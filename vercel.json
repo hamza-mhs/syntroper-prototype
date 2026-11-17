@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/Codona_Prototype_final.html" }
+  ]
+}
