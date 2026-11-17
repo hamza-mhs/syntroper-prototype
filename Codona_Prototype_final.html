@@ -7383,7 +7383,7 @@ function ncHTML(){ const M=S.nc; if(!M) return ''; const {add,dup,picked,from,un
     <div class="mhd"><span class="ic">${fbI(add?'swap':'cubedash',16)}</span><b id="ncT">${add?`Move use cases to ${esc(tgt.name)}`:'New bounded context'}</b><button class="ib" data-act="ncclose" aria-label="Close">${I('x',16)}</button></div>
     <div class="mbd ncb"><div class="ncc ncc-l">
       ${add?'':`<label class="nl" for="ncName">Name <span class="req" aria-hidden="true">*</span></label><label class="field ${nameErr?'err':''}"><input id="ncName" type="text" autocomplete="off" required aria-required="true" aria-invalid="${!!nameErr}" value="${esc(M.name)}" placeholder="For example, Returns"></label>${nameErr?`<div class="nerr">${nameErr}</div>`:''}`}
-      <div class="nl row2"><span>${add?'Pick the use cases to move':'Use cases'}</span></div>
+      <div class="nl row2"><span>${add?'Pick the use cases to move':'Use cases'}</span><span class="selc">${M.pick.length?`<span class="cnt">${M.pick.length} selected</span><button class="lnk" data-act="ncclear">Clear all</button>`:'<span class="none">None selected</span>'}</span></div>
       <label class="field sm">${I('search',14)}<input id="ncQ" type="text" autocomplete="off" value="${esc(M.q)}" placeholder="Search use cases"></label>
       <div class="nlist">${list}</div>
     </div><div class="ncc ncc-r">${picked.length ? sum+(window.ncPreview?ncPreview():'') : `<div class="npempty">${fbI('cubedash',24)}<b>Nothing picked yet</b><span>Pick use cases on the left to see their APIs, the integration points that move with them, and the other use cases that are affected.</span></div>`}</div></div>
@@ -8554,7 +8554,7 @@ function npHTML(){ const M=S.np; if(!M) return ''; const q=M.q.trim().toLowerCas
         <div class="fld"><label class="nl" for="npWho">Reviewer</label>${sel('npWho', `<option value="auto" ${M.who==='auto'?'selected':''}>${who&&M.pick.length?esc(whoName(who))+' · owns '+esc(CTB[ctxNow].name):'Owner of the context'}</option>${people.map(([v,l])=>`<option value="${esc(v)}" ${M.who===v?'selected':''}>${esc(l)}</option>`).join('')}`)}</div>
       </div></div>`;
   const body2 = `<div class="npb npb2">
-      <div class="npc npc-l"><h3>API calls <span class="req" aria-hidden="true">*</span><span class="opt">${M.pick.length?M.pick.length+' picked':''}</span></h3>
+      <div class="npc npc-l"><h3>API calls <span class="req" aria-hidden="true">*</span><span class="selc">${M.pick.length?`<span class="cnt">${M.pick.length} selected</span><button class="lnk" data-act="npclear">Clear all</button>`:'<span class="none">None selected</span>'}</span></h3>
         <label class="field">${I('search',16)}<input id="npQ" type="text" autocomplete="off" value="${esc(M.q)}" placeholder="Search routes, for example /store/carts"></label>
         <div class="nlist">${list}</div></div>
       <div class="npc npc-r"><h3>Steps, in order<span class="opt">${M.pick.length?'Drag to reorder':''}</span></h3>
@@ -8975,7 +8975,7 @@ const isUc = () => S.side.v==='item' && S.side.sel && S.side.sel.t==='uc';
 const bar = (label) => `<div class="rp-h"><button class="back" data-act="rpback">${I('arrow-left',16)}<span>${esc(label)}</span></button><span class="sp"></span><button class="ib" data-act="rpclose" aria-label="Close details">${I('x',16)}</button></div>`;
 function nestHTML(){ const N=S.rpn, u=UCB[N.id];
   if(N.k==='api'){ let h=itemHTML({t:'api', id:'op:'+N.arg}); return h.replace(/<div class="ch flat">[\s\S]*?<\/button><\/div>/, `<div class="ch flat">${bar(u.name)}</div>`); }
-  const R=UCR[N.id]; const live=R.reqs.filter(r=>r.st!=='resolved').length;
+  if(N.k!=='reqs') return ''; const R=UCR[N.id]; R.reqs=R.reqs||[]; const live=R.reqs.filter(r=>r.st!=='resolved').length;
   return `<section class="card fill"><div class="ch flat">${bar(u.name)}</div><div class="scroll"><div class="rpn-h"><small>Change requests · ${live} open</small><h2>${esc(u.name)}</h2></div>
     <div class="rpn-b">${ucOpenRv(N.id)?`<button class="btn sm" data-act="ucchg" data-arg="${N.id}">${I('plus',14)}Request changes</button>`:''}${reqHTML(N.id,true).replace(/<div class="ucq-h">[\s\S]*?<\/div>/,'')}</div></div></section>`; }
 { const _rs=renderSide; renderSide=function(){ if(S.rpn && !(isUc() && S.side.sel.id===S.rpn.id)) S.rpn=null; _rs(); const rp=$('#cxItem');
@@ -9258,8 +9258,8 @@ function syncRv(id){ const R=UCR[id]; if(!R||R.rv==='accepted'||R.rv==='rejected
 Object.keys(ROOM).forEach(id=>{ if(UCR[id]) syncRv(id); });
 S.room = {draft:{}, flag:{}, sum:{}, draftFor:{}};
 
-function roomEntry(id){ const R=room(id), last=[...R.msgs].reverse().find(m=>m.who!=='Syntroper'&&!m.ev)||R.msgs[R.msgs.length-1]; const n=openReqs(id).length;
-  return `<button class="rme" data-act="roomopen" data-arg="${id}"><span class="hash">#</span><span class="tx"><span class="l1"><span class="k">Chat room</span><b>#${esc(slug(id))}</b></span><small>${esc(last.who)}: ${esc(last.t)}</small></span>${n?`<span class="rvt warn">${n} ask${n===1?'':'s'}</span>`:''}${R.unread?`<span class="rvt acc">${R.unread} new</span>`:''}${I('chevron-right',16)}</button>`; }
+function roomEntry(id){ const R=room(id); const P=window.peopleOf?[...peopleOf(id).keys()]:members(id); const u=R.unread||0;
+  return `<button class="rme rme2" data-act="roomopen" data-arg="${id}" aria-label="Open the chat room for ${esc(UCB[id].name)}"><span class="hash">${I('users',16)}</span><span class="tx"><b>#${esc(slug(id))}</b><span class="ppl"><span class="stack">${P.slice(0,3).map(x=>pAv(x,18)).join('')}</span>${P.length} ${P.length===1?'person':'people'}</span></span>${u?`<span class="rvt acc">${u} new message${u===1?'':'s'}</span>`:''}${I('chevron-right',16)}</button>`; }
 function roomHTML(id){ const R=room(id), u=UCB[id]; const mem=members(id); const reqs=R.msgs.filter(m=>m.req); const open=reqs.filter(m=>!m.done);
   const sumOpen = S.room.sum[id]===true;
   const item = m => { const k=R.msgs.indexOf(m); return `<div class="it ${m.done?'done':''}"><button class="ck ${m.done?'on':''}" data-act="roomdone" data-arg="${id}|${k}" aria-label="${m.done?'Mark as open':'Mark as done'}">${m.done?I('check',12,'',2.2):''}</button><span>${esc(m.t)} <small>· ${esc(m.who)}${m.plus&&m.plus.length?` · ${m.plus.length+1} agree`:''}</small></span></div>`; };
@@ -9424,18 +9424,18 @@ Object.assign(ACT,{
 ========================================================= */
 S.ucx.fv='cards';
 const box=$('#ucFlow'), fw=box.querySelector('.fw'); let T=d3.zoomIdentity, shown=null;
-const zoom=d3.zoom().scaleExtent([.3,2.5]).filter(e=>(e.type==='wheel'||!e.target.closest('[data-act]')) && (!e.ctrlKey||e.type==='wheel') && !e.button)
+const zoom=d3.zoom().scaleExtent([.3,2.5]).filter(e=>(e.type==='wheel' ? (!e.target.closest('.fxx')||e.ctrlKey) : !e.target.closest('[data-act]')) && (!e.ctrlKey||e.type==='wheel') && !e.button)
   .on('zoom',e=>{ T=e.transform; fw.style.transform=`translate(${T.x}px,${T.y}px) scale(${T.k})`; updateDockPct(); });
 d3.select(box).call(zoom).on('dblclick.zoom',null);
 const lines=(t,n)=>Math.max(1,Math.ceil((t||'').length/n));
 const decLabel = alts => alts.some(a=>a.kind==='validation') ? 'Is it valid?' : alts.some(a=>a.kind==='error') ? 'Did it work?' : 'Carry on?';
 const edgeLbl = a => a.kind==='validation'?'Not valid':a.kind==='cancel'?'Leaves':'Fails';
-function layout(id, v){ const F=ucFlowOf(id), u=UCB[id]; const SY=v==='symbols'; const W=SY?260:320, cx=W/2; const GAP=SY?44:40;
+function layout(id, v, MH){ const F=ucFlowOf(id), u=UCB[id]; const SY=v==='symbols'; const W=SY?260:320; const OW=SY?600:640; const anyO=F.steps.some((s,i)=>fxO(id,i+1)); const cx=(anyO?OW:W)/2; const GAP=SY?44:40;
   const N=[], E=[], A=[]; let y=0; const put=n=>{ n.x=cx-n.w/2; n.y=y; y+=n.h+GAP; if(N.length) E.push({a:N[N.length-1], b:n, lbl:N[N.length-1].k==='dec'?'Yes':''}); N.push(n); return n; };
   const chn=u.ch==='both'?'Storefront and Admin':u.ch==='none'?'Subscribers and jobs':CHANNELS[u.ch].name;
   const start=put({k:'term', t:(ACTOR[u.ch]||'User')+' · '+chn, sub:F.start, w:SY?240:W, h:SY?48:(F.start?64:48)});
   const decs=[];
-  F.steps.forEach((s,i)=>{ const h=SY?64:28+lines(s.t,30)*20+(s.sc?24:0)+s.apis.length*26+8; const p=put({k:'proc', i:i+1, s, w:W, h});
+  F.steps.forEach((s,i)=>{ const O=fxO(id,i+1); const h=(MH&&MH[i+1])||((SY?64:28+lines(s.t,30)*20+(s.sc?28:0)+s.apis.length*26+30)+(O?440:0)); const p=put({k:'proc', i:i+1, s, w:O?OW:W, h});
     const al=F.alts.map((a,k)=>({a,k})).filter(x=>x.a.at===i+1);
     if(al.length){ const d=put({k:'dec', t:decLabel(al.map(x=>x.a)), al, w:SY?168:W, h:SY?104:58+al.length*20+20}); decs.push(d); } });
   put({k:'term', end:true, t:F.result, w:SY?Math.min(300,Math.max(160,F.result.length*7.4+48)):W, h:48});
@@ -9444,20 +9444,21 @@ function layout(id, v){ const F=ucFlowOf(id), u=UCB[id]; const SY=v==='symbols';
   decs.forEach(d=>d.al.forEach(({a,k})=>{ const h=SY?36+lines(a.t,26)*20+(a.steps.length?18:0):28+lines(a.t,26)*20+a.steps.reduce((t,x)=>t+lines(x,34)*18,0)+24;
     const top=Math.max(d.y+(d.h/2)-20, ay+24); const n={k:'alt', a, ak:k, x:AX, y:top, w:AW, h, from:d}; A.push(n); ay=top+h;
     if(SY && !a.back){ const e={k:'aend', t:'Ends · '+(a.end||''), x:AX+AW+48, y:top+h/2-16, w:Math.min(200,Math.max(110,((a.end||'').length+7)*6.6+28)), h:32}; n.endN=e; A.push(e); } }));
-  const right=Math.max(AX, ...A.map(n=>n.x+n.w)); return {F,N,E,A,W,H:Math.max(y, ay)+40, Wd:right+40, SY}; }
+  const right=Math.max(AX, ...A.map(n=>n.x+n.w)); return {F,N,E,A,W,cx,H:Math.max(y, ay)+40, Wd:right+40, SY}; }
 const symIc = (k,t) => `<span class="sym">${I(k,14)}${t}</span>`;
 function nodeHTML(id, n, L){ const hl=S.ucx.hl&&S.ucx.hl.id===id?S.ucx.hl.i:null; const pos=`left:${n.x}px;top:${n.y}px;width:${n.w}px;${n.k==='proc'||n.k==='alt'?'min-':''}height:${n.h}px`;
   if(L.SY){
     if(n.k==='term') return `<div class="fn f2-term ${n.end?'end':''}" style="${pos}">${n.end?I('check-circle',16):kindIc('channel',14)}<span>${esc(n.t)}</span></div>`;
     if(n.k==='aend') return `<div class="fn f2-term aend" style="${pos}">${esc(n.t)}</div>`;
-    if(n.k==='proc') return `<div class="fn f2-proc ${hl===n.i?'on':''} ${n.s._new?'nw':''} ${n.s._del?'dl':''}" role="button" tabindex="0" data-act="ucstep" data-arg="${id}|${n.i}" style="${pos}" title="${esc(n.s.t)}"><span class="n">${n.i}</span><span class="t">${esc(n.s.t)}</span>${n.s.apis.length?`<span class="c">${n.s.apis.length} API${n.s.apis.length===1?'':'s'}</span>`:''}</div>`;
+    if(n.k==='proc'){ const O=fxO(id,n.i); const nb=codeOf(id).filter(b=>b.step===n.i).length; const na=n.s.apis.length;
+      return `<div class="fn f2-proc ${hl===n.i?'on':''} ${O?'open':''} ${n.s._new?'nw':''} ${n.s._del?'dl':''}" role="button" tabindex="0" data-act="ucstep" data-arg="${id}|${n.i}" data-ni="${n.i}" style="${pos}" title="${esc(n.s.t)}"><div class="f2r"><span class="n">${n.i}</span><span class="t">${esc(n.s.t)}</span>${nb||na?`<button class="fxt ${O?'on':''}" data-act="fxopen" data-arg="${id}|${n.i}|${O?'x':'open'}|">${fbI('code',12)}${na?na+' API · ':''}${nb} code</button>`:''}</div>${O?fxChips(id,n.i,n.s)+fxPanel(id,n.i,O):''}</div>`; }
     if(n.k==='dec') return `<div class="fn f2-dec" style="${pos}"><svg width="${n.w}" height="${n.h}"><polygon points="${n.w/2},1 ${n.w-1},${n.h/2} ${n.w/2},${n.h-1} 1,${n.h/2}"/></svg><span>${esc(n.t)}</span></div>`;
     return `<div class="fn f2-alt ${n.a.kind} ${n.a._new?'nw':''} ${n.a._del?'dl':''}" role="button" tabindex="0" data-act="ucstep" data-arg="${id}|${n.a.at||1}" style="${pos}"><span class="t"><span class="ki">${altIc(n.a.kind)}</span>${esc(n.a.t)}</span>${n.a.steps.length?`<small>${esc(n.a.steps[0])}${n.a.steps.length>1?' …':''}</small>`:''}</div>`; }
   if(n.k==='term') return `<div class="fn fx-c term" style="${pos}"><div class="hd">${n.end?I('check-circle',16):kindIc('channel',14)}<span class="t">${esc(n.t)}</span><span class="sp"></span>${symIc('fc-term',n.end?'End':'Start')}</div>${n.sub?`<small>Starts when ${esc(n.sub.charAt(0).toLowerCase()+n.sub.slice(1))}</small>`:''}</div>`;
-  if(n.k==='proc'){ const s=n.s; return `<div class="fn fx-c ${hl===n.i?'on':''} ${s._new?'nw':''} ${s._del?'dl':''}" role="button" tabindex="0" data-act="ucstep" data-arg="${id}|${n.i}" style="${pos}"><div class="hd"><span class="n">${n.i}</span><span class="sp"></span>${symIc('fc-proc','Step')}</div><span class="t">${esc(s.t)}</span>${s.sc?`<span class="fl">${fbI('filecode',12)}${esc(s.sc.split('/').pop())} · ${codeOf(id).filter(b=>b.step===n.i).length} code blocks</span>`:''}${s.apis.length?`<span class="ap">${s.apis.map(apiChip).join('')}</span>`:''}</div>`; }
+  if(n.k==='proc'){ const s=n.s; const O=fxO(id,n.i); return `<div class="fn fx-c ${hl===n.i?'on':''} ${O?'open':''} ${s._new?'nw':''} ${s._del?'dl':''}" role="button" tabindex="0" data-act="ucstep" data-arg="${id}|${n.i}" data-ni="${n.i}" style="${pos}"><div class="hd"><span class="n">${n.i}</span><span class="sp"></span>${symIc('fc-proc','Step')}</div><span class="t">${esc(s.t)}</span>${fxChips(id,n.i,s)}${O?fxPanel(id,n.i,O):''}</div>`; }
   if(n.k==='dec') return `<div class="fn fx-c dec" style="${pos}"><div class="hd"><span class="t">${esc(n.t)}</span><span class="sp"></span>${symIc('fc-dec','Decision')}</div><div class="br"><span><b>Yes</b>Continue to the next step</span>${n.al.map(({a})=>`<span><b>${esc(edgeLbl(a))}</b>${esc(a.t)}</span>`).join('')}</div></div>`;
   return `<div class="fn fx-c alt ${n.a.kind} ${n.a._new?'nw':''} ${n.a._del?'dl':''}" role="button" tabindex="0" data-act="ucstep" data-arg="${id}|${n.a.at||1}" style="${pos}"><div class="hd"><span class="ki">${altIc(n.a.kind)}</span><span class="t">${esc(n.a.t)}</span><span class="sp"></span>${symIc('fc-alt','Other path')}</div><small>${n.a.steps.map(esc).join(' · ')}</small><small style="color:var(--text)">${n.a.back?'↩ Back to step '+n.a.back:'Ends · '+esc(n.a.end||'')}</small></div>`; }
-function build(id){ const L=layout(id, S.ucx.fv); const mid=L.W/2; let p='', lb='';
+function build(id, MH){ const L=layout(id, S.ucx.fv, MH); const mid=L.cx; let p='', lb='';
   const arrow=(x,y,d)=>d==='down'?`M${x-4} ${y-6}L${x} ${y}L${x+4} ${y-6}`:d==='left'?`M${x+6} ${y-4}L${x} ${y}L${x+6} ${y+4}`:`M${x-6} ${y-4}L${x} ${y}L${x-6} ${y+4}`;
   const label=(x,y,t)=>{ const w=t.length*6.6+12; lb+=`<rect class="elb" x="${x-w/2}" y="${y-10}" width="${w}" height="20" rx="4"/><text class="el2" x="${x}" y="${y+4}" text-anchor="middle">${esc(t)}</text>`; };
   L.E.forEach(e=>{ const y0=e.a.y+e.a.h, y1=e.b.y; p+=`<path class="hp" d="M${mid} ${y0}V${y1-1}"/><path class="hp" d="${arrow(mid,y1-1,'down')}"/>`; if(e.lbl) label(mid+18,(y0+y1)/2,e.lbl); });
@@ -9465,7 +9466,9 @@ function build(id){ const L=layout(id, S.ucx.fv); const mid=L.W/2; let p='', lb=
     p+=`<path class="ae ${n.a.kind}" d="M${sx} ${sy}C${sx+60} ${sy} ${tx-60} ${ty} ${tx-2} ${ty}"/><path class="ae ${n.a.kind}" style="stroke-dasharray:none" d="${arrow(tx-2,ty,'right')}"/>`; label((sx+tx)/2, (sy+ty)/2-2, edgeLbl(n.a));
     if(n.endN){ const e=n.endN; p+=`<path class="ae ${n.a.kind}" d="M${n.x+n.w} ${e.y+e.h/2}H${e.x-2}"/><path class="ae ${n.a.kind}" style="stroke-dasharray:none" d="${arrow(e.x-2,e.y+e.h/2,'right')}"/>`; }
     if(n.a.back){ const t=L.N.find(m=>m.k==='proc'&&m.i===n.a.back); if(t){ const by=t.y+t.h/2, bx=n.x+28, bw=t.x+t.w; p+=`<path class="be" d="M${bx} ${n.y+n.h}C${bx} ${n.y+n.h+40} ${bw+50} ${by} ${bw+2} ${by}"/><path class="be" style="stroke-dasharray:none" d="${arrow(bw+2,by,'left')}"/>`; } } });
-  fw.innerHTML=`<svg class="fe" width="${L.Wd}" height="${L.H}">${p}${lb}</svg>`+[...L.N,...L.A].map(n=>nodeHTML(id,n,L)).join(''); return L; }
+  fw.innerHTML=`<svg class="fe" width="${L.Wd}" height="${L.H}">${p}${lb}</svg>`+[...L.N,...L.A].map(n=>nodeHTML(id,n,L)).join('');
+  if(!MH){ const M={}; let diff=false; fw.querySelectorAll('.fn[data-ni]').forEach(el=>{ const i=+el.dataset.ni; const h=el.offsetHeight; const n=L.N.find(x=>x.k==='proc'&&x.i===i); M[i]=h; if(n&&h&&Math.abs(h-n.h)>2) diff=true; }); if(diff) return build(id, M); }
+  lastL=L; return L; }
 function area(){ const v=$('#vCodona'); const right=(!$('#cxItem').hidden?404:24); return {x:404, y:64, w:Math.max(200,v.clientWidth-404-right), h:Math.max(200,v.clientHeight-64-84)}; }
 function fit(L, anim){ const a=area(); const k=Math.min(1, a.w/(L.Wd+20), a.h/(L.H+20)); const t=d3.zoomIdentity.translate(a.x+Math.max(0,(a.w-L.Wd*k)/2), a.y+Math.max(0,(a.h-L.H*k)/2)).scale(k);
   (anim?d3.select(box).transition().duration(250):d3.select(box)).call(zoom.transform,t); }
@@ -9478,6 +9481,43 @@ window.renderFlowCanvas=function(focus){ const id=S.ucx.flow; const on=!!id && S
 { const _p=currentPct; currentPct=function(){ return S.ucx.flow ? Math.round(T.k*100) : _p(); }; }
 { const _rc=renderChrome; renderChrome=function(){ _rc(); if(!S.ucx.flow) return; const v=S.ucx.fv;
     $('#cTop').insertAdjacentHTML('beforeend', `<div class="fvt float" role="tablist" aria-label="Flowchart style">${[['cards','Cards with icons'],['symbols','Flowchart symbols']].map(([k,l])=>`<button role="tab" aria-selected="${v===k}" class="${v===k?'on':''}" data-act="ucfv" data-arg="${k}">${l}</button>`).join('')}</div>`); }; }
+/* FB33 · code inside the flowchart: click a file, an API or "Show all code" on a step and the code opens in the card */
+S.fx = {open:{}, int:{}};
+let lastL=null;
+const fxO = (id,i) => S.fx.open[id+'|'+i];
+function fxChips(id,i,s){ const O=fxO(id,i); const bs=codeOf(id).filter(b=>b.step===i); const files=[...new Set(bs.map(b=>b.file))];
+  const fc=files.map(f=>{ const n=bs.filter(b=>b.file===f).length; const k=bs.find(b=>b.file===f).kind; const on=O&&O.k==='f'&&O.v===f;
+    return `<button class="fxf ${on?'on':''}" data-act="fxopen" data-arg="${id}|${i}|f|${esc(f)}" title="${esc(f)} · ${esc(k)}">${fbI(blockKindIc(k),12)}<span>${esc(f.split('/').pop())}</span>${n>1?`<em>${n}</em>`:''}</button>`; }).join('');
+  const ac=s.apis.map(a=>{ const [m,...p]=a.split(' '); const on=O&&O.k==='a'&&O.v===a; const ni=opInts(a).length;
+    return `<button class="apc fxa ${on?'on':''}" data-act="fxopen" data-arg="${id}|${i}|a|${esc(a)}" title="${esc(a)}"><span class="meth ${m.toLowerCase()}">${m}</span><code>${esc(p.join(' '))}</code>${ni?`<em class="hpt" data-hp="i|${esc(a)}">${kindIc('point',12)}${ni}</em>`:''}</button>`; }).join('');
+  const all=O&&O.k==='all';
+  return `${fc?`<span class="fxfs">${fc}</span>`:''}${ac?`<span class="ap">${ac}</span>`:''}${bs.length?`<button class="fxall ${all?'on':''}" data-act="fxopen" data-arg="${id}|${i}|all|">${fbI('code',12)}${all?'Hide code':`Show all ${bs.length} code block${bs.length===1?'':'s'}`}</button>`:''}`; }
+function fxPanel(id,i,O){ const bs=codeOf(id).filter(b=>b.step===i); let body='', title='', sub='';
+  if(O.k==='f'){ const L=bs.filter(b=>b.file===O.v); title=esc(O.v.split('/').slice(-3).join('/')); sub=`${L.length} block${L.length===1?'':'s'} in this file`; body=L.map(b=>blockHTML(id,b)).join(''); }
+  else if(O.k==='a'){ const r=O.v; const b=codeOf(id).find(x=>x.route===r); const ints=opInts(r).map(x=>INB[x]).filter(Boolean); const us=(OPS[r]||{users:[]}).users.filter(x=>x!==id&&UCB[x]&&rvOf(x)!=='rejected');
+    title=esc(r); sub='API route, and what it leads to';
+    body=(b?blockHTML(id,b):'')+
+      (ints.length?`<div class="fxh">Leads to ${ints.length} integration point${ints.length===1?'':'s'} · click one to see its code</div>`+ints.map(it=>{ const k=id+'|'+i; const on=S.fx.int[k]===it.id; const ib=codeOf(id).find(x=>x.it&&x.file===it.file);
+        return `<button class="fxi ${on?'on':''}" data-act="fxint" data-arg="${id}|${i}|${it.id}">${kindIc('point',14)}<span class="l">${esc(it.label)}</span><span class="ityp">${esc(intKind(it)[1])}</span><span class="m">${esc(CTB[it.from]?CTB[it.from].name:'')} → ${esc(ctxName(it.to))}</span>${I(on?'chevron-up':'chevron-down',14)}</button>${on&&ib?blockHTML(id,ib):''}`; }).join('')
+        :'<div class="fxh">Leads to no integration points</div>')+
+      (us.length?`<div class="fxh">Also used by <span>${us.slice(0,3).map(x=>esc(UCB[x].name)).join(', ')}${us.length>3?` and ${us.length-3} more`:''}</span></div>`:''); }
+  else { title=`Step ${i} · all code`; const files=new Set(bs.map(b=>b.file)).size; sub=`${bs.length} block${bs.length===1?'':'s'} from ${files} file${files===1?'':'s'}`; body=bs.map(b=>blockHTML(id,b)).join(''); }
+  return `<div class="fxx" data-act="noop"><div class="fxx-h"><span><b>${title}</b><small>${sub}</small></span><button class="ib" data-act="fxclose" data-arg="${id}|${i}" aria-label="Close code" title="Close">${I('x',14)}</button></div>${body}</div>`; }
+function keepPos(before,i){ renderFlowCanvas(); const after=lastL&&lastL.N.find(n=>n.k==='proc'&&n.i===i);
+  if(before&&after&&(before.x!==after.x||before.y!==after.y)){ d3.select(box).call(zoom.transform, d3.zoomIdentity.translate(T.x-(after.x-before.x)*T.k, T.y-(after.y-before.y)*T.k).scale(T.k)); } }
+Object.assign(ACT,{
+  fxopen(a){ const p=a.split('|'); const id=p[0], i=+p[1], k=p[2], v=p.slice(3).join('|'); const key=id+'|'+i; const cur=S.fx.open[key];
+    const before=lastL&&lastL.N.find(n=>n.k==='proc'&&n.i===i);
+    if(k==='x') delete S.fx.open[key];
+    else { const nx = k==='open'?{k:'all',v:''}:{k,v}; if(cur && cur.k===nx.k && cur.v===nx.v) delete S.fx.open[key]; else S.fx.open[key]=nx; }
+    S.ucx.hl={id,i}; renderSide(); keepPos(before,i);
+    if(S.fx.open[key]){ const n=lastL&&lastL.N.find(m=>m.k==='proc'&&m.i===i); if(n){ const ar=area(); const k=Math.max(T.k,.9); const sx=T.x+n.x*T.k, sy=T.y+n.y*T.k; const fits = T.k>=.85 && sx>=ar.x && sx+n.w*T.k<=ar.x+ar.w && sy>=ar.y && sy<=ar.y+ar.h*.6;
+      if(!fits) d3.select(box).transition().duration(300).call(zoom.transform, d3.zoomIdentity.translate(ar.x+Math.max(16,(ar.w-n.w*k)/2)-n.x*k, ar.y+16-n.y*k).scale(k)); } } },
+  fxclose(a){ const [id,i]=a.split('|'); const before=lastL&&lastL.N.find(n=>n.k==='proc'&&n.i===+i); delete S.fx.open[a]; renderSide(); keepPos(before,+i); },
+  fxint(a){ const p=a.split('|'); const k=p[0]+'|'+p[1]; S.fx.int[k] = S.fx.int[k]===p[2] ? null : p[2]; const before=lastL&&lastL.N.find(n=>n.k==='proc'&&n.i===+p[1]); keepPos(before,+p[1]); }
+});
+{ const _c=ACT.cbkmore; ACT.cbkmore=function(k){ _c(k); if(S.ucx.flow) renderFlowCanvas(); }; }
+
 ACT.ucfv = v => { S.ucx.fv=v; render(); };
 
 /* =========================================================
@@ -9695,8 +9735,7 @@ function activityHTML(id){ const u=UCB[id]; const f=S.act.f[id]||'all'; const L=
 
 /* ---------- review rows: People and Activity ---------- */
 { const _ih=itemHTML; itemHTML=function(sel,o={}){ let h=_ih(sel,o); if((o&&o.lib)||sel.t!=='uc'||!UCR[sel.id]) return h; const id=sel.id; const P=[...peopleOf(id).keys()]; const A=activityOf(id);
-    const rows=`<span>People</span><div><button class="ucr-ppl" data-act="invopen" data-arg="${id}"><span class="stack">${P.slice(0,4).map(n=>pAv(n,20)).join('')}</span>${P.length}</button><button class="btn sm" data-act="invopen" data-arg="${id}">${I('user-plus',14)}Invite</button></div>
-      <span>Activity</span><div><button class="lnk3" data-act="actopen" data-arg="${id}">${A.length} updates <span>· last ${esc(A[0].d==='Today'?A[0].when:A[0].d)}</span>${I('chevron-right',14)}</button></div>`;
+    const rows=`<span>Activity</span><div><button class="lnk3" data-act="actopen" data-arg="${id}">${A.length} updates <span>· last ${esc(A[0].d==='Today'?A[0].when:A[0].d)}</span>${I('chevron-right',14)}</button></div>`;
     return h.replace(/(<span>Assigned to<\/span><div>[\s\S]*?<\/div>)(<\/div>)/, `$1${rows}$2`); }; }
 
 Object.assign(ACT,{
@@ -9852,9 +9891,12 @@ window.ncPreview=function(){ const M=S.nc; const ids=M.pick.filter(x=>UCB[x]); c
   const apis=[...new Set(ids.flatMap(id=>UCB[id].apis))];
   const cards=ids.map(id=>{ const u=UCB[id]; const from=u.ctx==='unassigned'?'No context':'From '+CTB[u.ctx].name;
     return `<div class="ncu"><div class="ncu-h">${kindIc('usecase',14)}<b>${esc(u.name)}</b><span class="tag ${u.ctx==='unassigned'?'out':'warn'}">${esc(from)}</span></div><div class="ncu-a">${u.apis.map(a=>{ const [m,...p]=a.split(' '); const sh=(OPS[a]||{users:[]}).users.some(x=>!set.has(x)&&UCB[x]); const n=opInts(a).length;
-      return `<div class="ncu-r"><span class="meth ${m.toLowerCase()}">${m}</span><span class="c"><code title="${esc(a)}">${esc(p.join(' '))}</code>${n||sh?`<small>${n?`Leads to ${n} integration point${n===1?'':'s'}`:'No integration points'}${sh?' · <em>Shared with other use cases</em>':''}</small>`:''}</span></div>`; }).join('')}</div></div>`; }).join('');
-  if(!M.imp||M.imp==='apis') M.imp='pts';
-  const imp=(window.impactHTML?impactHTML():'').replace(/<button role="tab"[^>]*data-arg="apis"[\s\S]*?<\/button>/,'').replace('<span>What else this affects</span>','<span>What else moving them affects</span>');
+      return `<div class="ncu-r"><span class="meth ${m.toLowerCase()}">${m}</span><span class="c"><code title="${esc(a)}">${esc(p.join(' '))}</code>${n||sh?`<small>${n?`<span class="hpt" data-hp="i|${esc(a)}">Leads to ${n} integration point${n===1?'':'s'}</span>`:'No integration points'}${sh?` · <em class="hpt" data-hp="u|${esc(a)}">Shared with other use cases</em>`:''}</small>`:''}</span></div>`; }).join('')}</div></div>`; }).join('');
+  const part = k => { M.imp=k; const h=window.impactHTML?impactHTML():''; const n=+((h.match(new RegExp('data-arg="'+k+'"[^>]*>[^<]*<span class="count">(\\d+)'))||[])[1]||0); const i=h.indexOf('<div class="nimp-l">'); const j=h.lastIndexOf('</div></div>'); return {n, body:i>=0&&j>i?h.slice(i+20,j):''}; };
+  const P1=part('pts'), P2=part('uc'); M.imp='pts';
+  const imp=`<div class="nimp nimp2"><div class="nimp-h">${I(P1.n||P2.n?'alert':'check-circle',16)}<span>What else moving them affects</span></div>
+    <div class="nimp-s"><div class="nimp-sh">Integration points<span class="count">${P1.n}</span></div><div class="nimp-l">${P1.body}</div></div>
+    <div class="nimp-s"><div class="nimp-sh">Other use cases<span class="count">${P2.n}</span></div><div class="nimp-l">${P2.body}</div></div></div>`;
   return `<div class="ncp"><div class="ncp-h">APIs in these use cases<small>${apis.length} API${apis.length===1?'':'s'} across ${ids.length} use case${ids.length===1?'':'s'}</small></div>${cards}</div><div class="ncp">${imp}</div>`; };
 ACT.npstage=function(n){ const M=S.np; if(!M) return; n=+n; if(n===2 && !M.name.trim()) return; M.stage=n; renderNP(n===1?{id:'npName'}:null); };
 { const _go=ACT.npgo; ACT.npgo=function(){ const M=S.np; if(M && (M.stage||1)===1){ ACT.npstage(2); return; } return _go(); }; }
@@ -9961,5 +10003,121 @@ const _s=wnSync; wnSync=function(){ _s(); const h=document.querySelector('#wnPan
 try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); }catch(e){} }); }catch(e){ console.error(e); }
 })();
 </script>
+<style>
+/* FB32 · selection count + Clear all, people inside the chat room card, activity row */
+.selc{margin-left:auto;display:inline-flex;align-items:center;gap:10px}
+.selc .cnt{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;background:var(--selected);box-shadow:inset 0 0 0 1px var(--accent);font:500 12px/18px var(--font);color:var(--text)}
+.selc .none{font:400 12px/18px var(--font);color:var(--text-3)}
+.selc .lnk{font:500 12px/18px var(--font);color:var(--text-2)}
+.selc .lnk:hover{color:#fff}
+.npx h3 .selc{font-weight:400}
+.rmw{border-radius:10px;background:var(--surface);overflow:hidden}
+.rmw .rme{background:none;border-radius:0}
+.rmw .rme:hover{background:var(--surface-strong)}
+.rmw-p{display:flex;align-items:center;gap:8px;padding:6px 10px 8px;border-top:1px solid var(--border)}
+.rmw-p .sp{flex:1}
+.ucr-f .lnk3{cursor:pointer;padding:2px 6px;margin-left:-6px;border-radius:6px}
+.ucr-f .lnk3:hover{background:var(--surface)}
+</style>
+<script>
+/* FB32 · Clear all */
+(function(){
+Object.assign(ACT,{
+  npclear(){ if(!S.np) return; S.np.pick=[]; S.np.titles={}; renderNP(); },
+  ncclear(){ if(!S.nc) return; S.nc.pick=[]; renderNC(); }
+});
+try{ render(); }catch(e){ console.error(e); }
+})();
+</script>
+<style>
+/* FB33 · code inside the flowchart */
+.fx-c .fxfs{display:flex;flex-wrap:wrap;gap:4px}
+.fxf{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:6px;background:var(--canvas);font:400 12px/18px var(--mono);color:var(--text-2)}
+.fxf:hover{color:var(--text);box-shadow:inset 0 0 0 1px var(--border-strong)}
+.fxf.on{color:var(--text);box-shadow:inset 0 0 0 1px var(--accent);background:var(--selected)}
+.fxf em,.fxa em{font-style:normal;display:inline-flex;align-items:center;gap:2px;font:500 12px/18px var(--font);color:var(--text-3)}
+.fxa{max-width:100%}
+.fxa:hover{box-shadow:inset 0 0 0 1px var(--border-strong)}
+.fxa.on{box-shadow:inset 0 0 0 1px var(--accent);background:var(--selected)}
+.fxall{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;height:24px;font:500 12px/18px var(--font);color:var(--text-2)}
+.fxall:hover,.fxall.on{color:#fff}
+.fn.open{z-index:3;border-color:var(--accent)}
+.fxx{display:flex;flex-direction:column;gap:8px;margin-top:6px;padding-top:12px;border-top:1px solid var(--border);cursor:auto;user-select:text;text-align:left}
+.fxx-h{display:flex;align-items:flex-start;gap:8px}
+.fxx-h>span{flex:1;min-width:0;display:flex;flex-direction:column}
+.fxx-h b{font:600 13px/20px var(--mono);color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fxx-h small{font:400 12px/18px var(--font);color:var(--text-3)}
+.fxh{margin-top:4px;font:600 12px/18px var(--font);color:var(--text-3)}
+.fxh span{font-weight:400;color:var(--text-2)}
+.fxi{display:flex;align-items:center;gap:8px;min-height:36px;padding:6px 10px;border-radius:8px;background:var(--surface);text-align:left;font:400 12px/18px var(--font);color:var(--text)}
+.fxi:hover{background:var(--surface-strong)}
+.fxi.on{box-shadow:inset 0 0 0 1px var(--accent)}
+.fxi .l{font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fxi .m{margin-left:auto;color:var(--text-3);white-space:nowrap}
+.fxi>svg{flex:none;color:var(--text-2)}
+.fxx .cbk{background:var(--surface)}
+.fxx .cbk pre{white-space:pre}
+.f2-proc{flex-direction:column;align-items:stretch;justify-content:center;gap:8px}
+.f2-proc .f2r{display:flex;align-items:center;gap:10px;min-width:0}
+.f2-proc.open{justify-content:flex-start}
+.f2-proc .fxfs{display:flex;flex-wrap:wrap;gap:4px}
+.f2-proc .ap{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.fxt{flex:none;display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:999px;background:var(--canvas);font:500 12px/18px var(--font);color:var(--text-2);white-space:nowrap}
+.fxt:hover,.fxt.on{color:#fff;box-shadow:inset 0 0 0 1px var(--accent)}
+</style>
+<script>
+/* FB33 · review guide entry */
+(function(){
+WN.push({a:'Flowchart', r:1, n:'Code inside the flowchart', how:'Click a file, an API or “Show all code” on any step. The code opens right in the card. An API also shows the integration points it leads to; click one to see its code.', go(){ try{ S.ai.open=false; }catch(e){} WN_HOME(); render(); ACT.layer(2); ACT.gsel('uc:checkout'); S.ucx.fv='cards'; ACT.ucview('checkout|flow'); ACT.fxopen('checkout|5|a|POST /store/carts/:id/complete'); }, sel:['#ucFlow .fxx','#ucFlow .fxf']});
+WN.forEach((f,i)=>f.i=i+1);
+['#wnPanel','#wnBtn','#wnLayer'].forEach(q=>{ const e=document.querySelector(q); if(e) e.remove(); });
+try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); }catch(e){} }); }catch(e){}
+})();
+</script>
+<style>
+/* FB34 · hover lists, one scroll for "what else moving them affects" */
+.hpt{cursor:help;text-decoration:underline dotted;text-underline-offset:3px;text-decoration-color:currentColor}
+#hpop{position:fixed;z-index:200;max-width:320px;min-width:220px;padding:8px;border-radius:10px;background:var(--panel);border:1px solid var(--border-strong);box-shadow:var(--shadow);pointer-events:none}
+#hpop[hidden]{display:none}
+#hpop .hh{padding:2px 6px 6px;font:600 12px/18px var(--font);color:var(--text-3)}
+#hpop .hr{display:flex;align-items:center;gap:8px;padding:4px 6px;font:400 12px/18px var(--font);color:var(--text)}
+#hpop .hr .l{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+#hpop .hr .m{color:var(--text-3);white-space:nowrap}
+#hpop .more{padding:4px 6px;font:400 12px/18px var(--font);color:var(--text-3)}
+.nimp2{background:none;padding:0;gap:12px}
+.nimp2 .nimp-s{display:flex;flex-direction:column;gap:4px}
+.nimp2 .nimp-sh{display:flex;align-items:center;gap:6px;padding:0 6px;font:600 12px/18px var(--font);color:var(--text-2)}
+.nimp2 .nimp-l{max-height:none;overflow:visible}
+</style>
+<script>
+/* FB34 · small hover pop-ups: which integration points, which other use cases */
+(function(){
+document.body.insertAdjacentHTML('beforeend','<div id="hpop" hidden role="tooltip"></div>');
+const el=document.getElementById('hpop'); let on=null;
+function content(spec){ const [k,...rest]=spec.split('|'); const r=rest.join('|');
+  if(k==='i'){ const L=opInts(r).map(x=>INB[x]).filter(Boolean); return `<div class="hh">${esc(r)} leads to</div>`+L.slice(0,8).map(it=>`<div class="hr">${kindIc('point',14)}<span class="l">${esc(it.label)}</span><span class="m">${/event/i.test(it.type)?'Event':'API call'} · ${esc(ctxName(it.to))}</span></div>`).join('')+(L.length>8?`<div class="more">and ${L.length-8} more</div>`:''); }
+  if(k==='u'){ const skip=new Set(S.nc?S.nc.pick:[]); const L=((OPS[r]||{users:[]}).users).filter(x=>UCB[x]&&!skip.has(x)&&rvOf(x)!=='rejected').map(x=>UCB[x]);
+    return `<div class="hh">Also used by ${L.length} use case${L.length===1?'':'s'}</div>`+L.slice(0,8).map(u=>`<div class="hr">${kindIc('usecase',14)}<span class="l">${esc(u.name)}</span><span class="m">${esc(u.ctx==='unassigned'?'No context':CTB[u.ctx].name)}</span></div>`).join('')+(L.length>8?`<div class="more">and ${L.length-8} more</div>`:''); }
+  return ''; }
+function show(t){ on=t; el.innerHTML=content(t.dataset.hp); el.hidden=false; const r=t.getBoundingClientRect(), w=el.offsetWidth, h=el.offsetHeight;
+  let x=Math.min(Math.max(8,r.left), innerWidth-w-8), y=r.bottom+6; if(y+h>innerHeight-8) y=r.top-h-6; el.style.left=x+'px'; el.style.top=y+'px'; }
+const hide=()=>{ on=null; el.hidden=true; };
+document.addEventListener('mouseover', e=>{ const t=e.target.closest&&e.target.closest('[data-hp]'); if(!t){ if(on) hide(); return; } if(t!==on) show(t); });
+document.addEventListener('scroll', hide, true);
+document.addEventListener('click', hide, true);
+})();
+</script>
+<style>
+/* FB35 · slimmer chat room card: group icon, name, avatars; unread messages only */
+.rme2{gap:12px;padding:10px 12px;background:var(--surface)}
+.rme2 .hash{width:32px;height:32px;border-radius:8px;color:var(--text-2)}
+.rme2 .tx{gap:4px}
+.rme2 .tx b{font:500 14px/20px var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rme2 .ppl{display:flex;align-items:center;gap:6px;font:400 12px/18px var(--font);color:var(--text-2)}
+.rme2 .ppl .stack{display:inline-flex}
+.rme2 .ppl .stack .cx-av{box-shadow:0 0 0 2px var(--surface)}
+.rme2 .ppl .stack .cx-av+.cx-av{margin-left:-5px}
+.rme2 .rvt{flex:none}
+</style>
 </body>
 </html>
