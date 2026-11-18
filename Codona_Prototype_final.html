@@ -11332,5 +11332,39 @@ ACT.bssync = () => { const b=document.querySelector('#cPanel .bs-sync'); if(b){ 
 put();
 })();
 </script>
+<script>
+/* FB51 · Review guide: everything in the use case sidebar, first */
+(function(){
+const reset = () => { try{ S.ucx.flow=null; S.rpn=null; S.ai.open=false; S.ucx.pop=null; renderUcPop(); S.ip=null; renderIP(); S.cx.pop=null; renderPop(); S.uct.tab={}; }catch(e){} };
+const UC2 = (id,f) => () => { reset(); S.tab='codona'; WN_HOME(); render(); ACT.layer(2); ACT.gsel('uc:'+id); if(f) f(); };
+const btn = q => { window.__cxBtn=document.querySelector(q); };
+const A='Use case sidebar';
+const L=[
+ ['Review status, source and assignee','The top of the sidebar shows the review status, who it is for, whether Syntroper found it or a person proposed it, and who is assigned.', UC2('cancel-order'), ['.ucr-f']],
+ ['Personas','Who the use case is for, as chips.', UC2('cancel-order'), ['.ucr-f .pers']],
+ ['Assign to review or revise','The assignee picker asks whether they should review or revise it. Context owners are suggested first.', UC2('checkout',()=>{ btn('.ucr-who'); ACT.cxassign('uc:checkout'); }), ['.up-role']],
+ ['Accept, Request changes, Reject','Review actions under the details. Request changes opens the chat room with the change request flag on.', UC2('checkout'), ['.ucr-a']],
+ ['Reject with a reason','Not a user goal, part of another use case, duplicate, or other. A rejected use case disappears everywhere.', UC2('calc-shipping',()=>{ btn('.ucr-a .rj'); ACT.ucrej('calc-shipping'); }), ['#ucPop .ucpop']],
+ ['History','Everything that happened, by day, with longer summaries and filters. Opens one level down.', UC2('checkout',()=>ACT.actopen('checkout')), ['.act-f','.act-i']],
+ ['Chat room card','Each use case has a private room. The card shows its members and new messages.', UC2('cancel-order'), ['.rme2']],
+ ['Chat room','People talk about the use case. Syntroper keeps a summary of open asks above the message box and can draft the changes.', UC2('cancel-order',()=>{ ACT.roomopen('cancel-order'); S.room.sum['cancel-order']=true; renderSide(); }), ['.room-h','.rsum']],
+ ['Invite people','Invite people or teams. Invited people see the use case and its room; assigning is what gives someone the review.', UC2('checkout',()=>{ btn('.rme2'); ACT.invopen('checkout'); }), ['#invPop .ip']],
+ ['Summary by Syntroper','A short summary of the whole flow instead of the step list.', UC2('checkout'), ['.aisum']],
+ ['Tabs: Code, APIs, Integration points, Affected','Everything the flow touches, one tab each.', UC2('checkout',()=>ACT.ucttab('checkout|code')), ['.uct5']],
+ ['Code blocks','Whole functions from every file the flow touches, grouped by step. Long ones open at the key lines; Show all expands them.', UC2('checkout',()=>ACT.ucttab('checkout|code')), ['.cbk','.cbk-more']],
+ ['APIs and what they lead to','Each API with its step, the integration points it triggers and which other use cases use it.', UC2('checkout',()=>ACT.ucttab('checkout|apis')), ['.ucl .uci']],
+ ['Integration points: dependants and evidence','API call or event, where it goes, its evidence line, and which other use cases depend on it.', UC2('checkout',()=>ACT.ucttab('checkout|pts')), ['.ucl .uci']],
+ ['Affected use cases','Other use cases that share its APIs or integration points, grouped by bounded context.', UC2('checkout',()=>ACT.ucttab('checkout|aff')), ['.ucl .uci']],
+ ['API one level down, with Back','Clicking an API opens it inside the sidebar. Back returns to the use case.', UC2('checkout',()=>ACT.ucapi('POST /store/carts/:id/complete')), ['#cxItem .rp-h .back']],
+ ['Ask Syntroper to change this','Opens the main chat on this use case. Changes are previewed in the diagram before you apply them.', UC2('checkout'), ['.ucask']]
+].map(([n,how,go,sel])=>({a:A, r:1, n, how, go, sel, red:false}));
+const keep=WN.filter(f=>!(f.a==='Use case panel' && ['Code before APIs','History'].includes(f.n)) && !L.some(x=>x.n===f.n));
+const rest=keep.filter(f=>f.a!=='Use case panel');
+const panel=keep.filter(f=>f.a==='Use case panel').map(f=>Object.assign(f,{a:A}));
+WN.length=0; WN.push(...L, ...panel, ...rest); WN.forEach((f,i)=>f.i=i+1);
+['#wnPanel','#wnBtn','#wnLayer'].forEach(q=>{ const e=document.querySelector(q); if(e) e.remove(); });
+try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); }catch(e){} }); }catch(e){}
+})();
+</script>
 </body>
 </html>
