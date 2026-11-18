@@ -11232,12 +11232,19 @@ Object.assign(ACT,{
 document.getElementById('vCodona').insertAdjacentHTML('beforeend','<div id="dgBar" hidden></div>');
 const bar=document.getElementById('dgBar');
 const LV=[['sys','System','Persona and system'],['ctx','Bounded contexts','Which contexts talk'],['code','Code','Key files']];
-function renderBar(){ const on=!!S.ucx.flow && S.tab==='codona' && UCB[S.ucx.flow]; bar.hidden=!on; if(!on) return; const v=S.ucx.fv==='symbols'?'cards':S.ucx.fv;
-  bar.innerHTML=`<div class="grp" role="tablist" aria-label="Diagram"><span class="lab">Diagram</span>${[['seq','Sequence'],['cards','Flowchart']].map(([k,l])=>`<button role="tab" aria-selected="${v===k}" class="${v===k?'on':''}" data-act="ucfv" data-arg="${k}">${l}</button>`).join('')}</div>
-    ${v==='seq'?`<div class="grp" role="tablist" aria-label="Level"><span class="lab">Level</span>${LV.map(([k,l,d],i)=>`<button role="tab" aria-selected="${S.ucx.sl===k}" class="${S.ucx.sl===k?'on':''}" data-act="ucsl" data-arg="${k}" title="${esc(d)}"><span class="lvn">${i+1}</span>${l}</button>`).join('')}</div>`:''}`;
+document.getElementById('vCodona').insertAdjacentHTML('beforeend','<div id="dgTog" hidden></div>');
+const tog=document.getElementById('dgTog');
+function renderBar(){ const on=!!S.ucx.flow && S.tab==='codona' && UCB[S.ucx.flow]; bar.hidden=!on||S.ucx.fv!=='seq'; tog.hidden=!on; if(!on) return; const v=S.ucx.fv==='symbols'?'cards':S.ucx.fv;
+  tog.innerHTML=`<div class="grp" role="tablist" aria-label="Diagram">${[['seq','Sequence'],['cards','Flowchart']].map(([k,l])=>`<button role="tab" aria-selected="${v===k}" class="${v===k?'on':''}" data-act="ucfv" data-arg="${k}">${l}</button>`).join('')}</div>`;
+  bar.innerHTML = v==='seq' ? `<div class="grp" role="tablist" aria-label="Level"><span class="lab">Level</span>${LV.map(([k,l,d],i)=>`<button role="tab" aria-selected="${S.ucx.sl===k}" class="${S.ucx.sl===k?'on':''}" data-act="ucsl" data-arg="${k}" title="${esc(d)}"><span class="lvn">${i+1}</span>${l}</button>`).join('')}</div>` : '';
   requestAnimationFrame(placeBar); }
-function placeBar(){ if(bar.hidden) return; const d=document.querySelector('#cDock'); const v=document.getElementById('vCodona'); if(!d||!v) return; const r=d.getBoundingClientRect(), pr=v.getBoundingClientRect(); if(!r.width) return;
-  bar.style.left=(r.left-pr.left+r.width/2)+'px'; bar.style.top='auto'; bar.style.bottom=(pr.bottom-r.top+10)+'px'; }
+function placeBar(){ const v=document.getElementById('vCodona'); if(!v) return; const pr=v.getBoundingClientRect();
+  const cr=document.getElementById('cCrumb'); if(cr&&!tog.hidden){ const r=cr.getBoundingClientRect(); tog.style.left=(r.left-pr.left)+'px'; tog.style.top=(r.bottom-pr.top+8)+'px'; }
+  if(bar.hidden) return; const d=document.querySelector('#cDock'); const lp=document.getElementById('cPanel'), rp=document.getElementById('cxItem');
+  const L = lp&&lp.offsetWidth&&getComputedStyle(lp).display!=='none' ? lp.getBoundingClientRect().right-pr.left : 0;
+  const R = rp&&!rp.hidden ? pr.right-rp.getBoundingClientRect().left : 0;
+  bar.style.left=(L+(pr.width-L-R)/2)+'px';
+  if(d){ const r=d.getBoundingClientRect(); if(r.width){ bar.style.top='auto'; bar.style.bottom=(pr.bottom-r.top+10)+'px'; } } }
 addEventListener('resize', placeBar);
 { const _r=render; render=function(){ _r(); renderBar(); }; }
 { const _f=window.renderFlowCanvas; window.renderFlowCanvas=function(x){ _f(x); renderBar(); }; }
@@ -11366,5 +11373,13 @@ WN.length=0; WN.push(...L, ...panel, ...rest); WN.forEach((f,i)=>f.i=i+1);
 try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); }catch(e){} }); }catch(e){}
 })();
 </script>
+<style>
+#dgTog{position:absolute;z-index:30}
+#dgTog[hidden]{display:none}
+#dgTog .grp{display:flex;align-items:center;gap:2px;padding:4px;border-radius:10px;background:var(--panel);border:1px solid var(--border);box-shadow:var(--shadow)}
+#dgTog button{height:30px;padding:0 12px;border-radius:7px;font:500 12px/18px var(--font);color:var(--text-2)}
+#dgTog button:hover{color:var(--text);background:var(--surface)}
+#dgTog button.on{background:var(--surface-strong);color:var(--text);font-weight:600}
+</style>
 </body>
 </html>
