@@ -3677,7 +3677,7 @@ const crow = (n, title, sub, act, arg, o={}) => `<button class="crow" data-act="
 const cgroup = (verb, n, rows) => rows.length ? `<div class="cg"><div class="cg-h"><b>${esc(verb)}</b>${esc(LAYERS[n].name)}<span class="count">${rows.length}</span></div>${rows.join('')}</div>` : '';
 function ctxName(id){ return CTB[id]?CTB[id].name:extView(EXB[id]).name; }
 function intRow(it){ return crow(6, it.label, `${CTB[it.from].name} to ${ctxName(it.to)}`, 'gsel', 'int:'+it.id, {code:/^[A-Z_]+$/.test(it.label)}); }
-function routeRow(a){ const [m,...p]=a.split(' '); return crow(3, '', `${OPS[a].users.length} use case${OPS[a].users.length>1?'s':''}`, 'gsel', 'api:op:'+a, {raw:`<span class="meth ${m.toLowerCase()}">${m}</span> <span class="code" style="font:500 12.5px/20px var(--mono)">${esc(p.join(' '))}</span>`}); }
+function routeRow(a){ const [m,...p]=a.split(' '); const _n=(OPS[a]||{users:[]}).users.length; return crow(3, '', `${_n} use case${_n>1?'s':''}`, 'gsel', 'api:op:'+a, {raw:`<span class="meth ${m.toLowerCase()}">${m}</span> <span class="code" style="font:500 12.5px/20px var(--mono)">${esc(p.join(' '))}</span>`}); }
 function ucRow(u, sub=true){ return crow(2, u.name, sub?CTB[u.ctx].name:'', 'gsel', 'uc:'+u.id); }
 function ctxRow(id){ return crow(4, CTB[id].name, `${ucsOf(id).length} use cases`, 'gsel', 'ctx:'+id); }
 function extRow(id){ const v=extView(EXB[id]); return crow(6, v.name, v.sub, 'gsel', 'ext:'+id); }
@@ -7031,11 +7031,12 @@ requestAnimationFrame(()=>{ gC.fit(false); gL.fit(false); });
    #/codona/systems   (an empty hash also lands here)                          */
 (function(){
 IC['github']='<path fill="currentColor" stroke="none" d="M12 .5C5.65.5.5 5.65.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2.17c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.74.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.09 0 4.42-2.69 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/>';
-const SYS=[
-  {id:'commerce', name:'Commerce platform', owner:'Rehan S.', repos:3, sync:'ok', q:()=>qOpen(), live:true},
-  {id:'warehouse', name:'Warehouse operations', owner:'Zara K.', repos:2, sync:'warn', q:()=>1},
-  {id:'support', name:'Customer support', owner:'Hamza M.', repos:1, sync:'run', q:()=>0},
-  {id:'internal', name:'Internal tools', owner:null, repos:2, sync:'none', q:()=>null}
+const SYS=window.SYS_LIST=[
+  {id:'commerce', name:'Commerce platform', owner:'checkout', repos:3, sync:'ok', q:()=>qOpen(), live:true},
+  {id:'warehouse', name:'Warehouse operations', owner:'platform', repos:2, sync:'warn', q:()=>1},
+  {id:'support', name:'Customer support', owner:'design', repos:1, sync:'run', q:()=>0},
+  {id:'internal', name:'Internal tools', owner:null, repos:2, sync:'none', q:()=>null},
+  {id:'legacy', name:'Legacy storefront', owner:'qa', repos:1, sync:'ok', q:()=>0, archived:true}
 ];
 const CHIP={ok:['ok','In sync'], warn:['warn','Out of sync'], run:['run','Syncing'], none:['gray','Not scanned']};
 document.querySelector('#vOrg').insertAdjacentHTML('afterend','<main id="vSys" class="view" aria-label="Business systems" hidden></main>');
@@ -7045,7 +7046,7 @@ function cardHTML(s){
   const cta = s.sync==='none' ? `<button class="btn primary sm" data-act="sysscan" data-arg="${s.id}">${I('refresh',14)}Scan</button>`
                               : `<button class="btn sm" data-act="sysopen" data-arg="${s.id}">View System</button>`;
   return `<article class="bsc" role="button" tabindex="0" data-act="${s.sync==='none'?'sysscan':'sysopen'}" data-arg="${s.id}" aria-label="${esc(s.name)}">
-    <div class="t"><div class="tx"><b>${esc(s.name)}</b>${s.owner?`<small>${esc(s.owner)}</small>`:`<small class="none">No owner yet</small>`}</div>${cta}</div>
+    <div class="t"><div class="tx"><b>${esc(s.name)}</b>${s.owner&&TEAM_BY[s.owner]?`<small class="own">${tAv(s.owner,16)}${esc(TEAM_BY[s.owner].name)}</small>`:`<small class="none">No owner team yet</small>`}</div>${cta}</div>
     <div class="m"><span class="gh">${I('github',16)}</span>${s.repos} repositor${s.repos===1?'y':'ies'}<span class="bs-chip ${k}"><span class="d"></span>${l}</span>${q}</div></article>`;
 }
 window.renderSys = function(){
@@ -7053,8 +7054,9 @@ window.renderSys = function(){
    <div class="libpage"><div class="bs-head"><div class="tx"><h1>Business systems</h1><p class="sub">Each system is built from the repositories you connect. Open one to see its Galaxy.</p></div>
      <label class="field">${I('search',16)}<input placeholder="Search systems" aria-label="Search systems"></label>
      <button class="btn primary" data-act="toast" data-arg="Creating a business system is not part of this prototype.">${I('plus',16)}New business system</button></div>
-    <div class="bs-grid">${SYS.map(cardHTML).join('')}
-     <button class="bsc new" data-act="toast" data-arg="Creating a business system is not part of this prototype.">${I('plus',16)}New business system</button></div></div>`;
+    <div class="bs-grid">${SYS.filter(s=>!s.archived).map(cardHTML).join('')}
+     <button class="bsc new" data-act="toast" data-arg="Creating a business system is not part of this prototype.">${I('plus',16)}New business system</button></div>
+    ${SYS.some(s=>s.archived)?`<div class="bs-arch"><button class="bs-arch-h" data-act="sysarch" aria-expanded="${!!S.sysArch}">${I(S.sysArch?'chevron-down':'chevron-right',16)}Archived<span class="count">${SYS.filter(s=>s.archived).length}</span></button>${S.sysArch?`<div class="bs-grid">${SYS.filter(s=>s.archived).map(s=>`<article class="bsc arch"><div class="t"><div class="tx"><b>${esc(s.name)}</b><small>Archived · not syncing</small></div><button class="btn sm" data-act="sysunarch" data-arg="${s.id}">Restore</button></div></article>`).join('')}</div>`:''}</div>`:''}</div>`;
 };
 Object.assign(ACT,{
   sysl(){ S.tab='systems'; S.lvMenu=false; render(); },
@@ -7062,7 +7064,9 @@ Object.assign(ACT,{
     S.tab='codona'; goHome();
     requestAnimationFrame(()=>{ window.dispatchEvent(new Event('resize')); gC.fit(false); });
     if(s&&!s.live) toast(`This prototype shows Commerce platform data for every system.`,'info'); },
-  sysscan(id){ toast('Scanning Internal tools is not part of this prototype.','info'); }
+  sysscan(id){ toast('Scanning Internal tools is not part of this prototype.','info'); },
+  sysarch(){ S.sysArch=!S.sysArch; renderSys(); },
+  sysunarch(id){ const s=SYS.find(x=>x.id===id); if(s){ s.archived=false; renderSys(); toast(`${s.name} is restored. Syncing starts again.`); } }
 });
 /* keyboard on the card */
 document.addEventListener('keydown',e=>{ const c=e.target.closest&&e.target.closest('.bsc[role=button]'); if(c&&(e.key==='Enter'||e.key===' ')&&e.target===c){ e.preventDefault(); c.click(); } });
@@ -7383,7 +7387,7 @@ function ncHTML(){ const M=S.nc; if(!M) return ''; const {add,dup,picked,from,un
     <div class="mhd"><span class="ic">${fbI(add?'swap':'cubedash',16)}</span><b id="ncT">${add?`Move use cases to ${esc(tgt.name)}`:'New bounded context'}</b><button class="ib" data-act="ncclose" aria-label="Close">${I('x',16)}</button></div>
     <div class="mbd ncb"><div class="ncc ncc-l">
       ${add?'':`<label class="nl" for="ncName">Name <span class="req" aria-hidden="true">*</span></label><label class="field ${nameErr?'err':''}"><input id="ncName" type="text" autocomplete="off" required aria-required="true" aria-invalid="${!!nameErr}" value="${esc(M.name)}" placeholder="For example, Returns"></label>${nameErr?`<div class="nerr">${nameErr}</div>`:''}`}
-      <div class="nl row2"><span>${add?'Pick the use cases to move':'Use cases'}</span><span class="selc">${M.pick.length?`<span class="cnt">${M.pick.length} selected</span><button class="lnk" data-act="ncclear">Clear all</button>`:'<span class="none">None selected</span>'}</span></div>
+      <div class="nl row2"><span>${add?'Pick the use cases to move':'Use cases'}</span><span class="selc">${M.pick.length?`<span class="db-selc">${M.pick.length} selected<button data-act="ncclear" aria-label="Clear all ${M.pick.length} selected" title="Clear all">${I('x',12)}</button></span>`:'<span class="none">None selected</span>'}</span></div>
       <label class="field sm">${I('search',14)}<input id="ncQ" type="text" autocomplete="off" value="${esc(M.q)}" placeholder="Search use cases"></label>
       <div class="nlist">${list}</div>
     </div><div class="ncc ncc-r">${picked.length ? sum+(window.ncPreview?ncPreview():'') : `<div class="npempty">${fbI('cubedash',24)}<b>Nothing picked yet</b><span>Pick use cases on the left to see their APIs, the integration points that move with them, and the other use cases that are affected.</span></div>`}</div></div>
@@ -7711,7 +7715,7 @@ button.bss-item:hover{background:var(--surface)}
   const RF='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8M21 3v5h-5"/></svg>';
   const ROLES=[['admin','Admin'],['editor','Editor'],['viewer','Viewer']];
   const MORE=[{id:'nt',name:'acme/notifications',branch:'main'},{id:'ad',name:'acme/admin-dashboard',branch:'main'}];
-  S.bs={open:false, tab:'general', repo:'all', scan:null, name:'Commerce platform', draft:null, owner:'Hamza M.', sched:'daily', repos:REPOS.map(r=>r.id), adding:false,
+  S.bs={open:false, tab:'general', repo:'all', scan:null, name:'Commerce platform', draft:null, owner:'checkout', vis:'org', sched:'daily', repos:REPOS.map(r=>r.id), adding:false,
     members:[{k:'person',id:'Hamza M.',role:'admin'},{k:'person',id:'Oliver F.',role:'admin'},{k:'team',id:'checkout',role:'editor'},{k:'team',id:'platform',role:'editor'},{k:'team',id:'payments',role:'viewer'},{k:'person',id:'Sarah R.',role:'viewer'}]};
   const B=S.bs;
   document.getElementById('vCodona').insertAdjacentHTML('beforeend','<section class="bss" id="bsSet" role="dialog" aria-label="Business system settings" hidden></section>');
@@ -7724,8 +7728,9 @@ button.bss-item:hover{background:var(--surface)}
 
   function general(){ const v=B.draft==null?B.name:B.draft; const dirty=v.trim()&&v.trim()!==B.name;
     return `<div class="bss-f"><label for="bsName">Name</label><div class="bss-row"><label class="field" style="flex:1"><input id="bsName" value="${esc(v)}" autocomplete="off"></label><button class="btn primary" data-act="bsname" ${dirty?'':'disabled'}>Save</button></div></div>
-      <div class="bss-f"><label for="bsOwner">Owner</label><select id="bsOwner" class="bss-sel">${Object.keys(CXP).map(n=>`<option ${n===B.owner?'selected':''}>${esc(n)}</option>`).join('')}</select></div>
-      <div class="bss-f"><span>Scan</span><div class="bss-seg">${[['daily','Daily'],['push','On every push'],['manual','Manual only']].map(([k,l])=>`<button class="${B.sched===k?'on':''}" data-act="bssched" data-arg="${k}">${l}</button>`).join('')}</div></div>
+      <div class="bss-f"><label for="bsOwner">Owner team</label><select id="bsOwner" class="bss-sel">${TEAMS.map(t=>`<option value="${t.id}" ${t.id===B.owner?'selected':''}>${esc(t.name)}</option>`).join('')}</select><small class="bss-hint">A business system is always owned by a team.</small></div>
+      <div class="bss-f"><span>Sync schedule</span><div class="bss-seg">${[['daily','Daily'],['push','On every push'],['manual','Manual only']].map(([k,l])=>`<button class="${B.sched===k?'on':''}" data-act="bssched" data-arg="${k}">${l}</button>`).join('')}</div></div>
+      <div class="bss-danger arch"><div style="flex:1"><b>Archive business system</b><small>Hides it from the list and stops syncing. Nothing is deleted, and you can restore it.</small></div><button class="btn" data-act="bsarchive">${I('folder',16)}Archive</button></div>
       <div class="bss-danger"><div style="flex:1"><b>Delete business system</b><small>Removes its Galaxy, questions and scan history. Repositories are not changed.</small></div><button class="btn danger" data-act="toast" data-arg="Delete asks you to type the name to confirm.">${TR}Delete</button></div>`; }
 
   function repos(){ const UCN={md:35,ns:9,sr:'—'};
@@ -7753,9 +7758,13 @@ button.bss-item:hover{background:var(--surface)}
       <div class="bss-list">${rows}</div>
       <div class="bss-roles"><span><b>Admin</b> settings, repositories, access</span><span><b>Editor</b> answer questions, move use cases, run scans</span><span><b>Viewer</b> view and comment</span></div>`; }
 
-  const TABS=[['general','General',()=>I('edit',16)],['repos','Repositories',()=>I('folder',16),()=>B.repos.length],['scans','Scans',()=>RF,()=>scansFor('all').length],['access','Access',()=>I('shield',16),()=>B.members.length]];
+  function sharing(){ const V=[['org','Everyone in '+ORG.name,'Anyone in the organization can open it and comment.'],['teams','Teams with access','Only the teams and people in Business system access.'],['owner','Only the owner team',(TEAM_BY[B.owner]||{name:'The owner team'}).name+' only.']];
+    return `<div class="bss-f"><span>Who can see it</span><div class="bss-radio">${V.map(([k,l,d])=>`<button class="${B.vis===k?'on':''}" data-act="bsvis" data-arg="${k}" role="radio" aria-checked="${B.vis===k}"><span class="cx-rb ${B.vis===k?'on':''}"></span><span><b>${esc(l)}</b><small>${esc(d)}</small></span></button>`).join('')}</div></div>
+      <div class="bss-f"><span>Link</span><div class="bss-row"><label class="field" style="flex:1"><input value="syntroper.app/syntroper/systems/commerce-platform" readonly aria-label="Link to this business system"></label><button class="btn" data-act="toast" data-arg="Link copied. People still need access to open it.">${I('copy',16)}Copy link</button></div></div>
+      <div class="bss-note">${I('shield',16)}<span>Who can edit is set in <button class="lnk" data-act="bsaccess">Organization settings › Business system access</button>.</span></div>`; }
+  const TABS=[['general','General',()=>I('edit',16)],['sharing','Sharing',()=>I('users',16)]];
   function renderBS(){ el.hidden=!B.open; if(!B.open) return;
-    const t=TABS.find(x=>x[0]===B.tab); const body={general,repos,scans,access}[B.tab]();
+    const t=TABS.find(x=>x[0]===B.tab); const body={general,repos,scans,access,sharing}[B.tab]();
     const keep=el.querySelector('.bss-scroll'); const st=keep&&el.dataset.tab===B.tab&&el.dataset.scan===String(B.scan)?keep.scrollTop:0;
     const title = B.tab==='scans'&&B.scan ? '' : `<h2 class="bss-h2">${t[1]}${B.tab==='repos'?`<span class="sp"></span><button class="btn" data-act="bsaddopen">${I('plus',16)}Add repository</button>`:''}</h2>`;
     el.innerHTML=`<div class="bss-scroll"><div class="bss-wrap"><div class="bss-head"><button class="back" data-act="bsclose">${I('arrow-left',16)}Go back</button><h1>${esc(B.name)}</h1></div>
@@ -7782,12 +7791,16 @@ button.bss-item:hover{background:var(--surface)}
     bsaddopen(){ B.adding=!B.adding; renderBS(); },
     bsadd(a){ B.repos.push(a); B.adding=false; renderBS(); sync(); toast(`${repo(a).name} added. It is scanned with the next scan.`); },
     bsrm(a){ B.menu=null; const i=B.repos.indexOf(a); B.repos.splice(i,1); if(B.repo===a) B.repo='all'; renderBS(); sync(); undoToast(`${repo(a).name} removed from ${B.name}.`, ()=>{ B.repos.splice(i,0,a); renderBS(); sync(); }); },
-    bsmrm(a){ const m=B.members.splice(+a,1)[0]; renderBS(); undoToast(`${whoName(m)} removed.`, ()=>{ B.members.splice(+a,0,m); renderBS(); }); }
+    bsmrm(a){ const m=B.members.splice(+a,1)[0]; renderBS(); if(S.tab==='org') renderOrg(); undoToast(`${whoName(m)} removed.`, ()=>{ B.members.splice(+a,0,m); renderBS(); if(S.tab==='org') renderOrg(); }); },
+    bsvis(a){ B.vis=a; renderBS(); },
+    bsaccess(){ B.open=false; renderBS(); ACT.cxorg('access'); },
+    bsarchive(){ const sys=(window.SYS_LIST||[]).find(x=>x.id==='commerce'); B.open=false; renderBS(); if(sys) sys.archived=true; S.tab='systems'; render();
+      undoToast(`${B.name} is archived. Syncing has stopped.`, ()=>{ if(sys) sys.archived=false; render(); }); }
   });
   /* the system card links open settings on the right tab */
-  document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('.sys-h [data-act="repos"], .sys-h [data-act="scans"]'); if(!b) return; e.preventDefault(); e.stopImmediatePropagation(); open(b.dataset.act==='repos'?'repos':'scans'); }, true);
+
   document.addEventListener('input',e=>{ if(e.target.id==='bsName'){ B.draft=e.target.value; const btn=el.querySelector('[data-act="bsname"]'); const v=B.draft.trim(); if(btn) btn.disabled=!(v&&v!==B.name); } });
-  document.addEventListener('change',e=>{ const t=e.target; if(t.id==='bsRepoF'){ B.repo=t.value; B.scan=null; renderBS(); return; } if(t.dataset&&t.dataset.bsrole!=null){ const m=B.members[+t.dataset.bsrole]; m.role=t.value; toast(`${whoName(m)} is now ${t.options[t.selectedIndex].text}.`); } if(t.id==='bsOwner'){ B.owner=t.value; renderBS(); } });
+  document.addEventListener('change',e=>{ const t=e.target; if(t.id==='bsRepoF'){ B.repo=t.value; B.scan=null; renderBS(); return; } if(t.dataset&&t.dataset.bsrole!=null){ const m=B.members[+t.dataset.bsrole]; m.role=t.value; toast(`${whoName(m)} is now ${t.options[t.selectedIndex].text}.`); } if(t.id==='bsOwner'){ B.owner=t.value; const sys=(window.SYS_LIST||[]).find(x=>x.id==='commerce'); if(sys) sys.owner=t.value; renderBS(); toast(`${TEAM_BY[t.value].name} now owns ${B.name}.`); } });
   document.addEventListener('keydown',e=>{ if(B.open&&e.key==='Escape'){ e.stopPropagation(); ACT.bsclose(); } if(B.open&&e.key==='Enter'&&e.target.id==='bsName') ACT.bsname(); }, true);
   const _rp=renderPage; renderPage=function(){ _rp(); if(B.open&&B.tab==='scans') renderBS(); };
   /* "Settings" at the bottom of the old Scans list opens these settings */
@@ -8079,7 +8092,7 @@ CTB.unassigned.name='No context';
     return h; }; }
 
 /* ---------- Use cases list: review tabs ---------- */
-const TABS2 = [['all','All'],['review','To review'],['accepted','Accepted'],['rejected','Rejected']];
+const TABS2 = [['all','All'],['review','To review'],['accepted','Accepted']];
 const inTab = (T,u) => { const r=rvOf(u.id); return T==='all' ? r!=='rejected' : T==='review' ? (r==='review'||r==='changes') : r===T; };
 function rowTag(id, T){ const R=UCR[id], r=R.rv;
   if(r==='changes') return '<span class="rvt warn">Changes requested</span>';
@@ -8201,7 +8214,7 @@ function ucPopHTML(){ const P=S.ucx.pop; const u=UCB[P.id], R=UCR[P.id];
     return `<div class="ucpop" role="dialog" aria-label="Reject ${esc(u.name)}"><div class="up-h">Reject ${esc(u.name)}?</div><div class="up-b">
       ${REJ_WHY.map(([k,l])=>`<button class="cx-opt" data-act="ucreason" data-arg="${k}" role="menuitemradio" aria-checked="${P.reason===k}"><span class="cx-rb ${P.reason===k?'on':''}"></span><span class="l">${l}</span></button>${P.reason===k?sub:''}`).join('')}
       ${P.reason?`<textarea id="ucPn" rows="2" placeholder="${P.reason==='other'?'Why? Required':'Add a note (optional)'}">${esc(P.note)}</textarea>`:''}
-      <p class="up-n">It leaves the Galaxy and the next scan won’t suggest it again. You can restore it from Rejected.</p></div>
+      <p class="up-n">It disappears everywhere, and the next sync won’t suggest it again. You can undo right after.</p></div>
       <div class="up-f"><button class="btn sm" data-act="ucpopx">Cancel</button><span class="sp"></span><button class="btn sm dgr" data-act="ucrejgo" ${popOk(P)?'':'disabled'}>Reject</button></div></div>`; }
   const to = R.src==='person' ? `${pAv(R.by,18)}<span>Goes back to <b>${esc(R.by)}</b> to revise.</span>` : `${sIc(18)}<span><b>Syntroper</b> drafts a revision. You review it before anything changes.</span>`;
   return `<div class="ucpop" role="dialog" aria-label="Request changes"><div class="up-h">Request changes</div><div class="up-b">
@@ -8247,7 +8260,7 @@ Object.assign(ACT,{
   ucrejgo(){ const P=S.ucx.pop; if(!P||!popOk(P)) return; const u=UCB[P.id]; S.ucx.pop=null; renderUcPop();
     const snap=setRv(P.id,'rejected',{reason:P.reason, ref:P.ref, note:P.note.trim(), by:ME, when:now()}, 'Rejected · '+rejTxt({reason:P.reason, ref:P.ref}));
     if(P.ref && UCR[P.ref]) UCR[P.ref].log.push([ME, `Marked ${u.name} as ${P.reason==='part'?'part':'a duplicate'} of this`, now()]);
-    undoToast(`Rejected ${u.name}. It’s off the Galaxy.`, ()=>undoRv(P.id,snap)); },
+    undoToast(`Rejected ${u.name}. It’s hidden now.`, ()=>undoRv(P.id,snap)); },
   ucchggo(){ const P=S.ucx.pop; if(!P||!popOk(P)) return; const id=P.id, R=UCR[id], note=P.note.trim(); S.ucx.pop=null; renderUcPop();
     if(R.src==='person'){ ASSIGN['uc:'+id]={k:'person', id:R.by}; R.role='revise'; setRv(id,'changes',{note, by:ME, when:now()},'Requested changes'); toast(`Sent back to ${R.by} to revise.`); return; }
     setRv(id,'changes',{note, by:ME, when:now()},'Requested changes');
@@ -8520,21 +8533,21 @@ try{ render(); }catch(e){ console.error(e); }
 (function(){
 document.body.insertAdjacentHTML('beforeend','<div id="npModal"></div>');
 S.np=null;
-const routeCtx = r => { const o=OPS[r]; return o&&UCB[o.users[0]] ? UCB[o.users[0]].ctx : 'unassigned'; };
+const routeCtx = r => { if(window.API_OWNER&&API_OWNER[r]) return API_OWNER[r]; const o=OPS[r]; return o&&UCB[o.users[0]] ? UCB[o.users[0]].ctx : 'unassigned'; };
 function npCtx(M){ if(M.ctx!=='auto') return M.ctx; const c={}; M.pick.forEach(r=>{ const k=routeCtx(r); c[k]=(c[k]||0)+1; }); return Object.entries(c).sort((a,b)=>b[1]-a[1])[0]?.[0] || 'unassigned'; }
 function npWho(M){ if(M.who!=='auto'){ const [k,id]=M.who.split('|'); return {k,id}; } const c=CTB[npCtx(M)]; return c&&c.owner ? {k:'person',id:c.owner} : null; }
 const npOk = M => !!M.name.trim() && M.pick.length>0;
 function npHTML(){ const M=S.np; if(!M) return ''; const q=M.q.trim().toLowerCase(); const st=M.stage||1;
-  const by={}; Object.keys(OPS).forEach(r=>{ if(q && !r.toLowerCase().includes(q)) return; const k=routeCtx(r); (by[k]=by[k]||[]).push(r); });
+  const by={}; Object.keys(OPS).forEach(r=>{ if(q && !aiMatch(r,q)) return; const k=routeCtx(r); (by[k]=by[k]||[]).push(r); });
   const groups=CTX.filter(c=>by[c.id]).map(c=>({c, rs:by[c.id]}));
-  const list = groups.map(({c,rs})=>{ const n=rs.filter(r=>M.pick.includes(r)).length, all=n===rs.length, mix=n>0&&!all; const open = q || M.open.has(c.id);
+  const list = (q?aiSuggestHTML(q,M):'')+groups.map(({c,rs})=>{ const n=rs.filter(r=>M.pick.includes(r)).length, all=n===rs.length, mix=n>0&&!all; const open = q || M.open.has(c.id);
       const head=`<div class="ng2 ${open?'open':''}"><button class="ngcb" data-act="npgrp" data-arg="${c.id}" role="checkbox" aria-checked="${all?'true':mix?'mixed':'false'}" aria-label="Select all in ${esc(c.name)}"><span class="cx-cb ${all?'on':mix?'mix':''}">${all?I('check',12,'',2.2):mix?'<i></i>':''}</span></button>
         <button class="ngt" data-act="npcol" data-arg="${c.id}" aria-expanded="${!!open}"><span class="nm">${esc(c.id==='unassigned'?'No context':c.name)}</span><span class="ct">${n?`${n} of ${rs.length}`:rs.length}</span><span class="sp"></span>${q?'':I('chevron-down',16,'chev')}</button></div>`;
       const rows = open ? rs.map(r=>{ const on=M.pick.includes(r); const [m,...p]=r.split(' '); const us=OPS[r].users.length;
         return `<button class="nopt ${on?'on':''}" data-act="nppick" data-arg="${esc(r)}" role="checkbox" aria-checked="${on}"><span class="cx-cb ${on?'on':''}">${on?I('check',12,'',2.2):''}</span><span class="meth ${m.toLowerCase()}">${m}</span><code>${esc(p.join(' '))}</code><span class="u">${us} use case${us===1?'':'s'}</span></button>`; }).join('') : '';
       return `<div class="ngrp">${head}${rows}</div>`; }).join('') || `<div class="nempty">No API matches “${esc(M.q)}”.</div>`;
   const stepT = r => M.titles[r]!=null ? M.titles[r] : genStep(r,M.ch).t;
-  const steps = `<div class="npst">${M.pick.map((r,i)=>`<div class="npr" draggable="true" data-i="${i}" data-r="${esc(r)}"><span class="grip" title="Drag to reorder" aria-hidden="true">${I('grip',16)}</span><div class="b"><input class="npT" data-r="${esc(r)}" value="${esc(stepT(r))}" aria-label="Step ${i+1} name"><span>${apiChip(r)}</span></div>
+  const steps = `<div class="npst">${M.pick.map((r,i)=>`<div class="npr" draggable="true" data-i="${i}" data-r="${esc(r)}"><span class="grip" title="Drag to reorder" aria-hidden="true">${I('grip',16)}</span><div class="b"><div class="npar"><span class="k">User</span><input class="npT" data-r="${esc(r)}" value="${esc(stepT(r))}" aria-label="Step ${i+1}: what the user does"></div><div class="npar"><span class="k">System</span><input class="npR" data-r="${esc(r)}" value="${esc(M.resp[r]!=null?M.resp[r]:respOfApi(r))}" aria-label="Step ${i+1}: what the system does"></div><span>${apiChip(r)}</span></div>
       <button class="ib" data-act="npmv" data-arg="${i}|-1" ${i===0?'disabled':''} aria-label="Move up">${I('arrow-up',14)}</button><button class="ib" data-act="npmv" data-arg="${i}|1" ${i===M.pick.length-1?'disabled':''} aria-label="Move down">${I('arrow-down',14)}</button><button class="ib" data-act="nppick" data-arg="${esc(r)}" aria-label="Remove">${I('x',14)}</button></div>`).join('')}</div>`;
   const empty = `<div class="npempty">${I('flow',24)}<b>No steps yet</b><span>Pick the API calls behind this use case on the left. Each one becomes a step you can rename and drag into order.</span></div>`;
   const shared = M.pick.filter(r=>OPS[r]&&OPS[r].users.length).length;
@@ -8546,18 +8559,20 @@ function npHTML(){ const M=S.np; if(!M) return ''; const q=M.q.trim().toLowerCas
       <input class="npAT" data-i="${k}" value="${esc(a.t)}" placeholder="What happens, for example Card is declined"><div class="selw sm"><select class="npAS" data-i="${k}" aria-label="At step"><option value="0">Any step</option>${M.pick.map((r,i)=>`<option value="${i+1}" ${a.at===i+1?'selected':''}>Step ${i+1}</option>`).join('')}</select>${I('chevron-down',14)}</div>
       <button class="ib" data-act="npaltrm" data-arg="${k}" aria-label="Remove">${I('x',14)}</button></div>`).join('');
   const sel = (id, opts) => `<div class="selw"><select id="${id}">${opts}</select>${I('chevron-down',16)}</div>`;
-  const stepper = `<div class="npsteps"><button class="${st===1?'on':'done'}" data-act="npstage" data-arg="1"><span class="k">${st>1?I('check',12,'',2.4):'1'}</span>Details</button><span class="ln"></span><button class="${st===2?'on':''}" data-act="npstage" data-arg="2" ${M.name.trim()?'':'disabled'}><span class="k">2</span>API calls and steps</button></div>`;
+  const stepper = `<div class="npsteps"><button class="${st===1?'on':'done'}" data-act="npstage" data-arg="1"><span class="k">${st>1?I('check',12,'',2.4):'1'}</span>Details</button><span class="ln"></span><button class="${st===2?'on':''}" data-act="npstage" data-arg="2" ${M.name.trim()&&M.per.length?'':'disabled'}><span class="k">${st>2?I('check',12,'',2.4):'2'}</span>Steps</button><span class="ln"></span><button class="${st===3?'on':''}" data-act="npstage" data-arg="3" ${M.pick.length?'':'disabled'}><span class="k">3</span>Dependencies</button></div>`;
   const body1 = `<div class="npb npb1"><div class="npc">
         <div class="fld"><label class="nl" for="npName">Name <span class="req" aria-hidden="true">*</span></label><label class="field"><input id="npName" type="text" autocomplete="off" required aria-required="true" value="${esc(M.name)}" placeholder="What the user gets done, for example Reorder a past order"></label></div>
+        ${window.perFieldHTML?perFieldHTML(M):""}
         <div class="fld"><label class="nl" for="npCh">Channel</label>${sel('npCh', Object.values(CHANNELS).map(C=>`<option value="${C.id}" ${M.ch===C.id?'selected':''}>${esc(C.id==='none'?'Background jobs':C.name)} · ${esc(C.kind)}</option>`).join(''))}</div>
         <div class="fld"><label class="nl" for="npCtx">Bounded context</label>${sel('npCtx', `<option value="auto" ${M.ctx==='auto'?'selected':''}>Let Syntroper suggest after you pick the APIs</option><optgroup label="Already reached from ${esc(CHANNELS[M.ch].name)}">${CTX.filter(c=>reach.has(c.id)).map(ctxOpt).join('')}</optgroup><optgroup label="Other contexts">${CTX.filter(c=>!reach.has(c.id)).map(ctxOpt).join('')}</optgroup>`)}<small class="hint">A context isn’t tied to one channel. The first group is the contexts this channel already reaches.</small></div>
         <div class="fld"><label class="nl" for="npWho">Reviewer</label>${sel('npWho', `<option value="auto" ${M.who==='auto'?'selected':''}>${who&&M.pick.length?esc(whoName(who))+' · owns '+esc(CTB[ctxNow].name):'Owner of the context'}</option>${people.map(([v,l])=>`<option value="${esc(v)}" ${M.who===v?'selected':''}>${esc(l)}</option>`).join('')}`)}</div>
       </div></div>`;
   const body2 = `<div class="npb npb2">
-      <div class="npc npc-l"><h3>API calls <span class="req" aria-hidden="true">*</span><span class="selc">${M.pick.length?`<span class="cnt">${M.pick.length} selected</span><button class="lnk" data-act="npclear">Clear all</button>`:'<span class="none">None selected</span>'}</span></h3>
-        <label class="field">${I('search',16)}<input id="npQ" type="text" autocomplete="off" value="${esc(M.q)}" placeholder="Search routes, for example /store/carts"></label>
+      <div class="npc npc-l"><h3>API calls <span class="req" aria-hidden="true">*</span><span class="selc">${M.pick.length?`<span class="db-selc">${M.pick.length} selected<button data-act="npclear" aria-label="Clear all ${M.pick.length} selected" title="Clear all">${I('x',12)}</button></span>`:'<span class="none">None selected</span>'}</span></h3>
+        <label class="field">${I('search',16)}<input id="npQ" type="text" autocomplete="off" value="${esc(M.q)}" placeholder="Describe it or search routes, e.g. cancel an order"></label>
         <div class="nlist">${list}</div></div>
-      <div class="npc npc-r"><h3>Steps, in order<span class="opt">${M.pick.length?'Drag to reorder':''}</span></h3>
+      <div class="npc npc-r"><h3>Steps, in order<span class="opt">${M.pick.length?'User action → system response · drag to reorder':''}</span></h3>
+        <div class="npai">${sIc(18)}<input id="npAsk" value="${esc(M.ask||'')}" autocomplete="off" placeholder="Describe the next step, Syntroper suggests the API"></div>${(M.ask||'').trim().length>2?aiStepHTML(M):''}
         ${M.pick.length?steps:empty}
         ${shared?`<div class="ninfo">${I('help-circle',14)}<span>${M.pick.length===1?'This API is':shared===M.pick.length?'All of these are':shared+' of these are'} also used by other use cases. That’s fine: an API can be part of many use cases.</span></div>`:''}
         ${M.pick.length?`<h3>Alternate flows</h3>
@@ -8565,12 +8580,56 @@ function npHTML(){ const M=S.np; if(!M) return ''; const q=M.q.trim().toLowerCas
           <button role="radio" aria-checked="${M.altMode==='own'}" class="${M.altMode==='own'?'on':''}" data-act="npalt" data-arg="own">${I('edit',18)}<span><b>I’ll add them</b><small>Write your own. Syntroper can still suggest more later.</small></span></button></div>
         ${M.altMode==='own'?`<div class="npal">${altRows}<button class="btn sm" data-act="npaltadd">${I('plus',14)}Add alternate flow</button></div>`:''}`:''}
       </div></div>`;
-  const foot = st===1 ? `<button class="btn" data-act="npclose">Cancel</button><span class="sp"></span><button class="btn primary" data-act="npstage" data-arg="2" ${M.name.trim()?'':'disabled'}>Next: API calls${I('arrow-right',14)}</button>`
-    : `<button class="btn" data-act="npstage" data-arg="1">${I('arrow-left',14)}Back</button><span class="sp"></span><button class="btn primary" data-act="npgo" ${npOk(M)?'':'disabled'}>Propose use case</button>`;
+  const foot = st===1 ? `<button class="btn" data-act="npclose">Cancel</button><span class="sp"></span><button class="btn primary" data-act="npstage" data-arg="2" ${M.name.trim()&&M.per.length?'':'disabled'}>Next: steps${I('arrow-right',14)}</button>`
+    : st===2 ? `<button class="btn" data-act="npstage" data-arg="1">${I('arrow-left',14)}Back</button><span class="sp"></span><button class="btn primary" data-act="npstage" data-arg="3" ${M.pick.length?'':'disabled'}>Next: dependencies${I('arrow-right',14)}</button>`
+    : `<button class="btn" data-act="npstage" data-arg="2">${I('arrow-left',14)}Back</button><span class="sp"></span>${npOpen(M)?`<small class="np-wait">Resolve ${npOpen(M)} first</small>`:''}<button class="btn primary" data-act="npgo" ${npOk(M)&&!npOpen(M)?'':'disabled'}>Propose use case</button>`;
   return `<div class="ncm-bg" data-act="npclose"></div><div class="ncm npm npx st${st}" role="dialog" aria-modal="true" aria-labelledby="npT">
     <div class="mhd"><span class="ic">${kindIc('usecase',16)}</span><b id="npT">New use case</b>${stepper}<button class="ib" data-act="npclose" aria-label="Close">${I('x',16)}</button></div>
-    ${st===1?body1:body2}
+    ${st===1?body1:st===2?body2:body3(M)}
     <div class="mft">${foot}</div></div>`; }
+/* FB39 · new use case, step 3: see where each API lives and what it reaches, resolve before proposing */
+function npDeps(M){ const tgt=npCtx(M); M.dres=M.dres||{}; const issues=[], reach=[];
+  M.pick.forEach(r=>{ const oc=routeCtx(r); if(oc!==tgt && oc!=='unassigned') issues.push({key:'own:'+r, r, oc});
+    opInts(r).map(i=>INB[i]).filter(Boolean).forEach(it=>reach.push({it, r})); });
+  issues.forEach(x=>x.done=!!M.dres[x.key]); return {tgt, issues, reach}; }
+window.npDeps = () => S.np ? npDeps(S.np) : null;
+const npOpen = M => npDeps(M).issues.filter(x=>!x.done).length;
+function body3(M){ const D=npDeps(M); const tn=D.tgt==='unassigned'?'No context':CTB[D.tgt].name; const cN=c=>c==='unassigned'?'No context':CTB[c]?CTB[c].name:ctxName(c);
+  const mp = a => { const [m,...p]=a.split(' '); return `<span class="meth ${m.toLowerCase()}">${m}</span><code title="${esc(a)}">${esc(p.join(' '))}</code>`; };
+  const opts = x => [['call',`Keep it in <b>${esc(cN(x.oc))}</b>. ${esc(tn)} calls it.`],['here',`Put this use case in <b>${esc(cN(x.oc))}</b> instead.`],['copy',`Give ${esc(tn)} its own copy of the endpoint.`]];
+  const iss = D.issues.map(x=>{ const r=M.dres[x.key]; return `<div class="db-i ${r?'done':''}"><div class="db-it">${I(r?'check-circle':'alert',16)}<span><b>API from another context</b><code>${esc(x.r)}</code><small>Owned by ${esc(cN(x.oc))}. This use case lives in ${esc(tn)}.</small></span></div>
+      <div class="db-op">${opts(x).map(([k,l])=>`<button class="${r===k?'on':''}" data-act="npdres" data-arg="${esc(x.key)}|${k}"><span class="cx-rb ${r===k?'on':''}"></span><span>${l}</span></button>`).join('')}</div></div>`; }).join('');
+  const shared = M.pick.filter(r=>(OPS[r]||{users:[]}).users.length);
+  const plan = [ `Create “${esc(M.name.trim())}” in ${esc(tn)} with ${M.pick.length} step${M.pick.length===1?'':'s'}`, ...D.issues.filter(x=>M.dres[x.key]==='call').map(x=>`${esc(tn)} calls ${esc(cN(x.oc))} for <code>${esc(x.r)}</code>`), ...D.issues.filter(x=>M.dres[x.key]==='copy').map(x=>`Copy <code>${esc(x.r)}</code> into ${esc(tn)}`) ];
+  const side = `<div class="db-side"><div class="db-sc">
+      <div class="db-sec"><div class="db-sh">Lives in<span class="sp"></span><span class="tag acc">${esc(tn)}</span></div><div class="db-info">${I('help-circle',14)}<span>${M.ctx==='auto'?'Syntroper picked the context that owns most of these APIs.':'You picked this context in step 1.'}</span></div></div>
+      <div class="db-sec"><div class="db-sh">Dependencies to resolve<span class="count">${npOpen(M)}</span></div>${iss||`<div class="db-ok">${I('check-circle',16)}Every API lives in ${esc(tn)}.</div>`}
+        ${shared.length?`<div class="db-info">${I('check',14)}<span>${shared.length} API${shared.length===1?' is':'s are'} also used by other use cases. That’s fine: an API can be part of many use cases.</span></div>`:''}
+        ${D.reach.length?`<div class="db-info">${I('check',14)}<span>It reaches ${new Set(D.reach.map(x=>x.it.to)).size} other context${new Set(D.reach.map(x=>x.it.to)).size===1?'':'s'} through ${new Set(D.reach.map(x=>x.it.id)).size} integration point${new Set(D.reach.map(x=>x.it.id)).size===1?'':'s'}.</span></div>`:''}</div>
+      ${npOpen(M)?'':`<div class="db-plan"><div class="h">${sIc(14)}What happens when you propose it</div><ol>${plan.map(t=>`<li>${t}</li>`).join('')}</ol></div>`}
+    </div></div>`;
+  const ucCard = `<div class="db-c move"><div class="db-chd">${kindIc('usecase',14)}<b>${esc(M.name.trim()||'New use case')}</b><span class="tag acc">new</span></div><div class="db-apis">${M.pick.map(r=>{ const oc=routeCtx(r); const key='own:'+r; const rs=M.dres[key]; const own=oc!==D.tgt&&oc!=='unassigned';
+      const flags=[]; if(own) flags.push(`<span class="${rs?'ok':'warn'}">${rs==='call'?'Calls '+esc(cN(oc)):rs==='copy'?'Own copy':rs==='here'?'':'Owned by '+esc(cN(oc))}</span>`);
+      opInts(r).map(i=>INB[i]).filter(Boolean).forEach(it=>flags.push(`<span class="acc" data-anc="np-pt:${it.id}">${kindIc('point',12)}${esc(it.label.length>22?it.label.slice(0,20)+'…':it.label)}</span>`));
+      return `<div class="db-a ${own?(rs?'ok':'warn'):''}" data-anc="np-m:${esc(r)}"><div class="db-ar">${mp(r)}</div>${flags.length?`<div class="db-fl">${flags.join('')}</div>`:''}</div>`; }).join('')}</div></div>`;
+  const owners=[...new Set(M.pick.map(routeCtx))].filter(c=>c!==D.tgt&&c!=='unassigned');
+  const ownCols = owners.map(c=>`<div class="db-col"><div class="db-ch">${kindIc('context',16)}<b>${esc(cN(c))}</b><small>owns ${M.pick.filter(r=>routeCtx(r)===c).length}</small></div>${M.pick.filter(r=>routeCtx(r)===c).map(r=>{ const us=(OPS[r]||{users:[]}).users.filter(x=>UCB[x]); const rs=M.dres['own:'+r];
+      return `<div class="db-c stay"><div class="db-a ${rs?'ok':'warn'}" data-anc="np-o:${esc(r)}"><div class="db-ar">${mp(r)}</div><div class="db-fl"><span>${us.length} use case${us.length===1?'':'s'} use it</span></div></div></div>`; }).join('')}</div>`).join('');
+  const tos=[...new Set(D.reach.map(x=>x.it.to))];
+  const reachCol = tos.length ? `<div class="db-col other"><div class="db-ch">${kindIc('external',16)}<b>What it reaches</b><small>${tos.length}</small></div>${tos.map(t=>`<div class="db-p" data-anc="np-to:${esc(t)}">${CTB[t]?kindIc('context',14):kindIc('external',14)}<b>${esc(ctxName(t))}</b><span class="tag out">${new Set(D.reach.filter(x=>x.it.to===t).map(x=>x.it.id)).size} point(s)</span></div>`).join('')}</div>` : '';
+  requestAnimationFrame(()=>npLines(D));
+  return `<div class="npb3">${side}<div class="db-cv" id="npCv"><div class="db-cvi">${ownCols}<div class="db-col target"><div class="db-ch">${kindIc('context',16)}<b>${esc(tn)}</b><small>lives here</small></div>${ucCard}</div>${reachCol}<svg class="db-lines"></svg></div><div class="db-leg"><span><i class="w"></i>Needs a decision</span><span><i class="o"></i>Resolved</span><span><i class="n"></i>Reaches</span></div></div></div>`; }
+function npLines(D){ const root=document.getElementById('npCv'); if(!root||!S.np) return; const inner=root.querySelector('.db-cvi'), svg=root.querySelector('.db-lines'); const R0=inner.getBoundingClientRect();
+  const pos=e=>{ const r=e.getBoundingClientRect(); return {l:r.left-R0.left, r:r.right-R0.left, y:r.top-R0.top+Math.min(r.height/2,16)}; }; let p='';
+  const link=(a,b,cls)=>{ if(!a||!b) return; const A=pos(a), B=pos(b); const ax=A.r<B.l?A.r:A.l, bx=A.r<B.l?B.l:B.r; const dx=Math.max(40,Math.abs(bx-ax)/2)*(bx>ax?1:-1); p+=`<path class="${cls}" d="M${ax} ${A.y}C${ax+dx} ${A.y} ${bx-dx} ${B.y} ${bx} ${B.y}"/>`; };
+  const find = pre => [...root.querySelectorAll('[data-anc]')].filter(e=>e.dataset.anc.startsWith(pre));
+  S.np.pick.forEach(r=>{ const a=find('np-m:').find(e=>e.dataset.anc==='np-m:'+r), o=find('np-o:').find(e=>e.dataset.anc==='np-o:'+r); if(o) link(a,o,S.np.dres['own:'+r]?'ok':'warn'); });
+  D.reach.forEach(x=>link(root.querySelector(`[data-anc="np-pt:${x.it.id}"]`), find('np-to:').find(e=>e.dataset.anc==='np-to:'+x.it.to), 'info'));
+  svg.setAttribute('width', inner.scrollWidth); svg.setAttribute('height', inner.scrollHeight); svg.innerHTML=p; }
+Object.assign(ACT,{
+  npdres(a){ const [k,v]=a.split('|'); const M=S.np; M.dres=M.dres||{}; if(v==='here'){ const r=k.slice(4); M.ctx=routeCtx(r); M.dres={}; renderNP(); toast(`This use case now lives in ${CTB[M.ctx]?CTB[M.ctx].name:'that context'}.`); return; } M.dres[k]=M.dres[k]===v?null:v; renderNP(); }
+});
+
 function renderNP(focus){ const el=$('#npModal'); const keep=['.nlist','.npc-l','.npc-r'].map(q=>{ const e=el.querySelector(q); return e?e.scrollTop:0; });
   el.innerHTML=npHTML(); ['.nlist','.npc-l','.npc-r'].forEach((q,k)=>{ const e=el.querySelector(q); if(e) e.scrollTop=keep[k]; });
   if(focus){ const f=$('#'+focus.id); if(f){ f.focus(); if(focus.pos!=null) try{ f.setSelectionRange(focus.pos,focus.pos); }catch(e){} } } }
@@ -8578,7 +8637,7 @@ window.renderNP=renderNP;
 
 
 Object.assign(ACT,{
-  npopen(r){ S.cx.pop=null; S.ai&&(S.ai.focus=false); const pick=r&&OPS[r]?[r]:[]; S.np={name:'', ch:'store', ctx:'auto', pick, q:'', open:new Set(pick.map(routeCtx)), who:'auto', titles:{}, altMode:'ai', alts:[], stage:1}; if(pick.length&&/\/admin\//.test(r)) S.np.ch='admin'; renderNP({id:'npName'}); },
+  npopen(r){ S.cx.pop=null; S.ai&&(S.ai.focus=false); const pick=r&&OPS[r]?[r]:[]; S.np={name:'', ch:'store', ctx:'auto', pick, q:'', open:new Set(pick.map(routeCtx)), who:'auto', titles:{}, resp:{}, per:[], ask:'', altMode:'ai', alts:[], stage:1}; if(pick.length&&/\/admin\//.test(r)) S.np.ch='admin'; renderNP({id:'npName'}); },
   npclose(){ S.np=null; renderNP(); },
   nppick(r){ const P=S.np.pick; const i=P.indexOf(r); if(i>=0) P.splice(i,1); else P.push(r); renderNP(); },
   npcol(c){ const O=S.np.open; O.has(c)?O.delete(c):O.add(c); renderNP(); },
@@ -8588,8 +8647,8 @@ Object.assign(ACT,{
   npch(k){ S.np.ch=k; renderNP(); },
   npdraft(){ S.np.draft=!S.np.draft; renderNP(); },
   npgo(){ const M=S.np; if(!npOk(M)) return; const ctx=npCtx(M), who=npWho(M), name=M.name.trim().charAt(0).toUpperCase()+M.name.trim().slice(1);
-    const steps=M.pick.map(r=>{ const st=genStep(r,M.ch); const t=(M.titles[r]||'').trim(); if(t) st.t=t; return st; }); const alts = M.altMode==='ai' ? genFlow({apis:M.pick, ch:M.ch, goal:name+'.'}).alts : M.alts.filter(a=>a.t.trim()).map(a=>al_(a.t.trim(), a.kind, a.at, [], {end:a.kind==='cancel'?'Nothing changes':'Nothing saved', by:ME}));
-    const id=ucCreate({name, ctx, ch:M.ch, apis:[...M.pick], steps, alts, src:'person', by:ME, assign:who});
+    const steps=M.pick.map(r=>{ const st=genStep(r,M.ch); const t=(M.titles[r]||'').trim(); if(t) st.t=t; st.r=(M.resp[r]!=null?M.resp[r]:respOfApi(r)).trim(); return st; }); const per=[...M.per]; const alts = M.altMode==='ai' ? genFlow({apis:M.pick, ch:M.ch, goal:name+'.'}).alts : M.alts.filter(a=>a.t.trim()).map(a=>al_(a.t.trim(), a.kind, a.at, [], {end:a.kind==='cancel'?'Nothing changes':'Nothing saved', by:ME}));
+    const id=ucCreate({name, ctx, ch:M.ch, apis:[...M.pick], steps, alts, src:'person', by:ME, assign:who}); UCB[id].personas=per;
     S.np=null; renderNP(); S.level=0; S.tab='codona'; navigate({v:'item', sel:{t:'uc', id}});
     undoToast(`Proposed ${name}. ${who?whoName(who)+' was asked to review it.':'Assign someone to review it.'}`, ()=>{ ucRemove(id); if(S.side.v==='item'&&S.side.sel.id===id) ACT.rpclose(); else render(); }); }
 });
@@ -8693,8 +8752,8 @@ window.renderFlowCanvas=function(focus){ const id=S.ucx.flow; const on=!!id && S
   if(!on){ shownId=null; return; } const L=build(id); if(shownId!==id){ shownId=id; requestAnimationFrame(()=>fit(L,false)); } else if(focus) focusStep(L); };
 /* the flowchart belongs to the selected use case, on the Galaxy level */
 { const _r=render; render=function(){ const sd=S.side; if(S.ucx.flow && !(S.tab==='codona' && S.level===0 && sd.v==='item' && sd.sel && sd.sel.t==='uc' && sd.sel.id===S.ucx.flow)) S.ucx.flow=null; _r(); renderFlowCanvas(); }; }
-{ const _rc=renderChrome; renderChrome=function(){ _rc(); if(S.ucx.flow){ $('#cTop').insertAdjacentHTML('afterbegin',`<button class="btn fx-close float" data-act="ucview" data-arg="${esc(S.ucx.flow)}|text">${I('x',16)}Close flowchart</button>`); } }; }
-{ const _c=crumbHTML; crumbHTML=function(){ const h=_c(); if(!S.ucx.flow) return h; return h.replace(/<span class="ci cur">([^<]*)<\/span>$/, (m,t)=>`${crumbBtn(t,'ucview',S.ucx.flow+'|text')}${SEP}<span class="ci cur">Flowchart</span>`); }; }
+{ const _rc=renderChrome; renderChrome=function(){ _rc(); if(S.ucx.flow){ $('#cTop').insertAdjacentHTML('afterbegin',`<button class="btn fx-close float" data-act="ucview" data-arg="${esc(S.ucx.flow)}|text">${I('x',16)}Close diagram</button>`); } }; }
+{ const _c=crumbHTML; crumbHTML=function(){ const h=_c(); if(!S.ucx.flow) return h; return h.replace(/<span class="ci cur">([^<]*)<\/span>$/, (m,t)=>`${crumbBtn(t,'ucview',S.ucx.flow+'|text')}${SEP}<span class="ci cur">${S.ucx.fv==='seq'?'Sequence diagram':'Flowchart'}</span>`); }; }
 { const _z=ACT.zoom; ACT.zoom=function(a){ if(S.ucx.flow && S.tab==='codona'){ if(a==='fit') fit(layout(S.ucx.flow),true); else d3.select(box).transition().duration(200).call(zoom.scaleBy,a==='in'?1.25:.8); return; } return _z.call(this,a); }; }
 { const _p=currentPct; currentPct=function(){ return S.ucx.flow ? Math.round(T.k*100) : _p(); }; }
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && S.ucx.flow && !S.ucx.pop && !S.np && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){ e.stopImmediatePropagation(); S.ucx.flow=null; render(); } }, true);
@@ -9398,12 +9457,12 @@ function tabBody(id, tab){ const F=ucFlowOf(id), u=UCB[id]; const hl=S.ucx.hl&&S
 function summaryText(id){ const F=ucFlowOf(id), u=UCB[id]; const alts=F.alts.filter(a=>!a._del);
   const apis=new Set(F.steps.flatMap(s=>s.apis)).size, files=new Set(codeOf(id).map(b=>b.file)).size; const pl=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
   return `${esc(u.goal)} <b>${pl(F.steps.length,'step')}</b>, ${pl(apis,'API call')} and ${pl(files,'file')}.${alts.length?` Other paths: ${alts.slice(0,3).map(a=>esc(a.t.charAt(0).toLowerCase()+a.t.slice(1))).join(', ')}${alts.length>3?` and ${alts.length-3} more`:''}.`:''}`; }
-function ucf2HTML(id){ const F=ucFlowOf(id); const pv=S.ai.pend[id]; const tab=S.uct.tab[id]||'apis'; const on=S.ucx.flow===id; const hl=S.ucx.hl&&S.ucx.hl.id===id?S.ucx.hl.i:null;
+function ucf2HTML(id){ const F=ucFlowOf(id); const pv=S.ai.pend[id]; const tab=S.uct.tab[id]||'code'; const on=S.ucx.flow===id; const hl=S.ucx.hl&&S.ucx.hl.id===id?S.ucx.hl.i:null;
   const dec=new Set(F.alts.filter(a=>!a._del&&a.at).map(a=>a.at)).size, nAlt=F.alts.filter(a=>!a._del).length; const pl=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
   const apis=new Set(F.steps.flatMap(s=>s.apis)).size, pts=UCB[id].i.filter(i=>INB[i]).length, aff=impactOf([id]).others.length, blocks=codeOf(id).length;
-  const T=[['apis','APIs',apis],['code','Code blocks',blocks],['pts','Integration points',pts],['aff','Affected use cases',aff]];
+  const T=[['code','Code blocks',blocks],['apis','APIs',apis],['pts','Integration points',pts],['aff','Affected use cases',aff]];
   return `<div class="ucf2">${pv?`<div class="ucpv">${sIc(16)}<span>Previewing Syntroper’s change in the flowchart</span><button class="btn sm" data-act="aidiscard" data-arg="${id}">Discard</button><button class="btn primary sm" data-act="aiapply" data-arg="${id}">Apply</button></div>`:''}
-    <div class="ucf2-h"><b>Flowchart</b><span class="sp"></span><button class="btn sm ${on?'':'primary'}" data-act="ucview" data-arg="${id}|${on?'text':'flow'}">${I(on?'x':'flow',14)}${on?'Close flowchart':'Open flowchart'}</button></div>
+    <div class="ucf2-h"><b>Diagram</b><span class="sp"></span><button class="btn sm ${on?'':'primary'}" data-act="ucview" data-arg="${id}|${on?'text':'flow'}">${I(on?'x':'flow',14)}${on?'Close diagram':'Open diagram'}</button></div>
     <div class="aisum"><div><small>Summary by Syntroper</small><p>${summaryText(id)}</p></div></div>
     <div class="stats"><span>${I('fc-proc',14)}${pl(F.steps.length,'step')}</span><span>${I('fc-dec',14)}${pl(dec,'decision')}</span><span>${I('fc-alt',14)}${pl(nAlt,'other path')}</span></div>
     <div class="uct uct5" role="tablist" aria-label="What to show">${T.map(([k,l,n])=>`<button role="tab" aria-selected="${tab===k}" class="${tab===k?'on':''}" data-act="ucttab" data-arg="${id}|${k}">${({apis:'APIs',code:'Code',pts:'Integration points',aff:'Affected'})[k]}<span class="count">${n}</span></button>`).join('')}</div>
@@ -9422,7 +9481,7 @@ Object.assign(ACT,{
 /* =========================================================
    5 · flowchart, two variations: Symbols (real flowchart shapes) and Cards (rectangles with a symbol icon)
 ========================================================= */
-S.ucx.fv='cards';
+S.ucx.fv='seq';
 const box=$('#ucFlow'), fw=box.querySelector('.fw'); let T=d3.zoomIdentity, shown=null;
 const zoom=d3.zoom().scaleExtent([.3,2.5]).filter(e=>(e.type==='wheel' ? (!e.target.closest('.fxx')||e.ctrlKey) : !e.target.closest('[data-act]')) && (!e.ctrlKey||e.type==='wheel') && !e.button)
   .on('zoom',e=>{ T=e.transform; fw.style.transform=`translate(${T.x}px,${T.y}px) scale(${T.k})`; updateDockPct(); });
@@ -9455,10 +9514,10 @@ function nodeHTML(id, n, L){ const hl=S.ucx.hl&&S.ucx.hl.id===id?S.ucx.hl.i:null
     if(n.k==='dec') return `<div class="fn f2-dec" style="${pos}"><svg width="${n.w}" height="${n.h}"><polygon points="${n.w/2},1 ${n.w-1},${n.h/2} ${n.w/2},${n.h-1} 1,${n.h/2}"/></svg><span>${esc(n.t)}</span></div>`;
     return `<div class="fn f2-alt ${n.a.kind} ${n.a._new?'nw':''} ${n.a._del?'dl':''}" role="button" tabindex="0" data-act="ucstep" data-arg="${id}|${n.a.at||1}" style="${pos}"><span class="t"><span class="ki">${altIc(n.a.kind)}</span>${esc(n.a.t)}</span>${n.a.steps.length?`<small>${esc(n.a.steps[0])}${n.a.steps.length>1?' …':''}</small>`:''}</div>`; }
   if(n.k==='term') return `<div class="fn fx-c term" style="${pos}"><div class="hd">${n.end?I('check-circle',16):kindIc('channel',14)}<span class="t">${esc(n.t)}</span><span class="sp"></span>${symIc('fc-term',n.end?'End':'Start')}</div>${n.sub?`<small>Starts when ${esc(n.sub.charAt(0).toLowerCase()+n.sub.slice(1))}</small>`:''}</div>`;
-  if(n.k==='proc'){ const s=n.s; const O=fxO(id,n.i); return `<div class="fn fx-c ${hl===n.i?'on':''} ${O?'open':''} ${s._new?'nw':''} ${s._del?'dl':''}" role="button" tabindex="0" data-act="ucstep" data-arg="${id}|${n.i}" data-ni="${n.i}" style="${pos}"><div class="hd"><span class="n">${n.i}</span><span class="sp"></span>${symIc('fc-proc','Step')}</div><span class="t">${esc(s.t)}</span>${fxChips(id,n.i,s)}${O?fxPanel(id,n.i,O):''}</div>`; }
+  if(n.k==='proc'){ const s=n.s; const O=fxO(id,n.i); return `<div class="fn fx-c ${hl===n.i?'on':''} ${O?'open':''} ${s._new?'nw':''} ${s._del?'dl':''}" role="button" tabindex="0" data-act="ucstep" data-arg="${id}|${n.i}" data-ni="${n.i}" style="${pos}"><div class="hd"><span class="n">${n.i}</span><span class="sp"></span>${symIc('fc-proc','Step')}</div><span class="t">${esc(s.t)}</span><span class="rs"><b>System</b> ${esc(respOf(s))}</span>${fxChips(id,n.i,s)}${O?fxPanel(id,n.i,O):''}</div>`; }
   if(n.k==='dec') return `<div class="fn fx-c dec" style="${pos}"><div class="hd"><span class="t">${esc(n.t)}</span><span class="sp"></span>${symIc('fc-dec','Decision')}</div><div class="br"><span><b>Yes</b>Continue to the next step</span>${n.al.map(({a})=>`<span><b>${esc(edgeLbl(a))}</b>${esc(a.t)}</span>`).join('')}</div></div>`;
   return `<div class="fn fx-c alt ${n.a.kind} ${n.a._new?'nw':''} ${n.a._del?'dl':''}" role="button" tabindex="0" data-act="ucstep" data-arg="${id}|${n.a.at||1}" style="${pos}"><div class="hd"><span class="ki">${altIc(n.a.kind)}</span><span class="t">${esc(n.a.t)}</span><span class="sp"></span>${symIc('fc-alt','Other path')}</div><small>${n.a.steps.map(esc).join(' · ')}</small><small style="color:var(--text)">${n.a.back?'↩ Back to step '+n.a.back:'Ends · '+esc(n.a.end||'')}</small></div>`; }
-function build(id, MH){ const L=layout(id, S.ucx.fv, MH); const mid=L.cx; let p='', lb='';
+function build(id, MH){ if(S.ucx.fv==='seq') return buildSeq(id); const L=layout(id, S.ucx.fv, MH); const mid=L.cx; let p='', lb='';
   const arrow=(x,y,d)=>d==='down'?`M${x-4} ${y-6}L${x} ${y}L${x+4} ${y-6}`:d==='left'?`M${x+6} ${y-4}L${x} ${y}L${x+6} ${y+4}`:`M${x-6} ${y-4}L${x} ${y}L${x-6} ${y+4}`;
   const label=(x,y,t)=>{ const w=t.length*6.6+12; lb+=`<rect class="elb" x="${x-w/2}" y="${y-10}" width="${w}" height="20" rx="4"/><text class="el2" x="${x}" y="${y+4}" text-anchor="middle">${esc(t)}</text>`; };
   L.E.forEach(e=>{ const y0=e.a.y+e.a.h, y1=e.b.y; p+=`<path class="hp" d="M${mid} ${y0}V${y1-1}"/><path class="hp" d="${arrow(mid,y1-1,'down')}"/>`; if(e.lbl) label(mid+18,(y0+y1)/2,e.lbl); });
@@ -9473,14 +9532,15 @@ function area(){ const v=$('#vCodona'); const right=(!$('#cxItem').hidden?404:24
 function fit(L, anim){ const a=area(); const k=Math.min(1, a.w/(L.Wd+20), a.h/(L.H+20)); const t=d3.zoomIdentity.translate(a.x+Math.max(0,(a.w-L.Wd*k)/2), a.y+Math.max(0,(a.h-L.H*k)/2)).scale(k);
   (anim?d3.select(box).transition().duration(250):d3.select(box)).call(zoom.transform,t); }
 function legend(){ const lg=$('#ucLeg'); if(!lg) return; lg.classList.add('fx-leg2');
+  if(S.ucx.fv==='seq'){ lg.innerHTML=`<span><i class="sq-k call"></i>Call</span><span><i class="sq-k ret"></i>Response</span><span><i class="sq-k event"></i>Event</span><span><i class="sq-k alt"></i>opt / alt · other paths</span><span>${fbI('code',12)}Click a message to see its code</span>`; return; }
   lg.innerHTML = [['fc-term','Start / end'],['fc-proc','Step'],['fc-dec','Decision'],['fc-alt','Other path']].map(([k,l])=>`<span>${I(k,16)}${l}</span>`).join('')+`<span><i class="d"></i>Fails</span><span><i class="b"></i>Back to a step</span>`; }
 window.renderFlowCanvas=function(focus){ const id=S.ucx.flow; const on=!!id && S.tab==='codona' && UCB[id]; box.hidden=!on; $('#ucLeg').hidden=!on; $('#vCodona').classList.toggle('flowing',!!on);
-  if(!on){ shown=null; return; } const L=build(id); legend(); const key=id+'|'+S.ucx.fv; if(shown!==key){ shown=key; requestAnimationFrame(()=>fit(L,false)); }
+  if(!on){ shown=null; return; } const L=build(id); legend(); const key=id+'|'+S.ucx.fv+'|'+(S.ucx.fv==='seq'?S.ucx.sl:''); if(shown!==key){ shown=key; requestAnimationFrame(()=>fit(L,false)); }
   else if(focus && S.ucx.hl){ const n=L.N.find(m=>m.k==='proc'&&m.i===S.ucx.hl.i); if(n){ const a=area(); const sy=T.y+n.y*T.k; if(sy<a.y||sy+n.h*T.k>a.y+a.h) d3.select(box).transition().duration(250).call(zoom.transform, d3.zoomIdentity.translate(T.x, a.y+a.h/2-(n.y+n.h/2)*T.k).scale(T.k)); } } };
-{ const _z=ACT.zoom; ACT.zoom=function(a){ if(S.ucx.flow && S.tab==='codona'){ if(a==='fit') fit(layout(S.ucx.flow,S.ucx.fv),true); else d3.select(box).transition().duration(200).call(zoom.scaleBy,a==='in'?1.25:.8); return; } return _z.call(this,a); }; }
+{ const _z=ACT.zoom; ACT.zoom=function(a){ if(S.ucx.flow && S.tab==='codona'){ if(a==='fit') fit(lastL||layout(S.ucx.flow,S.ucx.fv),true); else d3.select(box).transition().duration(200).call(zoom.scaleBy,a==='in'?1.25:.8); return; } return _z.call(this,a); }; }
 { const _p=currentPct; currentPct=function(){ return S.ucx.flow ? Math.round(T.k*100) : _p(); }; }
 { const _rc=renderChrome; renderChrome=function(){ _rc(); if(!S.ucx.flow) return; const v=S.ucx.fv;
-    $('#cTop').insertAdjacentHTML('beforeend', `<div class="fvt float" role="tablist" aria-label="Flowchart style">${[['cards','Cards with icons'],['symbols','Flowchart symbols']].map(([k,l])=>`<button role="tab" aria-selected="${v===k}" class="${v===k?'on':''}" data-act="ucfv" data-arg="${k}">${l}</button>`).join('')}</div>`); }; }
+    $('#cTop').insertAdjacentHTML('beforeend', `${v==='seq'?`<div class="fvt float sql" role="tablist" aria-label="Level">${[['sys','System'],['ctx','Bounded contexts'],['code','Code']].map(([k,l],i)=>`<button role="tab" aria-selected="${S.ucx.sl===k}" class="${S.ucx.sl===k?'on':''}" data-act="ucsl" data-arg="${k}"><span class="lvn">${i+1}</span>${l}</button>`).join('')}</div>`:''}<div class="fvt float" role="tablist" aria-label="Diagram">${[['seq','Sequence diagram'],['cards','Flowchart']].map(([k,l])=>`<button role="tab" aria-selected="${v===k||(k==='cards'&&v==='symbols')}" class="${v===k||(k==='cards'&&v==='symbols')?'on':''}" data-act="ucfv" data-arg="${k}">${l}</button>`).join('')}</div>`); }; }
 /* FB33 · code inside the flowchart: click a file, an API or "Show all code" on a step and the code opens in the card */
 S.fx = {open:{}, int:{}};
 let lastL=null;
@@ -9518,7 +9578,88 @@ Object.assign(ACT,{
 });
 { const _c=ACT.cbkmore; ACT.cbkmore=function(k){ _c(k); if(S.ucx.flow) renderFlowCanvas(); }; }
 
-ACT.ucfv = v => { S.ucx.fv=v; render(); };
+/* FB38 · sequence diagram, three levels of the same story: System · Bounded contexts · Code */
+S.ucx.sl = S.ucx.sl || 'sys'; S.sq = {open:null};
+const rCtx = r => { if(window.API_OWNER&&API_OWNER[r]) return API_OWNER[r]; const o=OPS[r]; return o&&UCB[o.users[0]] ? UCB[o.users[0]].ctx : 'unassigned'; };
+const cLabel = c => c==='unassigned' ? 'No context' : (CTB[c]?CTB[c].name:c);
+function seqModel(id){ const F=ucFlowOf(id), u=UCB[id]; const lv=S.ucx.sl; const B=codeOf(id);
+  const per=(u.personas||personaOf(u)).map(p=>(PERSONAS.find(x=>x.id===p)||{name:p}).name).join(' · ');
+  const app = u.ch==='both'?'Storefront · Admin':u.ch==='none'?'Jobs and webhooks':CHANNELS[u.ch].name;
+  const L=[]; const lane=(k,label,sub,kind)=>{ let x=L.find(l=>l.k===k); if(!x){ x={k,label,sub,kind}; L.push(x); } return x; };
+  lane('p', per||'User', 'Persona', 'person');
+  lane('app', lv==='code'?'Screens':app, lv==='code'?app:(u.ch==='none'?'Trigger':'App'), 'channel');
+  const sysName=(S.bs&&S.bs.name)||'Commerce platform'; const M=[];
+  F.steps.forEach((s,i)=>{ const st=i+1; const fl={nw:!!s._new, dl:!!s._del};
+    M.push({row:'step', step:st, t:s.t, ...fl});
+    const scr=B.find(b=>b.step===st&&(b.kind==='Screen'||b.kind==='Server action'));
+    M.push({f:'p', to:'app', label:s.t, kind:'act', step:st, code:scr, O:scr?{k:'f',v:scr.file}:null, ...fl});
+    s.apis.forEach(a=>{ const rb=B.find(b=>b.route===a);
+      if(lv==='sys'){ lane('sys', sysName, 'Business system', 'system'); M.push({f:'app', to:'sys', label:a, kind:'call', mono:1, step:st, code:rb, O:{k:'a',v:a}, ...fl}); }
+      else if(lv==='ctx'){ const oc=rCtx(a); const ol=lane('c:'+oc, cLabel(oc), 'Bounded context', 'context'); M.push({f:'app', to:ol.k, label:a, kind:'call', mono:1, step:st, code:rb, O:{k:'a',v:a}, ...fl});
+        opInts(a).forEach(iid=>{ const it=INB[iid]; if(!it) return; const tk=CTB[it.to]?'c:'+it.to:'x:'+it.to; const fk=CTB[it.from]?'c:'+it.from:ol.k;
+          if(!L.find(l=>l.k===fk)) lane(fk, cLabel(it.from), 'Bounded context', 'context');
+          lane(tk, ctxName(it.to), CTB[it.to]?'Bounded context':'Outside system', CTB[it.to]?'context':'external');
+          const ev=/event/i.test(it.type); const ib=B.find(b=>b.it&&b.file===it.file);
+          M.push({f:fk, to:tk, label:it.label, kind:ev?'event':'call', step:st, code:ib, O:ib?{k:'f',v:ib.file}:null, ...fl});
+          if(!ev && fk!==tk) M.push({f:tk, to:fk, label:'', kind:'ret', step:st, ...fl}); });
+        M.push({f:ol.k, to:'app', label:'', kind:'ret', step:st, ...fl}); }
+      else { const oc=rCtx(a); const rl=lane('r:'+oc, 'API routes', cLabel(oc), 'api'); M.push({f:'app', to:rl.k, label:a, kind:'call', mono:1, step:st, code:rb, O:{k:'a',v:a}, ...fl});
+        opInts(a).forEach(iid=>{ const it=INB[iid]; if(!it) return; const ib=B.find(b=>b.it&&b.file===it.file); const fk='f:'+it.file;
+          lane(fk, it.file.split('/').pop(), ib?ib.kind:'File', 'code');
+          M.push({f:rl.k, to:fk, label:it.symbol.length>34?it.symbol.slice(0,32)+'…':it.symbol, kind:/event/i.test(it.type)?'event':'call', mono:1, step:st, code:ib, O:ib?{k:'f',v:ib.file}:null, ...fl}); });
+        M.push({f:rl.k, to:'app', label:'', kind:'ret', step:st, ...fl}); }
+    });
+    if(lv==='sys' && s.apis.length) M.push({f:'sys', to:'app', label:'', kind:'ret', step:st, ...fl});
+    M.push({f:'app', to:'p', label:respOf(s), kind:'ret', step:st, sys:1, ...fl});
+    const al=F.alts.map((a,k)=>({a,k})).filter(x=>x.a.at===st); if(al.length) M.push({row:'alt', step:st, al});
+  });
+  const any=F.alts.map((a,k)=>({a,k})).filter(x=>!x.a.at); if(any.length) M.push({row:'alt', step:0, al:any});
+  M.push({row:'end', t:F.result});
+  return {L, M, F, lv}; }
+const LANE_IC = {person:()=>I('user',14), channel:()=>kindIc('channel',14), system:()=>fbI('cube4',14), context:()=>kindIc('context',14), external:()=>kindIc('external',14), api:()=>kindIc('api',14), code:()=>fbI('filecode',14)};
+function buildSeq(id){ const X=seqModel(id); const LW=X.L.length<=4?320:250, G=56, TOP=86; const n=X.L.length; const cx=i=>G+i*LW+LW/2; const li=k=>X.L.findIndex(l=>l.k===k);
+  const hl=S.ucx.hl&&S.ucx.hl.id===id?S.ucx.hl.i:null; let y=TOP; let svg='', html=''; const W=G+n*LW;
+  const arrow=(x,yy,dir,open)=>dir>0?`M${x-7} ${yy-4}L${x} ${yy}L${x-7} ${yy+4}${open?'':'Z'}`:`M${x+7} ${yy-4}L${x} ${yy}L${x+7} ${yy+4}${open?'':'Z'}`;
+  X.L.forEach((l,i)=>{ html+=`<div class="sq-lh k-${l.kind}" style="left:${cx(i)-LW/2+12}px;top:0;width:${LW-24}px">${(LANE_IC[l.kind]||LANE_IC.code)()}<span><b title="${esc(l.label)}">${esc(l.label)}</b><small>${esc(l.sub||'')}</small></span></div>`; });
+  const rows=[];
+  X.M.forEach((m,k)=>{ const on = hl!=null && m.step===hl;
+    if(m.row==='step'){ y+=10; html+=`<button class="sq-step ${on?'on':''} ${m.nw?'nw':''} ${m.dl?'dl':''}" data-act="ucstep" data-arg="${id}|${m.step}" style="left:6px;top:${y}px" title="Step ${m.step}">${m.step}</button>`; svg+=`<line class="sq-sep" x1="${G-8}" y1="${y+12}" x2="${W-8}" y2="${y+12}"/>`; y+=24; return; }
+    if(m.row==='alt'){ const x0=G+6, x1=W-6, y0=y+6, SH=64; const ax0=cx(li('app')), ax1=cx(li('p'));
+      m.al.forEach(({a},j)=>{ const t=y0+j*SH; if(j) svg+=`<line class="sq-altsep" x1="${x0}" y1="${t}" x2="${x1}" y2="${t}"/>`;
+        html+=`<span class="sq-cond" style="left:${x0+(j?10:58)}px;top:${t+3}px">[${esc(a.t)}]</span>`;
+        html+=`<span class="sq-lbl alt ${a.kind}" style="left:${Math.min(ax0,ax1)+10}px;top:${t+22}px;width:${Math.abs(ax0-ax1)-20}px" title="${esc(a.steps.join(' · '))}"><span>${esc(a.steps[0]||a.t)}</span></span>`;
+        svg+=`<line class="sq-m ret alt ${a.kind}" x1="${ax0}" y1="${t+46}" x2="${ax1+2}" y2="${t+46}"/><path class="sq-ah ret alt ${a.kind}" d="${arrow(ax1,t+46,-1,true)}"/>`;
+        html+=`<span class="sq-note ${a.kind}" style="left:${ax0+16}px;top:${t+36}px">${a.back?'↩ back to step '+a.back:'■ ends · '+esc(a.end||'')}</span>`; });
+      const h=m.al.length*SH+4; svg+=`<rect class="sq-frame" x="${x0}" y="${y0}" width="${x1-x0}" height="${h}" rx="6"/><path class="sq-ftag" d="M${x0+6} ${y0}H${x0+46}V${y0+12}l-8 8H${x0}V${y0+6}A6 6 0 0 1 ${x0+6} ${y0}Z"/>`;
+      html+=`<span class="sq-ftxt" style="left:${x0+8}px;top:${y0+1}px">${m.al.length>1?'alt':'opt'}</span>`;
+      y=y0+h+14; return; }
+    if(m.row==='end'){ y+=12; const a=cx(0), b=cx(1); html+=`<div class="sq-end" style="left:${a-20}px;top:${y}px;width:${b-a+40}px">${I('check-circle',14)}<span>${esc(m.t)}</span></div>`; y+=48; return; }
+    const i0=li(m.f), i1=li(m.to); if(i0<0||i1<0) return; const x0=cx(i0), x1=cx(i1); const dir=x1>x0?1:-1; const hasL=!!m.label; const yy=y+(hasL?22:10);
+    const cls=`${m.kind} ${on?'on':''} ${m.nw?'nw':''} ${m.dl?'dl':''}`;
+    if(i0===i1){ svg+=`<path class="sq-m ${cls}" d="M${x0} ${yy-6}h36v14h-34"/><path class="sq-ah ${cls}" d="${arrow(x0+2,yy+8,-1,m.kind!=='call'&&m.kind!=='act')}"/>`; }
+    else { svg+=`<line class="sq-m ${cls}" x1="${x0}" y1="${yy}" x2="${x1-dir*2}" y2="${yy}"/><path class="sq-ah ${cls}" d="${arrow(x1,yy,dir,m.kind==='ret'||m.kind==='event')}"/>`; }
+    if(hasL){ const L0=Math.min(x0,x1)+10, Wl=Math.max(120,Math.abs(x1-x0)-20); const tag = m.kind==='event'?'<em>event</em>':m.kind==='act'?'<em>user</em>':m.sys?'<em>system</em>':'';
+      const inner=`${tag}<span class="${m.mono?'mono':''}">${esc(m.label)}</span>${m.code?fbI('code',12):''}`;
+      html+= m.code||m.O ? `<button class="sq-lbl ${cls} ${S.sq.open===k?'open':''}" data-act="sqmsg" data-arg="${id}|${k}" style="left:${L0}px;top:${y}px;width:${Wl}px" title="${esc(m.label)}">${inner}</button>`
+                         : `<span class="sq-lbl ${cls}" style="left:${L0}px;top:${y}px;width:${Wl}px" title="${esc(m.label)}">${inner}</span>`; }
+    rows.push({k, y}); y = yy+ (hasL?18:14); });
+  const H=y+24;
+  X.L.forEach((l,i)=>{ svg=`<line class="sq-life" x1="${cx(i)}" y1="52" x2="${cx(i)}" y2="${H}"/>`+svg; });
+  let pop='', Wd=W+24;
+  if(S.sq.open!=null && X.M[S.sq.open]){ const m=X.M[S.sq.open]; const r=rows.find(x=>x.k===S.sq.open); const py=Math.max(0,(r?r.y:0)-20);
+    let body=''; try{ body = m.O ? fxPanel(id, m.step, m.O) : (m.code?blockHTML(id,m.code):''); if(!/class="cbk"/.test(body) && m.code) body=`<div class="fxx">${blockHTML(id,m.code)}</div>`; }catch(e){ body=''; }
+    body=body.replace(/data-act="fxclose" data-arg="[^"]*"/,'data-act="sqclose"');
+    pop=`<div class="sq-pop" data-act="noop" style="left:${W+40}px;top:${py}px"><div class="sq-pop-h"><span class="k">Step ${m.step} · ${m.kind==='act'?'what the user does':m.kind==='event'?'event':'call'}</span><span class="t">${esc(m.label)}</span></div>${body}</div>`; Wd=W+40+640; }
+  fw.innerHTML=`<svg class="fe sq" width="${W}" height="${H}">${svg}</svg>`+html+pop;
+  const L={N:[],A:[],Wd, H:Math.max(H, pop?H:0), seq:true, popX:W+40, popY:pop?(rows.find(x=>x.k===S.sq.open)||{y:0}).y:0}; lastL=L; return L; }
+Object.assign(ACT,{
+  ucsl(v){ S.ucx.sl=v; S.sq.open=null; render(); },
+  sqmsg(a){ const p=a.split('|'); const k=+p[1]; S.sq.open = S.sq.open===k ? null : k; const m=S.sq.open!=null?seqModel(p[0]).M[k]:null; if(m) S.ucx.hl={id:p[0], i:m.step}; renderSide(); renderFlowCanvas();
+    if(S.sq.open!=null && lastL){ const ar=area(); const kz=Math.max(T.k,.85); d3.select(box).transition().duration(300).call(zoom.transform, d3.zoomIdentity.translate(ar.x+ar.w-640*kz-16-(lastL.popX)*kz, ar.y+16-(lastL.popY-20)*kz).scale(kz)); } },
+  sqclose(){ S.sq.open=null; renderFlowCanvas(); }
+});
+
+ACT.ucfv = v => { S.ucx.fv=v; S.sq.open=null; render(); };
 
 /* =========================================================
    6 · review guide for this round
@@ -9728,14 +9869,14 @@ function activityHTML(id){ const u=UCB[id]; const f=S.act.f[id]||'all'; const L=
   const bar=`<div class="rp-h"><button class="back" data-act="rpback">${I('arrow-left',16)}<span>${esc(u.name)}</span></button><span class="sp"></span><button class="ib" data-act="rpclose" aria-label="Close details">${I('x',16)}</button></div>`;
   const item=(x,k)=>{ const key=id+'|'+x.d+'|'+x.when+'|'+k; const open=S.act.more[key]; const long=x.s&&x.s.length>110;
     return `<div class="act-i"><span class="ln">${x.who==='Syntroper'?sIc(24):pAv(x.who,24)}</span><div class="b"><span class="t"><b>${esc(x.who)}</b> ${esc(x.t.charAt(0).toLowerCase()+x.t.slice(1))}</span><span class="w">${esc(x.d)} · ${esc(x.when)}</span>${x.s?`<div class="s ${long&&!open?'clamp':''}">${esc(x.s)}</div>${long?`<button class="more" data-act="actmore" data-arg="${esc(key)}">${open?'Show less':'Show more'}</button>`:''}`:''}</div></div>`; };
-  return `<section class="card fill"><div class="ch flat">${bar}</div><div class="scroll"><div class="act-h"><small>Activity · ${L.length}</small><h2>${esc(u.name)}</h2></div>
+  return `<section class="card fill"><div class="ch flat">${bar}</div><div class="scroll"><div class="act-h"><small>History · ${L.length}</small><h2>${esc(u.name)}</h2></div>
     <div class="act-f" role="tablist">${KF.map(([k,l])=>`<button role="tab" aria-selected="${f===k}" class="${f===k?'on':''}" data-act="actf" data-arg="${id}|${k}">${l}</button>`).join('')}</div>
     ${days.map(d=>`<div class="act-d">${esc(d)}</div>${L.filter(x=>x.d===d).map(item).join('')}`).join('')||'<div class="act-d">Nothing here yet</div>'}</div></section>`; }
 { const _rs=renderSide; renderSide=function(){ _rs(); const rp=$('#cxItem'); if(S.rpn && S.rpn.k==='act' && rp && !rp.hidden && isUc() && S.side.sel.id===S.rpn.id){ const sc=rp.querySelector('.scroll'); const t=sc&&rp.dataset.ak===S.rpn.id?sc.scrollTop:0; rp.innerHTML=activityHTML(S.rpn.id); rp.dataset.ak=S.rpn.id; const s2=rp.querySelector('.scroll'); if(s2) s2.scrollTop=t; } }; }
 
 /* ---------- review rows: People and Activity ---------- */
 { const _ih=itemHTML; itemHTML=function(sel,o={}){ let h=_ih(sel,o); if((o&&o.lib)||sel.t!=='uc'||!UCR[sel.id]) return h; const id=sel.id; const P=[...peopleOf(id).keys()]; const A=activityOf(id);
-    const rows=`<span>Activity</span><div><button class="lnk3" data-act="actopen" data-arg="${id}">${A.length} updates <span>· last ${esc(A[0].d==='Today'?A[0].when:A[0].d)}</span>${I('chevron-right',14)}</button></div>`;
+    const rows=`<span>History</span><div><button class="lnk3" data-act="actopen" data-arg="${id}">${A.length} updates <span>· last ${esc(A[0].d==='Today'?A[0].when:A[0].d)}</span>${I('chevron-right',14)}</button></div>`;
     return h.replace(/(<span>Assigned to<\/span><div>[\s\S]*?<\/div>)(<\/div>)/, `$1${rows}$2`); }; }
 
 Object.assign(ACT,{
@@ -9898,8 +10039,8 @@ window.ncPreview=function(){ const M=S.nc; const ids=M.pick.filter(x=>UCB[x]); c
     <div class="nimp-s"><div class="nimp-sh">Integration points<span class="count">${P1.n}</span></div><div class="nimp-l">${P1.body}</div></div>
     <div class="nimp-s"><div class="nimp-sh">Other use cases<span class="count">${P2.n}</span></div><div class="nimp-l">${P2.body}</div></div></div>`;
   return `<div class="ncp"><div class="ncp-h">APIs in these use cases<small>${apis.length} API${apis.length===1?'':'s'} across ${ids.length} use case${ids.length===1?'':'s'}</small></div>${cards}</div><div class="ncp">${imp}</div>`; };
-ACT.npstage=function(n){ const M=S.np; if(!M) return; n=+n; if(n===2 && !M.name.trim()) return; M.stage=n; renderNP(n===1?{id:'npName'}:null); };
-{ const _go=ACT.npgo; ACT.npgo=function(){ const M=S.np; if(M && (M.stage||1)===1){ ACT.npstage(2); return; } return _go(); }; }
+ACT.npstage=function(n){ const M=S.np; if(!M) return; n=+n; if(n>=2 && !(M.name.trim()&&M.per.length)) return; if(n===3 && !M.pick.length) return; M.stage=n; renderNP(n===1?{id:'npName'}:null); };
+{ const _go=ACT.npgo; ACT.npgo=function(){ const M=S.np; if(M && (M.stage||1)<3){ ACT.npstage((M.stage||1)+1); return; } if(M && window.npDeps && npDeps().issues.some(x=>!x.done)) return; return _go(); }; }
 try{ render(); }catch(e){ console.error(e); }
 })();
 </script>
@@ -9918,7 +10059,7 @@ WN.push(
   {a:'Use cases', r:1, n:'“Unassigned” is now “No context”', how:'Unassigned now only means nobody is assigned. Use cases outside a bounded context are “No context”.', go(){ HOME(); }, sel:['.unas-cta']},
   {a:'Use cases', r:1, n:'Review a use case', how:'Review status, source, assignee, people and activity at the top, then Accept, Request changes and Reject.', go(){ UC2('checkout'); }, sel:['.ucr-f','.ucr-a']},
   {a:'Use cases', r:1, n:'Assign to review or revise', how:'The assign picker asks whether they should review or revise it. Context owners are suggested first.', go(){ UC2('checkout'); btn('.ucr-who'); ACT.cxassign('uc:checkout'); }, sel:['.up-role']},
-  {a:'Use cases', r:1, n:'Reject with a reason', how:'Not a user goal, part of another use case, duplicate, or other. It leaves the Galaxy and can be restored. Syntroper flags use cases that look like steps.', go(){ UC2('calc-shipping'); }, sel:['.ucr-c.ai','.ucr-a .rj']},
+  {a:'Use cases', r:1, n:'Reject with a reason', how:'Not a user goal, part of another use case, duplicate, or other. It is hidden everywhere after that. Syntroper flags use cases that look like steps.', go(){ UC2('calc-shipping'); }, sel:['.ucr-c.ai','.ucr-a .rj']},
   /* flowchart */
   {a:'Flowchart', r:1, n:'Summary by Syntroper', how:'The step list is replaced by a short summary, with counts of steps, decisions and other paths.', go(){ UC2('checkout'); }, sel:['.aisum','.ucf2 .stats']},
   {a:'Flowchart', r:1, n:'Tabs: APIs, Code, Integration points, Affected', how:'Everything the flow touches, one tab each.', go(){ UC2('checkout'); ACT.ucttab('checkout|apis'); }, sel:['.uct5']},
@@ -9953,7 +10094,7 @@ WN.push(
   {a:'Chat rooms', r:1, n:'Mark a message as a change request', how:'Request changes opens the room with this on. @Syntroper gets a summary back.', go(){ UC2('cancel-order'); ACT.ucchg('cancel-order'); }, sel:['.room-flag']},
   /* people */
   {a:'People and activity', r:1, n:'Invite people to a use case', how:'Invited people see the use case and its room and get notified. Assigning gives the review; inviting doesn’t.', go(){ UC2('checkout'); btn('.ucr-ppl'); ACT.invopen('checkout'); }, sel:['#invPop .ip','.ucr-ppl']},
-  {a:'People and activity', r:1, n:'Activity page', how:'Everything that happened, by day, with times and longer summaries. Filter by changes, reviews, people or scans. Dummy data for now.', go(){ UC2('checkout'); ACT.actopen('checkout'); }, sel:['.act-f','.act-i']},
+  {a:'People and activity', r:1, n:'History page', how:'Everything that happened, by day, with times and longer summaries. Filter by changes, reviews, people or syncs. Dummy data for now.', go(){ UC2('checkout'); ACT.actopen('checkout'); }, sel:['.act-f','.act-i']},
   /* layout */
   {a:'Layout', r:1, n:'Navigation collapses by itself', how:'When you open a business system or the chat, the left navigation collapses. You can open it again.', go(){ R6(); S.nav.open=true; renderShell(); ACT.sysl(); ACT.sysopen('commerce'); }, sel:['#rail']}
 );
@@ -10119,5 +10260,1077 @@ document.addEventListener('click', hide, true);
 .rme2 .ppl .stack .cx-av+.cx-av{margin-left:-5px}
 .rme2 .rvt{flex:none}
 </style>
+<style>
+/* FB36 · navigation per Figma (Design System › Sidebar/Main 7503:56775), Syntroper Code / Syntroper Infra groups */
+body{--rail:64px}
+body.nav-open{--rail:265px}
+#rail{background:var(--canvas)!important;border-right:1px solid var(--border);padding:24px 12px;gap:0}
+#rail .nv-h{height:26px;margin:0 0 32px;padding:0}
+body:not(.nav-open) #rail .nv-h{justify-content:center}
+#rail .nv-brand{gap:8px}
+#rail .nv-brand b{font:800 15px/20px var(--font);font-variant:small-caps;letter-spacing:.01em;text-transform:none;color:var(--text)}
+#rail .nv-tg{width:26px;height:26px;border-radius:6px;color:var(--text-2)}
+#rail .nv-tg:hover{background:var(--surface);color:var(--text)}
+#rail .nv-items{gap:8px}
+.nv2{position:relative;display:flex;align-items:center;gap:8px;width:100%;height:34px;padding:6px 10px;border-radius:8px;font:500 14px/22px var(--font);color:var(--text-2);text-align:left;flex:none}
+.nv2 .nic{flex:none;width:18px;height:18px;color:var(--text-2)}
+.nv2 .l{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nv2 .cv{flex:none;color:var(--text-2);transition:transform .15s}
+.nv2[aria-expanded="false"] .cv{transform:rotate(180deg)}
+.nv2:hover{background:var(--surface);color:var(--text)}
+.nv2:hover .nic,.nv2:hover .cv{color:var(--text)}
+.nv2.on{background:var(--surface);color:var(--text)}
+.nv2.on .nic,.nv2.has .nic{color:var(--text)}
+.nv2.has{color:var(--text)}
+.nv2.sub{padding-left:32px;gap:10px}
+.nv-g{display:flex;flex-direction:column;gap:4px}
+.nv-sep{height:1px;background:var(--border);margin:4px 10px}
+body:not(.nav-open) .nv2{width:40px;height:40px;padding:0;justify-content:center;margin:0 auto}
+body:not(.nav-open) .nv2 .l,body:not(.nav-open) .nv2 .cv{display:none}
+body:not(.nav-open) .nv-sep{width:24px;margin:4px auto}
+.nv2 .tipx{position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);white-space:nowrap;background:var(--panel);border:1px solid var(--border-strong);border-radius:8px;padding:4px 8px;font:500 12px/18px var(--font);color:var(--text);opacity:0;pointer-events:none;transition:opacity .12s;box-shadow:var(--shadow);z-index:80}
+.nv2:hover .tipx{opacity:1}
+#rail .nv-orgs{gap:10px}
+#rail .nv-org{gap:10px;padding:8px 16px 8px 8px;border-radius:12px;border:1px solid var(--border);background:var(--panel)}
+#rail .nv-org.on{background:var(--surface-strong);border-color:var(--border-strong)}
+#rail .nv-org .nv-av{width:32px!important;height:32px!important;border-radius:8px}
+#rail .nv-org .tx b{font:600 12px/18px var(--font)}
+#rail .nv-create{height:34px;border-radius:8px;border:1px solid var(--border);font:600 12px/18px var(--font);margin-bottom:10px}
+#rail .nv-up{height:36px;border-radius:8px;background:var(--canvas);border:1px solid rgba(133,120,211,.7);box-shadow:0 0 12px rgba(98,78,213,.28);font:600 12px/18px var(--font);gap:8px;margin-bottom:16px}
+#rail .nv-up svg{width:12px;height:12px;padding:6px;background:var(--accent);border-radius:50%}
+#rail .nv-tile{border-radius:12px;border-color:var(--border);background:var(--panel)}
+#rail .nv-tile.on{background:var(--surface-strong);border-color:var(--border-strong);box-shadow:none}
+#appTop{background:var(--canvas)!important}
+</style>
+<script>
+/* FB36 · navigation: Dashboard, Syntroper Code (Codona, Architecture library), Syntroper Infra (Cloud Workloads, Cloud Snapshots), Integrations, Settings */
+(function(){
+const P = {
+  dash:['0 0 24 24','M12 17.99v-3M9.02 2.84 3.63 7.04C2.73 7.74 2 9.23 2 10.36v7.41c0 2.32 1.89 4.22 4.21 4.22h11.58c2.32 0 4.21-1.9 4.21-4.21v-7.28c0-1.21-.81-2.76-1.8-3.45l-6.18-4.33c-1.4-.98-3.65-.93-5 .12Z',1.5],
+  code:['0 0 24 24','M22 9H2M14 17.5l2.5-2.5-2.5-2.5M10 12.5 7.5 15l2.5 2.5M2 7.8v8.4c0 1.68 0 2.52.33 3.16a3 3 0 0 0 1.31 1.31C4.28 21 5.12 21 6.8 21h10.4c1.68 0 2.52 0 3.16-.33a3 3 0 0 0 1.31-1.31c.33-.64.33-1.48.33-3.16V7.8c0-1.68 0-2.52-.33-3.16a3 3 0 0 0-1.31-1.31C19.72 3 18.88 3 17.2 3H6.8c-1.68 0-2.52 0-3.16.33a3 3 0 0 0-1.31 1.31C2 5.28 2 6.12 2 7.8Z',1.5],
+  orbit:['0 0 24 24','M20.34 6.48A10 10 0 0 1 10.27 21.85M3.66 17.52A10 10 0 0 1 13.74 2.15M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM21 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM7 19a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z',1.6],
+  book:['0 0 24 24','M12 9.4c0-2.24 0-3.36.44-4.22a4 4 0 0 1 1.74-1.74C15.04 3 16.16 3 18.4 3h.4c1.12 0 1.68 0 2.11.22.37.19.68.5.87.87.22.43.22.99.22 2.11v8.6c0 1.12 0 1.68-.22 2.11a2 2 0 0 1-.87.87c-.43.22-.99.22-2.11.22h-1.37c-1.25 0-1.88 0-2.45.17a4 4 0 0 0-1.38.74c-.46.38-.8.9-1.5 1.94L12 21l-.1-.15c-.7-1.04-1.04-1.56-1.5-1.94a4 4 0 0 0-1.38-.74C8.45 18 7.83 18 6.57 18H5.2c-1.12 0-1.68 0-2.11-.22a2 2 0 0 1-.87-.87C2 16.48 2 15.92 2 14.8V6.2c0-1.12 0-1.68.22-2.11.19-.37.5-.68.87-.87C3.52 3 4.08 3 5.2 3h.4c2.24 0 3.36 0 4.22.44a4 4 0 0 1 1.74 1.74C12 6.04 12 7.16 12 9.4Zm0 11.6V9.4',1.5],
+  infra:['0 0 24 24','M6 6h.01M6 18h.01M5.2 10h13.6c1.12 0 1.68 0 2.11-.22.37-.19.68-.5.87-.87.22-.43.22-.99.22-2.11V5.2c0-1.12 0-1.68-.22-2.11a2 2 0 0 0-.87-.87C20.48 2 19.92 2 18.8 2H5.2c-1.12 0-1.68 0-2.11.22-.37.19-.68.5-.87.87C2 3.52 2 4.08 2 5.2v1.6c0 1.12 0 1.68.22 2.11.19.37.5.68.87.87.43.22.99.22 2.11.22Zm0 12h13.6c1.12 0 1.68 0 2.11-.22.37-.19.68-.5.87-.87.22-.43.22-.99.22-2.11v-1.6c0-1.12 0-1.68-.22-2.11a2 2 0 0 0-.87-.87c-.43-.22-.99-.22-2.11-.22H5.2c-1.12 0-1.68 0-2.11.22-.37.19-.68.5-.87.87C2 15.52 2 16.08 2 17.2v1.6c0 1.12 0 1.68.22 2.11.19.37.5.68.87.87.43.22.99.22 2.11.22Z',1.5],
+  work:['0 0 24 24','M12 19l-3.97 2.38a2 2 0 0 1-2.06 0l-3-1.8A2 2 0 0 1 2 17.87v-3.24a2 2 0 0 1 .97-1.71L7 10.5l5 3M12 19v-5.5M12 19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3M12 13.5l-5 3v5.17M12 13.5l5 3v5.17M12 13.5V8M7 16.49l-4.74-2.85M17 16.49l4.74-2.85M16.74 5.15A2 2 0 0 1 17 6.13v4.37l-5 3-5-3V6.13a2 2 0 0 1 .97-1.71l3-1.8a2 2 0 0 1 2.06 0l3 1.8c.3.18.54.43.71.73Zm0 0L12 7.99M12 7.99 7.26 5.14',1.35],
+  snap:['0 0 26 26','M24.75 8.13V6.65c0-2.07 0-3.1-.4-3.89a3.7 3.7 0 0 0-1.62-1.61C21.94.75 20.9.75 18.84.75h-1.48m7.39 16.61v1.48c0 2.07 0 3.1-.4 3.89a3.7 3.7 0 0 1-1.62 1.61c-.79.4-1.82.4-3.89.4h-1.48M.75 8.13V6.65c0-2.07 0-3.1.4-3.89a3.7 3.7 0 0 1 1.61-1.61C3.55.75 4.59.75 6.65.75h1.48M.75 17.36v1.48c0 2.07 0 3.1.4 3.89a3.7 3.7 0 0 0 1.61 1.61c.79.4 1.83.4 3.89.4h1.48m6.23-18.66h-3.22c-.09 0-.13 0-.17.01a1.33 1.33 0 0 0-1.16.83l-.06.17-.06.16a1.33 1.33 0 0 1-1.16.84H8.35c-.25 0-.37 0-.47.01a2 2 0 0 0-1.79 1.79c-.01.1-.01.22-.01.45v5.21c0 1.12 0 1.68.22 2.11.19.38.5.68.87.87.43.22.99.22 2.11.22h6.93c1.12 0 1.68 0 2.11-.22.38-.19.68-.49.87-.87.22-.43.22-.99.22-2.11v-5.21c0-.23 0-.35-.01-.45a2 2 0 0 0-1.79-1.79c-.1-.01-.22-.01-.47-.01h-.18a1.33 1.33 0 0 1-1.16-.84l-.06-.16-.06-.17a1.33 1.33 0 0 0-1.16-.83c-.04-.01-.08-.01-.17-.01Zm1.05 7a2.67 2.67 0 1 1-5.33 0 2.67 2.67 0 0 1 5.33 0Z',1.5],
+  integ:['0 0 24 24','M7.68 6.94v2.47M14.2 19.29 12 17.44M16.94 6.32 12 11.26M7.68 6.94a2.47 2.47 0 1 0 0-4.94 2.47 2.47 0 0 0 0 4.94Zm11.11 0a2.47 2.47 0 1 0 0-4.94 2.47 2.47 0 0 0 0 4.94Zm-2.47 16.06a2.47 2.47 0 1 0 0-4.94 2.47 2.47 0 0 0 0 4.94ZM7.68 19.29a4.94 4.94 0 1 0 0-9.88 4.94 4.94 0 0 0 0 9.88Z',1.5],
+  set:['0 0 24 24','M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2 12.88v-1.76c0-1.04.85-1.9 1.9-1.9 1.81 0 2.55-1.28 1.64-2.85a1.9 1.9 0 0 1 .7-2.59l1.73-.99c.79-.47 1.81-.19 2.28.6l.11.19c.9 1.57 2.38 1.57 3.29 0l.11-.19c.47-.79 1.49-1.07 2.28-.6l1.73.99c.91.52 1.22 1.69.7 2.59-.91 1.57-.17 2.85 1.64 2.85 1.04 0 1.9.85 1.9 1.9v1.76c0 1.04-.85 1.9-1.9 1.9-1.81 0-2.55 1.28-1.64 2.85.52.91.21 2.07-.7 2.59l-1.73.99c-.79.47-1.81.19-2.28-.6l-.11-.19c-.9-1.57-2.38-1.57-3.29 0l-.11.19c-.47.79-1.49 1.07-2.28.6l-1.73-.99a1.9 1.9 0 0 1-.7-2.59c.91-1.57.17-2.85-1.64-2.85-1.05 0-1.9-.86-1.9-1.9Z',1.5],
+  bld:['0 0 24 24','M7.5 11H4.6c-.56 0-.84 0-1.05.11a1 1 0 0 0-.44.44C3 11.76 3 12.04 3 12.6V21M7.5 11v10M7.5 11V6.2c0-1.12 0-1.68.22-2.11.19-.37.5-.68.87-.87C9.02 3 9.58 3 10.7 3h2.6c1.12 0 1.68 0 2.11.22.37.19.68.5.87.87.22.43.22.99.22 2.11V11M3 21h4.5M3 21H2m14.5-10h2.9c.56 0 .84 0 1.05.11a1 1 0 0 1 .44.44c.11.21.11.49.11 1.05V21m-4.5-10v10m4.5 0h1m-1 0h-4.5m0 0h-9M11 7h2m-2 4h2m-2 4h2',1.5],
+  user:['0 0 24 24','M20 21c0-1.4 0-2.09-.17-2.66a4 4 0 0 0-2.67-2.67C16.59 15.5 15.9 15.5 14.5 15.5h-5c-1.4 0-2.09 0-2.66.17a4 4 0 0 0-2.67 2.67C4 18.91 4 19.6 4 21M16.5 7.5a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z',1.5],
+  help:['0 0 24 24','M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01M22 12c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2s10 4.48 10 10Z',1.5],
+  toggle:['0 0 24 24','M7.97 2v20M14.97 9.45l-2.56 2.56 2.56 2.56M21.97 15V9c0-5-2-7-7-7h-6c-5 0-7 2-7 7v6c0 5 2 7 7 7h6c5 0 7-2 7-7Z',1.5]
+};
+const ic = (k,s=18) => { const [vb,d,w]=P[k]; return `<svg class="nic" width="${s}" height="${s}" viewBox="${vb}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`; };
+const chev = `<svg class="cv" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>`;
+const MARK = '<svg width="23" height="26" viewBox="0 0 23 26" aria-hidden="true"><path d="M22.71 13.01a11.29 11.29 0 1 1-22.59 0 11.29 11.29 0 0 1 22.59 0Z" fill="#fff"/><path fill-rule="evenodd" d="M22.22 6.04c.39.22.64.64.64 1.1v11.73c0 .45-.25.87-.64 1.1l-10.16 5.86c-.39.23-.88.23-1.27 0L.63 19.96A1.27 1.27 0 0 1 0 18.87V7.13c0-.45.24-.87.63-1.1L10.79.17c.39-.23.88-.23 1.27 0l10.16 5.87ZM12.06 4.91a1.27 1.27 0 0 0-1.27 0L4.74 8.4c-.39.23-.64.65-.64 1.1v.39c0 .3.16.58.42.73l9.16 5.29c.28.16.28.57 0 .73l-1.69.98a.42.42 0 0 1-.42 0l-6.2-3.58a.85.85 0 0 0-1.27.73v1.72c0 .45.24.87.64 1.1l6.05 3.5c.39.22.88.22 1.27 0l6.06-3.5c.39-.23.63-.65.63-1.1v-.78c0-.3-.16-.58-.42-.73l-8.6-4.97a.42.42 0 0 1 0-.73l1.69-.98a.42.42 0 0 1 .42 0l5.64 3.26c.56.32 1.27-.08 1.27-.74V9.5c0-.45-.24-.87-.64-1.1l-6.05-3.49Z" fill="#624ED5"/></svg>';
+if(S.nav.code==null) S.nav.code=true; if(S.nav.infra==null) S.nav.infra=false;
+const soon = n => `${n} is not part of this prototype.`;
+const item = (k,label,act,arg,on,sub) => `<button class="nv2 ${on?'on':''} ${sub?'sub':''}" data-act="${act}" ${arg!=null?`data-arg="${esc(arg)}"`:''} aria-label="${esc(label)}" ${on?'aria-current="page"':''}>${ic(k)}<span class="l">${esc(label)}</span>${S.nav.open?'':`<span class="tipx">${esc(label)}</span>`}</button>`;
+const group = (key,k,label,kids,has) => { const open=S.nav[key];
+  if(!S.nav.open) return `<div class="nv-sep"></div>${kids.join('')}<div class="nv-sep"></div>`;
+  return `<div class="nv-g"><button class="nv2 ${has&&!open?'has':''}" data-act="nvgrp" data-arg="${key}" aria-expanded="${!!open}">${ic(k)}<span class="l">${esc(label)}</span>${chev}</button>${open?kids.join(''):''}</div>`; };
+railHTML = function(){ const N=S.nav, open=N.open, T=S.tab;
+  const cOn = T==='codona'||T==='systems', lOn = T==='library';
+  const items = [
+    item('dash','Dashboard','toast',soon('Dashboard')),
+    group('code','code','Syntroper Code',[item('orbit','Codona','sysl',null,cOn,true), item('book','Architecture library','tab','library',lOn,true)], cOn||lOn),
+    group('infra','infra','Syntroper Infra',[item('work','Cloud Workloads','toast',soon('Cloud Workloads'),false,true), item('snap','Cloud Snapshots','toast',soon('Cloud Snapshots'),false,true)], false),
+    item('integ','Integrations','toast',soon('Integrations')),
+    open ? `<div class="nv-g"><button class="nv2 ${T==='org'&&!N.set?'has':''}" data-act="nvset" aria-expanded="${!!N.set}">${ic('set')}<span class="l">Settings</span>${chev}</button>${N.set?item('bld','Organization','cxorg','teams',T==='org',true)+item('user','My Account','toast',soon('My Account'),false,true):''}</div>`
+         : item('set','Settings','cxorg','teams',T==='org')
+  ].join('');
+  const head = `<div class="nv-h">${open?`<span class="nv-brand">${MARK}<b>Syntroper AI</b></span>`:''}<button class="ib nv-tg" data-act="nvtoggle" aria-label="${open?'Collapse navigation':'Expand navigation'}">${ic('toggle')}</button></div>`;
+  const spaces = SPACES.map(sp => open
+    ? `<div class="nv-org ${sp.cur?'on':''} ${sp.personal?'solo':''}" role="button" tabindex="0" data-act="nvspace" data-arg="${sp.id}">${spaceAv(sp,32)}<span class="tx"><b>${esc(sp.name)}</b>${sp.personal?'<small>Free Plan</small>':`<span class="nv-teams">${teamChips(sp)}</span>`}</span><span class="nv-r">${sp.cur?I('check',16):sp.bell?`<span class="nv-bell">${I('bell',18)}<i>${sp.bell}</i></span>`:''}</span></div>`
+    : `<button class="nv-tile ${sp.cur?'on':''}" data-act="nvspace" data-arg="${sp.id}" aria-label="${esc(sp.name)}">${spaceAv(sp,32)}${sp.bell?`<i class="nv-badge">${sp.bell}</i>`:''}<span class="tipx"><b>${esc(sp.name)}</b></span></button>`).join('');
+  const foot = open
+    ? `<div class="nv-orgs">${spaces}</div><button class="nv-create" data-act="toast" data-arg="${soon('Create Org')}">${I('plus',16)}Create Org</button>
+       <button class="nv-up" data-act="toast" data-arg="Upgrades Syntroper’s Org. Your personal workspace stays free.">${I('zap',12)}Upgrade your plan</button>${item('help','Help Center','toast',soon('Help Center'))}`
+    : `<div class="nv-orgs">${spaces}</div><button class="nv-tile add" data-act="toast" data-arg="${soon('Create Org')}" aria-label="Create Org">${I('plus',16)}</button>
+       <button class="nv-tile up" data-act="toast" data-arg="Upgrades Syntroper’s Org." aria-label="Upgrade your plan">${I('zap',14)}</button>${item('help','Help Center','toast',soon('Help Center'))}`;
+  return head+`<div class="nv-items">${items}</div><div class="nv-sp"></div>`+foot; };
+ACT.nvgrp = k => { S.nav[k]=!S.nav[k]; renderShell(); };
+
+/* ---------- Scan is now Sync, in everything people read ---------- */
+const RX = [[/\bRescanning\b/g,'Resyncing'],[/\bRescanned\b/g,'Resynced'],[/\bRescan\b/g,'Resync'],[/\brescan\b/g,'resync'],[/\bScanning\b/g,'Syncing'],[/\bscanning\b/g,'syncing'],
+  [/\bScanned\b/g,'Synced'],[/\bscanned\b/g,'synced'],[/\bScan now\b/g,'Sync now'],[/\bScans\b/g,'Syncs'],[/\bscans\b/g,'syncs'],[/\bScan\b/g,'Sync'],[/\bscan\b/g,'sync']];
+const fix = t => { if(!/[Ss]can/.test(t)) return t; let o=t; RX.forEach(([a,b])=>o=o.replace(a,b)); return o; };
+const SKIP = /^(PRE|CODE|SCRIPT|STYLE|TEXTAREA|INPUT)$/;
+function pass(root){ if(!root) return; if(root.nodeType===3){ const p=root.parentNode; if(p&&!SKIP.test(p.nodeName)&&!(p.closest&&p.closest('pre,code'))){ const n=fix(root.nodeValue); if(n!==root.nodeValue) root.nodeValue=(n.trim()==='Syncs'?n.replace('Syncs','Sync history'):n); } return; }
+  if(root.nodeType!==1||SKIP.test(root.nodeName)) return;
+  ['title','aria-label','placeholder','data-tip'].forEach(a=>{ const v=root.getAttribute&&root.getAttribute(a); if(v){ const n=fix(v); if(n!==v) root.setAttribute(a,n); } });
+  if(root.closest&&root.closest('pre')) return;
+  const w=document.createTreeWalker(root, NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT); let n; while((n=w.nextNode())) pass1(n); }
+function pass1(n){ if(n.nodeType===3){ const p=n.parentNode; if(!p||SKIP.test(p.nodeName)||(p.closest&&p.closest('pre,code'))) return; const v=fix(n.nodeValue); if(v!==n.nodeValue) n.nodeValue=(v.trim()==='Syncs'?v.replace('Syncs','Sync history'):v); return; }
+  ['title','aria-label','placeholder','data-tip'].forEach(a=>{ const v=n.getAttribute&&n.getAttribute(a); if(v){ const x=fix(v); if(x!==v) n.setAttribute(a,x); } }); }
+window.syncWords = () => pass(document.body);
+try{ const ob=new MutationObserver(ms=>{ ob.disconnect(); try{ ms.forEach(m=>{ if(m.type==='characterData') pass(m.target); else m.addedNodes.forEach(pass); }); } finally { ob.observe(document.body,{childList:true,subtree:true,characterData:true}); } });
+  ob.observe(document.body,{childList:true,subtree:true,characterData:true}); }catch(e){}
+
+/* ---------- rejected use cases are hidden everywhere ---------- */
+const HID = window.HIDDEN_UC = {};
+function syncHidden(){ let ch=false;
+  UC.slice().forEach(u=>{ const R=UCR[u.id]; if(R && R.rv==='rejected'){ const i=UC.indexOf(u); UC.splice(i,1); u.apis.forEach(a=>{ const o=OPS[a]; if(o){ o.users=o.users.filter(x=>x!==u.id); if(!o.users.length) delete OPS[a]; } }); HID[u.id]={u,i}; ch=true; } });
+  Object.keys(HID).forEach(id=>{ const R=UCR[id]; if(!R || R.rv!=='rejected'){ const {u,i}=HID[id]; UC.splice(Math.min(i,UC.length),0,u); u.apis.forEach(a=>{ OPS[a]=OPS[a]||{route:a,users:[]}; if(!OPS[a].users.includes(id)) OPS[a].users.push(id); }); delete HID[id]; ch=true; } });
+  const gone = s => s && s.v==='item' && s.sel && s.sel.t==='uc' && HID[s.sel.id];
+  if(gone(S.side)){ S.side={v:'layer',n:2}; S.rpn=null; }
+  S.stack=S.stack.filter(x=>!gone(x));
+  if(S.ucx && S.ucx.flow && HID[S.ucx.flow]) S.ucx.flow=null;
+  return ch; }
+window.syncHidden=syncHidden;
+{ const _r=render; render=function(){ if(syncHidden()) regeo(); _r(); }; }
+
+try{ syncHidden(); regeo(); render(); renderShell(); }catch(e){ console.error(e); }
+})();
+</script>
+<style>
+/* FB36b · settings as a floating panel on the canvas; sharing; archive; access in org settings */
+#bsSet.bss{position:absolute;inset:auto;left:12px;top:12px;bottom:12px;width:min(820px,calc(100% - 24px));border:1px solid var(--border);border-radius:14px;background:var(--panel);box-shadow:var(--shadow);z-index:40;overflow:hidden}
+#bsSet .bss-wrap{max-width:none;padding:20px 24px 28px;box-sizing:border-box}
+#bsSet .bss-head{flex-direction:row;align-items:center;gap:12px;margin-bottom:20px}
+#bsSet .bss-head h1{font:600 18px/26px var(--font);order:1;flex:1}
+#bsSet .bss-head .back{order:0}
+#bsSet .bss-cols{min-height:0}
+#bsSet .bss-nav{width:150px}
+.bss-hint{display:block;margin-top:6px;font:400 12px/18px var(--font);color:var(--text-3)}
+.bss-danger.arch{border-color:var(--border-strong)}
+.bss-radio{display:flex;flex-direction:column;gap:8px}
+.bss-radio button{display:flex;align-items:flex-start;gap:10px;padding:12px;border-radius:10px;box-shadow:inset 0 0 0 1px var(--border-strong);text-align:left}
+.bss-radio button.on{background:var(--selected);box-shadow:inset 0 0 0 1px var(--accent)}
+.bss-radio .cx-rb{margin-top:2px;flex:none}
+.bss-radio b{display:block;font:500 14px/20px var(--font);color:var(--text)}
+.bss-radio small{display:block;font:400 12px/18px var(--font);color:var(--text-2)}
+.bss-note{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:var(--surface);font:400 12px/18px var(--font);color:var(--text-2)}
+.bss-note .lnk{color:var(--accent-on);font-weight:500}
+.bss-note .lnk:hover{color:#fff}
+.bsc .own{display:flex;align-items:center;gap:6px}
+.bs-arch{margin-top:32px}
+.bs-arch-h{display:flex;align-items:center;gap:8px;font:600 14px/20px var(--font);color:var(--text-2);margin-bottom:12px}
+.bs-arch-h:hover{color:var(--text)}
+.bsc.arch{opacity:.75}
+.oacc{display:flex;flex-direction:column;gap:16px}
+.oacc-s{border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.oacc-h{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface)}
+.oacc-h b{font:600 14px/20px var(--font)}
+.oacc-h small{font:400 12px/18px var(--font);color:var(--text-2)}
+.oacc-h .sp{flex:1}
+.oacc .bss-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--border)}
+.oacc .bss-item .tx{flex:1;min-width:0}
+.oacc .bss-item .tx b{display:block;font:500 14px/20px var(--font)}
+.oacc .bss-item .tx small{display:block;font:400 12px/18px var(--font);color:var(--text-3)}
+.oacc .bss-sel{height:32px;padding:0 8px;border-radius:8px;background:var(--canvas);border:1px solid var(--border-strong);color:var(--text)}
+.oacc-r{display:flex;flex-wrap:wrap;gap:16px;font:400 12px/18px var(--font);color:var(--text-2)}
+.oacc-r b{color:var(--text);font-weight:500}
+</style>
+<script>
+/* FB36b · Business system access lives in Organization settings */
+(function(){
+ORG_PAGES.splice(4,0,['access','Business system access','shield']);
+const ROLES=[['admin','Admin'],['editor','Editor'],['viewer','Viewer']];
+const _op=orgPageHTML; orgPageHTML=function(p){ if(p!=='access') return _op(p); const B=S.bs; const L=window.SYS_LIST||[];
+  const block=(s,ms)=>`<div class="oacc-s"><div class="oacc-h">${I('galaxy',16)}<span><b>${esc(s.name)}</b><br><small>Owner team · ${s.owner&&TEAM_BY[s.owner]?esc(TEAM_BY[s.owner].name):'none yet'}${s.archived?' · archived':''}</small></span><span class="sp"></span><button class="btn sm" data-act="toast" data-arg="Pick people or teams from ${esc(ORG.name)}, then a role.">${I('user-plus',14)}Add people or teams</button></div>
+    ${ms.map((m,i)=>`<div class="bss-item">${m.k==='team'?tAv(m.id,28):pAv(m.id,28)}<div class="tx"><b>${esc(whoName(m))}</b><small>${m.k==='team'?`Team · ${teamMembers(m.id).length} people`:esc((CXP[m.id]||{}).mail||'')}</small></div>${s.id==='commerce'?`<select class="bss-sel" data-bsrole="${i}" aria-label="Role for ${esc(whoName(m))}">${ROLES.map(([k,l])=>`<option value="${k}" ${m.role===k?'selected':''}>${l}</option>`).join('')}</select><button class="ib" data-act="bsmrm" data-arg="${i}" aria-label="Remove ${esc(whoName(m))}">${I('x',14)}</button>`:`<span class="tag">${esc(ROLES.find(r=>r[0]===m.role)[1])}</span>`}</div>`).join('')}</div>`;
+  const others={warehouse:[{k:'team',id:'platform',role:'admin'},{k:'person',id:'Zoe K.',role:'editor'}], support:[{k:'team',id:'design',role:'admin'}], internal:[], legacy:[{k:'team',id:'qa',role:'admin'}]};
+  return `<div class="opg"><h2>Business system access</h2><div class="oacc"><div class="oacc-r"><span><b>Admin</b> settings, repositories, access</span><span><b>Editor</b> answer questions, move use cases, run syncs</span><span><b>Viewer</b> view and comment</span></div>
+    ${L.map(s=>block(s, s.id==='commerce'?B.members:(others[s.id]||[]))).join('')}</div></div>`; };
+try{ render(); }catch(e){ console.error(e); }
+})();
+</script>
+<style>
+/* FB37 · personas, user action → system response, Syntroper suggests APIs */
+.npx .npper{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.npx .npper button{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border-radius:10px;box-shadow:inset 0 0 0 1px var(--border-strong);text-align:left;color:var(--text-2);min-height:56px}
+.npx .npper button:hover{box-shadow:inset 0 0 0 1px var(--text-3)}
+.npx .npper button.on{background:var(--selected);box-shadow:inset 0 0 0 1px var(--accent);color:var(--text)}
+.npx .npper button>svg{flex:none;margin-top:3px;color:var(--accent-on)}
+.npx .npper span{display:flex;flex-direction:column;min-width:0}
+.npx .npper b{font:500 14px/20px var(--font);color:var(--text)}
+.npx .npper small{font:400 12px/18px var(--font);color:var(--text-3)}
+.npx .npar{display:flex;align-items:center;gap:8px;min-width:0}
+.npx .npar .k{flex:none;width:52px;font:500 12px/18px var(--font);color:var(--text-3)}
+.npx .npar input{flex:1;min-width:0}
+.npx .npR{height:28px;padding:0 8px;margin-left:-8px;border-radius:6px;border:1px solid transparent;background:none;font:400 14px/20px var(--font);color:var(--text-2)}
+.npx .npR:hover{border-color:var(--border-strong)}
+.npx .npR:focus{outline:none;border-color:var(--accent);background:var(--canvas);color:var(--text)}
+.npx .npr .b>span:last-child{margin-left:60px}
+.npai{display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;border-radius:10px;background:var(--canvas);box-shadow:inset 0 0 0 1px var(--accent)}
+.npai input{flex:1;min-width:0;background:none;border:0;outline:none;font:400 14px/20px var(--font);color:var(--text)}
+.npai input::placeholder{color:var(--text-3)}
+.npsg{display:flex;flex-direction:column;gap:4px;padding:8px;border-radius:10px;background:var(--selected)}
+.npsg .h{display:flex;align-items:center;gap:6px;padding:2px 4px 4px;font:600 12px/18px var(--font);color:var(--accent-on)}
+.npsg .r{display:flex;align-items:center;gap:8px;min-height:36px;padding:4px 6px;border-radius:8px;background:var(--panel)}
+.npsg .r code{flex:1;min-width:0;font:400 12px/18px var(--mono);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.npsg .r small{font:400 12px/18px var(--font);color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40%}
+.nlist .ngrp.ai{background:var(--selected);border-radius:8px;margin-bottom:6px}
+.nlist .ngrp.ai .ngt{color:var(--accent-on)}
+.nlist .ngrp.ai .nopt .u{color:var(--text-2)}
+.ucr-f .pers{display:flex;flex-wrap:wrap;gap:4px}
+.pchip{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:999px;background:var(--surface);font:500 12px/18px var(--font);color:var(--text)}
+.fx-c .rs{font:400 12px/18px var(--font);color:var(--text-2)}
+.fx-c .rs b{color:var(--text-3);font-weight:500}
+</style>
+<script>
+/* FB37 · personas and action → response */
+(function(){
+window.PERSONAS = [
+  {id:'shopper', name:'Shopper', d:'Buys from the storefront'},
+  {id:'guest', name:'Guest shopper', d:'Buys without an account'},
+  {id:'admin', name:'Store admin', d:'Runs the store'},
+  {id:'ops', name:'Fulfillment staff', d:'Packs and ships orders'},
+  {id:'finance', name:'Finance', d:'Payments and refunds'},
+  {id:'merch', name:'Merchandiser', d:'Products and prices'},
+  {id:'system', name:'System', d:'Jobs and webhooks'}];
+const PB = Object.fromEntries(PERSONAS.map(p=>[p.id,p]));
+window.personaOf = u => { if(u.personas) return u.personas; const c=u.ctx;
+  if(u.ch==='none') return ['system'];
+  if(u.ch==='store') return ['checkout','create-cart','add-item','availability','set-address','apply-promo','update-line'].includes(u.id)?['shopper','guest']:['shopper'];
+  const adm = c==='fulfillment'||c==='inventory' ? ['ops'] : c==='payments' ? ['finance'] : c==='products'||c==='pricing' ? ['merch'] : ['admin'];
+  return u.ch==='both' ? ['shopper',...adm] : adm; };
+UC.forEach(u=>{ if(!u.personas) u.personas=personaOf(u); });
+{ const H=window.HIDDEN_UC||{}; Object.values(H).forEach(x=>{ if(!x.u.personas) x.u.personas=personaOf(x.u); }); }
+const pChips = u => (u.personas||personaOf(u)).map(p=>`<span class="pchip">${I('user',12)}${esc((PB[p]||{name:p}).name)}</span>`).join('');
+window.pChips=pChips;
+
+/* ---------- system responses ---------- */
+const RV={calculate:'Calculates',complete:'Completes',cancel:'Cancels',capture:'Captures',refund:'Refunds',archive:'Archives',confirm:'Confirms',request:'Requests',transfer:'Transfers',accept:'Accepts','mark-as-delivered':'Marks as delivered',import:'Imports'};
+window.respOfApi = r => { const [m,p0]=r.split(' '); const p=p0.split('?')[0]; { const sg=p.split('/').filter(x=>x&&!x.startsWith(':')&&!['store','admin','auth'].includes(x)); const last=sg[sg.length-1]; if(RV[last]){ const obj=(sg[sg.length-2]||'request').replace(/-/g,' ').replace(/ies$/,'y').replace(/s$/,''); return `${RV[last]} the ${obj}`; } } const n=humanNoun(r); const one=n.replace(/ies$/,'y').replace(/s$/,''); const idEnd=/:\w+$/.test(p);
+  return m==='GET' ? (idEnd?`Shows the ${one}`:`Shows the ${n} list`) : m==='DELETE' ? `Removes the ${one} and confirms` : `Saves the ${one} and shows the result`; };
+window.respOf = s => s.r || (s.apis&&s.apis[0] ? respOfApi(s.apis[0]) : 'Shows the next screen');
+const RS = {
+  checkout:['Shows the checkout with the cart total','Saves the addresses and lists delivery options','Prices the delivery and updates the total','Opens a payment session with the provider','Places the order, charges the card and reserves stock','Shows the order number and a summary'],
+  'create-cart':['Shows the product with sizes and price','Creates a cart with the item','Updates the cart count'],
+  'add-item':['Shows the product','Adds the item at today’s price','Opens the cart drawer'],
+  'cancel-order':['Shows the order and its status','Opens the confirm dialog','Cancels it, releases stock and refunds the payment','Shows the order as Canceled'],
+  register:['Shows the sign-up form','Creates the login','Creates the customer record','Shows the account overview'],
+  'capture-payment':['Shows the order and its payment','Captures the payment at the provider','Shows the payment as Captured'],
+  reorder:['Shows the past order','Creates a new cart','Adds the same items','Shows the cart'],
+  'request-return':['Shows the order','Creates the return request','Asks the warehouse for the items','Shows the return as Requested']
+};
+Object.entries(RS).forEach(([id,L])=>{ const F=FLOW[id]; if(F) F.steps.forEach((s,i)=>{ if(!s.r&&L[i]) s.r=L[i]; }); });
+
+/* ---------- Syntroper suggests APIs from a description ---------- */
+const SYN={buy:['carts','complete','orders'],checkout:['complete','carts','payment-collections'],pay:['payment-collections','payment-sessions','payments','capture'],payment:['payment-collections','payment-sessions','payments','capture'],deliver:['shipping-options','fulfillments','shipments'],delivery:['shipping-options','calculate'],ship:['shipping-options','fulfillments','shipments'],return:['returns'],refund:['refund'],cancel:['cancel'],login:['auth','session'],sign:['auth','session','register'],register:['register','customers'],signup:['register'],address:['addresses','carts'],stock:['inventory-items','reservations','location-levels','stock-locations'],price:['price-lists','prices'],discount:['promotions'],promo:['promotions'],coupon:['promotions'],product:['products','variants'],order:['orders'],cart:['carts','line-items'],item:['line-items','items'],exchange:['exchanges'],edit:['order-edits'],category:['product-categories'],collection:['collections'],customer:['customers'],group:['customer-groups'],import:['import'],archive:['archive'],transfer:['transfer'],variant:['variants'],option:['options','shipping-options'],fulfil:['fulfillments'],fulfill:['fulfillments']};
+const VERB={open:'GET',see:'GET',view:'GET',show:'GET',list:'GET',check:'GET',find:'GET',browse:'GET',create:'POST',add:'POST',new:'POST',save:'POST',submit:'POST',place:'POST',update:'POST',change:'POST',pick:'POST',choose:'POST',enter:'POST',confirm:'POST',remove:'DELETE',delete:'DELETE'};
+const stem = w => w.replace(/(ies)$/,'y').replace(/(ing|ed|es|s)$/,'');
+function aiScore(r,text){ const [m,p]=r.split(' '); const path=p.toLowerCase().split('?')[0]; const segs=path.split('/').filter(Boolean);
+  const words=text.toLowerCase().replace(/[^a-z ]/g,' ').split(/\s+/).filter(w=>w.length>2); let sc=0;
+  words.forEach(w0=>{ const w=stem(w0); if(segs.some(s=>!s.startsWith(':')&&s.startsWith(w))) sc+=2; ((SYN[w0]||SYN[w]||[])).forEach(t=>{ if(segs.includes(t)) sc+=2; }); const v=VERB[w0]||VERB[w]; if(v && v===m) sc+=1; });
+  const us=(OPS[r]||{users:[]}).users.map(x=>UCB[x]).filter(Boolean); us.forEach(u=>{ const n=(u.name+' '+u.goal).toLowerCase(); words.forEach(w=>{ if(w.length>3 && n.includes(stem(w))) sc+=1; }); });
+  if(S.np){ if(path.startsWith('/store')&&S.np.ch==='store') sc+=.5; if(path.startsWith('/admin')&&S.np.ch==='admin') sc+=.5; }
+  return sc; }
+window.aiScore=aiScore;
+window.aiMatch = (r,q) => r.toLowerCase().includes(q) || (/\s/.test(q.trim())||!q.includes('/')) && aiScore(r,q)>=3;
+const top = (q,n,skip=[]) => Object.keys(OPS).filter(r=>!skip.includes(r)).map(r=>[r,aiScore(r,q)]).filter(x=>x[1]>=3).sort((a,b)=>b[1]-a[1]).slice(0,n).map(x=>x[0]);
+const why = r => { const us=(OPS[r]||{users:[]}).users.map(x=>UCB[x]).filter(Boolean); return us.length ? 'Used by '+us[0].name+(us.length>1?` and ${us.length-1} more`:'') : 'Not used by a use case yet'; };
+window.aiSuggestHTML = (q,M) => { if(q.includes('/')&&!/\s/.test(q)) return ''; const L=top(q,4); if(!L.length) return '';
+  return `<div class="ngrp ai"><div class="ng2 open"><span class="ngcb">${sIc(16)}</span><span class="ngt"><span class="nm">Suggested by Syntroper</span><span class="ct">for “${esc(q)}”</span></span></div>${L.map(r=>{ const on=M.pick.includes(r); const [m,...p]=r.split(' ');
+    return `<button class="nopt ${on?'on':''}" data-act="nppick" data-arg="${esc(r)}" role="checkbox" aria-checked="${on}"><span class="cx-cb ${on?'on':''}">${on?I('check',12,'',2.2):''}</span><span class="meth ${m.toLowerCase()}">${m}</span><code>${esc(p.join(' '))}</code><span class="u">${esc(why(r))}</span></button>`; }).join('')}</div>`; };
+window.aiStepHTML = M => { const q=M.ask.trim(); const L=top(q,3,M.pick);
+  return `<div class="npsg"><div class="h">${sIc(14)}${L.length?'Syntroper suggests':'No API matches yet. Try other words, or pick one on the left.'}</div>${L.map(r=>{ const [m,...p]=r.split(' ');
+    return `<div class="r"><span class="meth ${m.toLowerCase()}">${m}</span><code title="${esc(r)}">${esc(p.join(' '))}</code><small>${esc(why(r))}</small><button class="btn sm primary" data-act="npsugg" data-arg="${esc(r)}">${I('plus',14)}Add step</button></div>`; }).join('')}</div>`; };
+Object.assign(ACT,{
+  npper(id){ const P=S.np.per; const i=P.indexOf(id); if(i>=0) P.splice(i,1); else P.push(id); renderNP(); },
+  npsugg(r){ const M=S.np; if(!M.pick.includes(r)) M.pick.push(r); const t=M.ask.trim(); if(t) M.titles[r]=t.charAt(0).toUpperCase()+t.slice(1); M.ask=''; M.open.add(routeCtxOf(r)); renderNP({id:'npAsk'}); }
+});
+const routeCtxOf = r => { if(window.API_OWNER&&API_OWNER[r]) return API_OWNER[r]; const o=OPS[r]; return o&&UCB[o.users[0]] ? UCB[o.users[0]].ctx : 'unassigned'; };
+document.addEventListener('input', e=>{ const t=e.target; if(!S.np) return; if(t.id==='npAsk'){ S.np.ask=t.value; renderNP({id:'npAsk', pos:t.selectionStart}); } if(t.classList&&t.classList.contains('npR')) S.np.resp[t.dataset.r]=t.value; });
+document.addEventListener('keydown', e=>{ if(e.target.id==='npAsk' && e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); const b=document.querySelector('#npModal [data-act=npsugg]'); if(b) ACT.npsugg(b.dataset.arg); } }, true);
+
+/* ---------- personas in the list: filter and group ---------- */
+S.cx.f.per = S.cx.f.per || [];
+{ const _ug=ucGroups; ucGroups=function(fs){ const ok = u => { const F=S.cx.f.per||[]; return !F.length || (u.personas||[]).some(p=>F.includes(p)); };
+    if(S.cx.groupBy==='per'){ const list=UC.filter(u=>fs(u)&&ok(u)); return PERSONAS.map(p=>({g:p.name, k:'per:'+p.id, rows:list.filter(u=>(u.personas||[]).includes(p.id)).map(u=>({st:u.status, name:u.name, act:'gsel', arg:'uc:'+u.id, s:u.status, right:''}))})).filter(g=>g.rows.length); }
+    return _ug(u=>fs(u)&&ok(u)); }; }
+GB_NAME.per='Persona';
+{ const _cf=ACT.cxf; ACT.cxf=function(a){ const [k,v]=a.split(':'); if(k==='per'){ const L=S.cx.f.per=S.cx.f.per||[]; const i=L.indexOf(v); i>=0?L.splice(i,1):L.push(v); render(); return; } return _cf.call(this,a); }; }
+{ const _cl=ACT.cxfclear; ACT.cxfclear=function(a){ const r=_cl.call(this,a); S.cx.f.per=[]; render(); return r; }; }
+{ const _fc=filterChips; filterChips=function(){ return _fc().concat((S.cx.f.per||[]).map(p=>[PB[p].name,'per:'+p])); }; }
+{ const _fm=filterMenuHTML; filterMenuHTML=function(){ const h=_fm(); const F=S.cx.f.per||[];
+    const cb=p=>{ const on=F.includes(p.id); return `<button class="cx-opt" data-act="cxf" data-arg="per:${p.id}" role="menuitemcheckbox" aria-checked="${on}"><span class="cx-cb ${on?'on':''}">${on?I('check',12,'',2.2):''}</span><span class="l">${esc(p.name)}</span><span class="n">${UC.filter(u=>(u.personas||[]).includes(p.id)).length}</span></button>`; };
+    return h.replace('<div class="cx-ph">Channel app</div>', `<div class="cx-ph">Persona</div>${PERSONAS.map(cb).join('')}<div class="cx-dv"></div><div class="cx-ph">Channel app</div>`); }; }
+/* ---------- detail: personas row ---------- */
+{ const _ih=itemHTML; itemHTML=function(sel,o={}){ let h=_ih(sel,o); if((o&&o.lib)||sel.t!=='uc'||!UCB[sel.id]) return h;
+    return h.replace('<span>Source</span>', `<span>Personas</span><div class="pers">${pChips(UCB[sel.id])}</div><span>Source</span>`); }; }
+try{ render(); }catch(e){ console.error(e); }
+})();
+</script>
+<style>
+/* FB38 · sequence diagram */
+#ucFlow svg.fe.sq .sq-life{stroke:var(--border-strong);stroke-width:1.5;stroke-dasharray:4 5}
+#ucFlow svg.fe.sq .sq-sep{stroke:var(--border);stroke-width:1}
+#ucFlow svg.fe.sq .sq-m{fill:none;stroke:var(--text-2);stroke-width:1.5}
+#ucFlow svg.fe.sq .sq-m.act{stroke:var(--accent-on)}
+#ucFlow svg.fe.sq .sq-m.ret{stroke:var(--text-3);stroke-dasharray:5 4;stroke-width:1.25}
+#ucFlow svg.fe.sq .sq-m.event{stroke:var(--warn);stroke-dasharray:2 4}
+#ucFlow svg.fe.sq .sq-ah{fill:var(--text-2);stroke:var(--text-2);stroke-width:1.25}
+#ucFlow svg.fe.sq .sq-ah.act{fill:var(--accent-on);stroke:var(--accent-on)}
+#ucFlow svg.fe.sq .sq-ah.ret{fill:none;stroke:var(--text-3)}
+#ucFlow svg.fe.sq .sq-ah.event{fill:none;stroke:var(--warn)}
+#ucFlow svg.fe.sq .sq-m.on,#ucFlow svg.fe.sq .sq-ah.on{stroke:#fff}
+#ucFlow svg.fe.sq .sq-m.nw{stroke:var(--ok)}
+#ucFlow svg.fe.sq .sq-m.dl{opacity:.4}
+#ucFlow svg.fe.sq .sq-m.alt.error,#ucFlow svg.fe.sq .sq-ah.alt.error{stroke:var(--danger-text)}
+#ucFlow svg.fe.sq .sq-m.alt.validation,#ucFlow svg.fe.sq .sq-ah.alt.validation{stroke:var(--warn)}
+#ucFlow svg.fe.sq .sq-frame{fill:rgba(255,255,255,.02);stroke:var(--border-strong);stroke-width:1.25}
+#ucFlow svg.fe.sq .sq-ftag{fill:var(--surface-strong)}
+#ucFlow svg.fe.sq .sq-altsep{stroke:var(--border-strong);stroke-dasharray:6 4}
+.sq-lh{position:absolute;display:flex;align-items:center;gap:8px;height:52px;padding:0 12px;border-radius:10px;background:var(--panel);border:1px solid var(--border-strong);box-shadow:var(--shadow)}
+.sq-lh>svg,.sq-lh>.kic2{flex:none;color:var(--text-2)}
+.sq-lh span{display:flex;flex-direction:column;min-width:0}
+.sq-lh b{font:600 13px/18px var(--font);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sq-lh small{font:400 12px/16px var(--font);color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sq-lh.k-person{border-color:rgba(168,218,255,.45)}
+.sq-lh.k-system{border-color:var(--accent)}
+.sq-lh.k-code b{font-family:var(--mono);font-size:12px}
+.sq-step{position:absolute;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--surface-strong);font:600 12px/18px var(--font);color:var(--text)}
+.sq-step.on{background:var(--accent);color:#fff}
+.sq-step.nw{background:var(--ok);color:#06210f}
+.sq-lbl{position:absolute;display:flex;align-items:center;justify-content:center;gap:6px;height:22px;padding:0 6px;font:400 12px/18px var(--font);color:var(--text);text-align:center;border-radius:6px;white-space:nowrap;overflow:hidden}
+.sq-lbl>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.sq-lbl .mono{font-family:var(--mono)}
+.sq-lbl em{flex:none;font-style:normal;font:500 10px/14px var(--font);padding:0 5px;border-radius:999px;background:var(--surface);color:var(--text-3);text-transform:uppercase;letter-spacing:.03em}
+.sq-lbl.act{color:var(--accent-on)} .sq-lbl.act em{color:var(--accent-on);background:var(--selected)}
+.sq-lbl.ret{color:var(--text-2)}
+.sq-lbl.event{color:var(--warn-text)} .sq-lbl.event em{color:var(--warn-text);background:var(--warn-sub)}
+.sq-lbl>svg{flex:none;color:var(--text-3)}
+button.sq-lbl:hover{background:var(--surface);color:#fff}
+button.sq-lbl.open{background:var(--selected);box-shadow:inset 0 0 0 1px var(--accent);color:#fff}
+.sq-lbl.on{color:#fff;font-weight:500}
+.sq-lbl.nw{color:var(--ok-text)}
+.sq-lbl.dl{text-decoration:line-through;opacity:.6}
+.sq-lbl.alt{color:var(--text-2)} .sq-lbl.alt.error{color:var(--danger-text)} .sq-lbl.alt.validation{color:var(--warn-text)}
+.sq-cond{position:absolute;font:500 12px/18px var(--font);color:var(--text-2);white-space:nowrap}
+.sq-ftxt{position:absolute;font:700 11px/18px var(--mono);color:var(--text)}
+.sq-note{position:absolute;font:500 12px/18px var(--font);color:var(--text-3);white-space:nowrap}
+.sq-end{position:absolute;display:flex;align-items:center;justify-content:center;gap:8px;height:36px;border-radius:999px;border:1.5px solid var(--ok);background:var(--panel);font:500 13px/18px var(--font);color:var(--text)}
+.sq-end>svg{color:var(--ok);flex:none}
+.sq-end span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sq-pop{position:absolute;width:600px;padding:14px;border-radius:12px;background:var(--panel);border:1px solid var(--accent);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;cursor:auto;user-select:text}
+.sq-pop-h{display:flex;flex-direction:column;gap:2px}
+.sq-pop-h .k{font:500 12px/18px var(--font);color:var(--text-3)}
+.sq-pop-h .t{font:600 14px/20px var(--font);color:var(--text)}
+.sq-pop .fxx{margin-top:0;border-top:0;padding-top:0}
+.fvt.sql .lvn{display:inline-grid;place-items:center;width:16px;height:16px;margin-right:6px;border-radius:50%;background:var(--surface-strong);font:600 10px/16px var(--font)}
+.fvt.sql button.on .lvn{background:var(--accent);color:#fff}
+.fx-leg2 .sq-k{display:inline-block;width:20px;height:0;border-top:1.5px solid var(--text-2);vertical-align:middle;margin-right:6px}
+.fx-leg2 .sq-k.ret{border-top-style:dashed;border-color:var(--text-3)}
+.fx-leg2 .sq-k.event{border-top-style:dotted;border-color:var(--warn)}
+.fx-leg2 .sq-k.alt{height:10px;border:1.25px solid var(--border-strong);border-radius:3px}
+</style>
+<style>
+/* FB39 · dependency board: move use cases / new bounded context / new use case */
+#dbd{position:absolute;inset:0;z-index:45;display:grid;grid-template-columns:380px 1fr;background-color:var(--canvas);background-image:radial-gradient(circle at 1px 1px,var(--surface) 1px,transparent 1.2px);background-size:18px 18px}
+#dbd[hidden]{display:none}
+.db-side{display:flex;flex-direction:column;min-height:0;background:var(--panel);border-right:1px solid var(--border)}
+.db-h{display:flex;align-items:center;gap:10px;padding:14px 14px 14px 16px;border-bottom:1px solid var(--border)}
+.db-h b{flex:1;min-width:0;font:600 16px/22px var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.db-h .ic{display:grid;color:var(--l4)}
+.db-sc{flex:1;min-height:0;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:20px}
+.db-sec{display:flex;flex-direction:column;gap:8px}
+.db-sh{display:flex;align-items:center;gap:8px;font:600 14px/20px var(--font);color:var(--text)}
+.db-sh .sp{flex:1}
+.db-sh .count{margin-left:0}
+.db-side .field{height:40px;min-height:40px}
+.db-side .field input{height:100%}
+.db-list{display:flex;flex-direction:column;max-height:260px;overflow:auto;border:1px solid var(--border-strong);border-radius:10px;padding:4px}
+.db-g{padding:8px 8px 4px;font:600 12px/18px var(--font);color:var(--text-3);display:flex;align-items:center;gap:6px}
+.db-u{display:flex;align-items:center;gap:8px;min-height:34px;padding:4px 8px;border-radius:6px;text-align:left;font:400 14px/20px var(--font);color:var(--text);cursor:grab}
+.db-u:hover{background:var(--surface)}
+.db-u .l{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.db-u .n{font:400 12px/18px var(--font);color:var(--text-3)}
+.db-iss{display:flex;flex-direction:column;gap:8px}
+.db-i{border-radius:10px;background:var(--surface);overflow:hidden;box-shadow:inset 3px 0 0 var(--warn)}
+.db-i.done{box-shadow:inset 3px 0 0 var(--ok)}
+.db-i.focus{outline:1px solid var(--accent)}
+.db-it{display:flex;align-items:flex-start;gap:8px;width:100%;padding:10px 12px 6px;text-align:left}
+.db-it>svg{flex:none;margin-top:2px;color:var(--warn)}
+.db-i.done .db-it>svg{color:var(--ok)}
+.db-it span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.db-it b{font:500 14px/20px var(--font);color:var(--text)}
+.db-it small{font:400 12px/18px var(--font);color:var(--text-2)}
+.db-it code{font:400 12px/18px var(--mono);color:var(--text)}
+.db-op{display:flex;flex-direction:column;gap:4px;padding:2px 10px 10px}
+.db-op button{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:8px;text-align:left;font:400 12px/18px var(--font);color:var(--text-2)}
+.db-op button:hover{background:var(--surface-strong);color:var(--text)}
+.db-op button.on{background:var(--selected);color:var(--text);box-shadow:inset 0 0 0 1px var(--accent)}
+.db-op .cx-rb{flex:none;margin-top:2px}
+.db-op b{font-weight:500;color:var(--text)}
+.db-info{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:8px;background:var(--canvas);font:400 12px/18px var(--font);color:var(--text-2)}
+.db-info>svg{flex:none;margin-top:1px;color:var(--ok)}
+.db-plan{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:10px;background:var(--selected)}
+.db-plan .h{display:flex;align-items:center;gap:6px;font:600 12px/18px var(--font);color:var(--accent-on)}
+.db-plan ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font:400 12px/18px var(--font);color:var(--text)}
+.db-ok{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:var(--ok-sub);font:500 12px/18px var(--font);color:var(--ok-text)}
+.db-f{display:flex;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid var(--border)}
+.db-f .sp{flex:1}
+.db-f small{font:400 12px/18px var(--font);color:var(--warn-text)}
+.db-cv{position:relative;min-width:0;overflow:auto}
+.db-cvi{position:relative;display:flex;align-items:flex-start;gap:72px;padding:32px 40px 80px;min-height:100%;width:max-content}
+.db-lines{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.db-lines path{fill:none;stroke-width:1.5}
+.db-lines .warn{stroke:var(--warn);stroke-dasharray:5 4}
+.db-lines .ok{stroke:var(--ok)}
+.db-lines .info{stroke:var(--text-3);stroke-dasharray:2 4}
+.db-lines .focus{stroke-width:2.5}
+.db-col{width:340px;flex:none;display:flex;flex-direction:column;gap:12px;padding:12px;border-radius:14px;border:1px solid var(--border);background:rgba(19,22,32,.72)}
+.db-col.target{border:1.5px dashed var(--accent);background:rgba(98,78,213,.07)}
+.db-col.target.over{background:rgba(98,78,213,.18)}
+.db-col.other{width:300px}
+.db-ch{display:flex;align-items:center;gap:8px;padding:2px 4px}
+.db-ch b{flex:1;min-width:0;font:600 14px/20px var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.db-ch small{font:400 12px/18px var(--font);color:var(--text-3)}
+.db-empty{display:flex;flex-direction:column;align-items:center;gap:6px;padding:28px 16px;border-radius:10px;border:1px dashed var(--border-strong);text-align:center;font:400 12px/18px var(--font);color:var(--text-2)}
+.db-empty b{font:600 14px/20px var(--font);color:var(--text)}
+.db-c{border-radius:12px;background:var(--panel);border:1px solid var(--border-strong);box-shadow:var(--shadow);overflow:hidden}
+.db-c.move{border-color:var(--accent)}
+.db-c.stay{border-color:var(--border-strong)}
+.db-c.ghost{background:none;box-shadow:none;border-style:dashed;opacity:.6}
+.db-c.focus{box-shadow:0 0 0 2px var(--accent),var(--shadow)}
+.db-c[draggable=true]{cursor:grab}
+.db-c[draggable=true]:active{cursor:grabbing}
+.db-chd{display:flex;align-items:center;gap:8px;padding:10px 12px}
+.db-chd b{flex:1;min-width:0;font:500 14px/20px var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.db-chd .grip{color:var(--text-3);display:grid}
+.db-chd .tag{flex:none}
+.db-chd .ib{width:24px;height:24px}
+.db-apis{display:flex;flex-direction:column;border-top:1px solid var(--border)}
+.db-a{display:flex;flex-direction:column;gap:4px;padding:8px 12px;border-top:1px solid var(--border)}
+.db-a:first-child{border-top:0}
+.db-a.warn{background:rgba(255,204,77,.06)}
+.db-a.ok{background:rgba(52,199,89,.05)}
+.db-ar{display:flex;align-items:center;gap:8px;min-width:0}
+.db-ar code{flex:1;min-width:0;font:400 12px/18px var(--mono);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.db-fl{display:flex;flex-wrap:wrap;gap:4px}
+.db-fl span{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 6px;border-radius:999px;font:500 12px/16px var(--font);background:var(--surface);color:var(--text-2)}
+.db-fl span.warn{background:var(--warn-sub);color:var(--warn-text)}
+.db-fl span.ok{background:var(--ok-sub);color:var(--ok-text)}
+.db-fl span.acc{background:var(--accent-sub);color:var(--accent-on)}
+.db-pts{display:flex;flex-direction:column;gap:6px}
+.db-p{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:var(--panel);border:1px solid var(--border-strong);font:400 12px/18px var(--font);color:var(--text)}
+.db-p b{font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.db-p.warn{border-color:rgba(255,204,77,.5)}
+.db-p.ok{border-color:rgba(52,199,89,.45)}
+.db-leg{position:sticky;left:0;bottom:0;display:flex;gap:16px;padding:10px 16px;font:400 12px/18px var(--font);color:var(--text-2);background:linear-gradient(transparent,var(--canvas) 40%)}
+.db-leg i{display:inline-block;width:18px;border-top:1.5px solid;vertical-align:middle;margin-right:6px}
+.db-leg i.w{border-color:var(--warn);border-top-style:dashed} .db-leg i.o{border-color:var(--ok)} .db-leg i.n{border-color:var(--text-3);border-top-style:dotted}
+/* new use case · step 3 */
+.npx .npb3{display:grid;grid-template-columns:380px 1fr;min-height:0;flex:1}
+.npx .npb3 .db-side{border-radius:0}
+.npx .npb3 .db-cv{background-color:var(--canvas);background-image:radial-gradient(circle at 1px 1px,var(--surface) 1px,transparent 1.2px);background-size:18px 18px}
+</style>
+<script>
+/* FB41 · dependency board v2: pick single APIs, dependencies on the right, decisions saved together, zoomable canvas, chips only for status */
+(function(){
+document.getElementById('vCodona').insertAdjacentHTML('beforeend','<section id="dbd" hidden aria-label="Move APIs and use cases"></section>');
+const el=document.getElementById('dbd');
+const now = () => 'Today, '+nowT();
+window.API_OWNER = window.API_OWNER || {};
+const rCtx = r => API_OWNER[r] || (OPS[r]&&UCB[OPS[r].users[0]] ? UCB[OPS[r].users[0]].ctx : 'unassigned');
+const cName = c => c==='unassigned' ? 'No context' : CTB[c] ? CTB[c].name : ctxName(c);
+const live = id => UCB[id] && UC.includes(UCB[id]);
+const mp = a => { const [m,...p]=a.split(' '); return `<span class="meth ${m.toLowerCase()}">${m}</span><code title="${esc(a)}">${esc(p.join(' '))}</code>`; };
+const chip = (cls,t) => `<span class="dbs ${cls}">${t}</span>`;
+const nm = id => UCB[id] ? UCB[id].name : id;
+const list2 = ids => ids.length===1 ? `<b>${esc(nm(ids[0]))}</b>` : `<b>${esc(nm(ids[0]))}</b> and ${ids.length-1} more`;
+const ensure = () => { const M=S.nc; if(!M.sel) M.sel=[...new Set((M.pick||[]).flatMap(id=>UCB[id]?UCB[id].apis:[]))]; M.res=M.res||{}; M.open=M.open||{}; M.from=M.from||[...new Set(M.pick||[])]; return M; };
+
+/* ---------- model ---------- */
+function model(){ const M=ensure(); const add=M.mode==='add'; const tgt=add?M.to:'__new'; const tName=add?cName(M.to):(M.name.trim()||'the new context');
+  const sel=new Set(M.sel); const cand=UC.filter(u=>u.apis.length && !(add&&u.ctx===M.to));
+  const full=cand.filter(u=>u.apis.every(a=>sel.has(a))).map(u=>u.id);
+  const part=cand.filter(u=>u.apis.some(a=>sel.has(a)) && !u.apis.every(a=>sel.has(a))).map(u=>u.id);
+  const R=M.res; const issues=[], infos=[];
+  part.forEach(id=>{ const u=UCB[id]; issues.push({key:'part:'+id, type:'part', id, moved:u.apis.filter(a=>sel.has(a)), kept:u.apis.filter(a=>!sel.has(a))}); });
+  /* who moves once decisions apply */
+  const mov=new Set(full); part.forEach(id=>{ if(R['part:'+id]==='all') mov.add(id); });
+  [...sel].forEach(a=>{ const st=(OPS[a]||{users:[]}).users.filter(x=>live(x)&&!full.includes(x)&&!part.includes(x)); if(st.length){ const key='api:'+a; issues.push({key, type:'api', api:a, src:rCtx(a), st}); if(R[key]==='with') st.forEach(x=>mov.add(x)); } });
+  const routes=new Set([...sel, ...[...mov].flatMap(id=>UCB[id].apis)]);
+  part.forEach(id=>{ if(R['part:'+id]==='none') UCB[id].apis.forEach(a=>{ if(!UC.some(u=>u.id!==id&&mov.has(u.id)&&u.apis.includes(a))) routes.delete(a); }); });
+  issues.filter(x=>x.type==='api'&&R[x.key]==='keep').forEach(x=>routes.delete(x.api));
+  const seen=new Set();
+  [...routes].forEach(a=>opInts(a).forEach(iid=>{ const it=INB[iid]; if(!it||seen.has(iid)) return; seen.add(iid);
+    if(it.to===tgt){ infos.push({t:`“${it.label}” becomes internal to ${tName}`, iid, st:'internal'}); return; }
+    const stay=usersOf(iid).filter(u=>live(u.id)&&!mov.has(u.id)&&!u.apis.some(x=>routes.has(x)));
+    if(stay.length) issues.push({key:'pt:'+iid, type:'pt', it, src:it.from, stay:stay.map(u=>u.id)}); else infos.push({t:`“${it.label}” moves with them`, iid, st:'moves'}); }));
+  issues.forEach(x=>x.done=!!R[x.key]);
+  return {M, add, tgt, tName, sel, full, part, mov:[...mov], routes:[...routes], issues, infos}; }
+window.dbModel = model;
+const IGN = ['ignore','Ignore for now. Nothing changes for it.'];
+const OPTS = (x,D) => [...OPTS0(x,D), IGN];
+const OPTS0 = (x,D) => x.type==='part' ? [['split',`Keep <b>${esc(nm(x.id))}</b> in ${esc(cName(UCB[x.id].ctx))}. It calls ${esc(D.tName)} for ${x.moved.length===1?'this API':'these '+x.moved.length+' APIs'}.`],['all',`Move all of <b>${esc(nm(x.id))}</b>.`],['none',`Don’t move its APIs.`]]
+  : x.type==='api' ? [['with',`Move ${list2(x.st)} too.`],['call',`Move it. ${list2(x.st)} call${x.st.length===1?'s':''} ${esc(D.tName)} for it.`],['keep',`Leave it in ${esc(cName(x.src))}. The moved use cases call it there.`],['copy',`Both keep their own copy.`]]
+  : [['stay',`Keep it in ${esc(cName(x.src))}. ${esc(D.tName.charAt(0).toUpperCase()+D.tName.slice(1))} calls it.`],['move',`Move it to ${esc(D.tName)}. ${list2(x.stay)} call${x.stay.length===1?'s':''} it there.`],['event',`Turn it into an event both listen to.`]];
+function planOf(D){ const R=D.M.res, tn=D.tName, L=[];
+  D.mov.forEach(id=>{ const u=UCB[id]; L.push(`Move ${esc(u.name)} from ${esc(cName(u.ctx))} to ${esc(tn)}`); });
+  const alone=D.routes.filter(a=>!D.mov.some(id=>UCB[id].apis.includes(a))); if(alone.length) L.push(`Move ${alone.length} API${alone.length===1?'':'s'} on their own: ${alone.map(a=>`<code>${esc(a)}</code>`).join(', ')}`);
+  D.issues.forEach(x=>{ const r=R[x.key]; if(!r) return;
+    if(x.type==='part' && r==='split') L.push(`${esc(nm(x.id))} calls ${esc(tn)} for ${x.moved.length} moved API${x.moved.length===1?'':'s'}`);
+    if(x.type==='api' && r==='call') L.push(`${x.st.map(nm).map(esc).join(', ')} call${x.st.length===1?'s':''} ${esc(tn)} for <code>${esc(x.api)}</code>`);
+    if(x.type==='api' && r==='keep') L.push(`${esc(tn)} calls ${esc(cName(x.src))} for <code>${esc(x.api)}</code>`);
+    if(x.type==='api' && r==='copy') L.push(`Copy <code>${esc(x.api)}</code> into ${esc(tn)}`);
+    if(x.type==='pt') L.push(r==='stay'?`${esc(tn)} calls ${esc(cName(x.src))} for “${esc(x.it.label)}”`:r==='move'?`Move “${esc(x.it.label)}” to ${esc(tn)}`:`Publish “${esc(x.it.label)}” as an event`); });
+  return L; }
+
+/* ---------- left: use cases with every API ---------- */
+function leftHTML(D){ const M=D.M; const q=(M.q||'').trim().toLowerCase();
+  const groups=CTX.filter(c=>!(D.add&&c.id===M.to)).map(c=>({c, us:ucsOf(c.id).filter(u=>u.apis.length&&(!q||u.name.toLowerCase().includes(q)||u.apis.some(a=>a.toLowerCase().includes(q))))})).filter(g=>g.us.length);
+  const rows=groups.map(g=>`<div class="db-g">${g.c.id==='unassigned'?'No context':esc(g.c.name)}<span class="count">${g.us.length}</span></div>${g.us.map(u=>{ const n=u.apis.filter(a=>D.sel.has(a)).length, all=n===u.apis.length, mix=n>0&&!all; const op=M.open[u.id]||q&&u.apis.some(a=>a.toLowerCase().includes(q));
+      return `<div class="db-uw ${n?'on':''}"><div class="db-u" draggable="true" data-uc="${u.id}"><button class="ngcb" data-act="ncpick" data-arg="${u.id}" role="checkbox" aria-checked="${all?'true':mix?'mixed':'false'}" aria-label="Move all of ${esc(u.name)}"><span class="cx-cb ${all?'on':mix?'mix':''}">${all?I('check',12,'',2.2):mix?'<i></i>':''}</span></button>
+        <button class="l" data-act="dbopen" data-arg="${u.id}" aria-expanded="${!!op}"><span>${esc(u.name)}</span><small>${n?`${n} of ${u.apis.length}`:`${u.apis.length} API${u.apis.length===1?'':'s'}`}</small>${I(op?'chevron-up':'chevron-down',14)}</button></div>
+        ${op?`<div class="db-al">${u.apis.map(a=>{ const on=D.sel.has(a); return `<button class="db-ap ${on?'on':''}" draggable="true" data-r="${esc(a)}" data-from="${u.id}" data-act="dbapi" data-arg="${u.id}|${esc(a)}" role="checkbox" aria-checked="${on}"><span class="cx-cb ${on?'on':''}">${on?I('check',12,'',2.2):''}</span>${mp(a)}</button>`; }).join('')}</div>`:''}</div>`; }).join('')}`).join('') || '<div class="db-g">Nothing matches</div>';
+  const nameErr=!D.add && M.name.trim() && CTX.some(c=>c.name.toLowerCase()===M.name.trim().toLowerCase());
+  return `<div class="db-side db-l"><div class="db-h"><span class="ic">${fbI(D.add?'swap':'cubedash',16)}</span><b>${D.add?`Move to ${esc(D.tName)}`:'New bounded context'}</b><button class="ib" data-act="ncclose" aria-label="Close">${I('x',16)}</button></div>
+    <div class="db-sc">
+      ${D.add?'':`<div class="db-sec"><label class="db-sh" for="ncName">Name <span class="req" aria-hidden="true">*</span></label><label class="field ${nameErr?'err':''}"><input id="ncName" type="text" autocomplete="off" value="${esc(M.name)}" placeholder="For example, Returns"></label>${nameErr?`<div class="nerr">A context called “${esc(M.name.trim())}” already exists.</div>`:''}</div>`}
+      <div class="db-sec db-grow"><div class="db-sh">Use cases and APIs${D.sel.size?`<span class="db-selc">${D.sel.size} selected<button data-act="ncclear" aria-label="Clear all ${D.sel.size} selected APIs" title="Clear all">${I('x',12)}</button></span>`:''}</div>${D.sel.size?'':'<div class="db-selrow"><span class="none">Tick APIs or whole use cases, or drag them onto the canvas</span></div>'}
+        <label class="field">${I('search',16)}<input id="ncQ" type="text" autocomplete="off" value="${esc(M.q||'')}" placeholder="Search use cases or routes"></label><div class="db-list">${rows}</div></div>
+    </div></div>`; }
+
+/* ---------- right: dependencies, plan, save ---------- */
+function rightHTML(D){ const M=D.M; const open=D.issues.filter(x=>!x.done).length; const nameErr=!D.add && (!M.name.trim() || CTX.some(c=>c.name.toLowerCase()===M.name.trim().toLowerCase()));
+  const ok = D.sel.size && !nameErr; const plan=planOf(D); const tab=M.dtab||'open'; const shown=D.issues.filter(x=>tab==='open'?!x.done:x.done);
+  const head = x => x.type==='part' ? `<b>Only some APIs move</b><small>${esc(nm(x.id))} · ${x.moved.length} of ${x.moved.length+x.kept.length}</small>`
+    : x.type==='api' ? `<b>Shared API</b><code>${esc(x.api)}</code><small>Also used by ${x.st.slice(0,2).map(i=>esc(nm(i))).join(', ')}${x.st.length>2?` and ${x.st.length-2} more`:''}</small>`
+    : `<b>Shared integration point</b><small>${esc(x.it.label)} · ${esc(cName(x.src))} → ${esc(ctxName(x.it.to))}</small>`;
+  const card = x => { const r=M.res[x.key]; M.col=M.col||{}; const op = M.col[x.key]!=null ? !M.col[x.key] : !r; const pick=r?(OPTS(x,D).find(o=>o[0]===r)||[])[1]:'';
+    return `<div class="db-i ${r?'done':''} ${M.focus===x.key?'focus':''} ${op?'open':''}"><button class="db-it" data-act="dbtog" data-arg="${esc(x.key)}" aria-expanded="${op}">${I(r?'check-circle':'alert',16)}<span>${head(x)}${!op&&pick?`<small class="pk">${I('check',12)}<span>${pick}</span></small>`:''}</span><span class="db-ir">${chip(r?'ok':'warn', r?'Decided':'To decide')}${I(op?'chevron-up':'chevron-down',16)}</span></button>
+    ${op?`<div class="db-op">${OPTS(x,D).map(([k,l])=>`<button class="${r===k?'on':''}" data-act="dbres" data-arg="${esc(x.key)}|${k}" role="radio" aria-checked="${r===k}"><span class="cx-rb ${r===k?'on':''}"></span><span>${l}</span></button>`).join('')}</div>`:''}</div>`; };
+  return `<div class="db-side db-r"><div class="db-h"><b>Dependencies</b>${D.issues.length?chip(open?'warn':'ok', open?`${open} to decide`:'All decided'):''}</div>
+    <div class="db-sc">
+      ${D.issues.length?`<div class="tabs dbt" role="tablist"><button role="tab" aria-selected="${tab==='open'}" class="${tab==='open'?'on':''}" data-act="dbtab" data-arg="open">Unresolved <span class="count">${open}</span></button><button role="tab" aria-selected="${tab==='done'}" class="${tab==='done'?'on':''}" data-act="dbtab" data-arg="done">Resolved <span class="count">${D.issues.length-open}</span></button></div>`:''}
+      ${!D.sel.size?'<div class="db-info">Pick APIs or whole use cases on the left. Their dependencies show up here.</div>':!D.issues.length?`<div class="db-ok">${I('check-circle',16)}Nothing shared. These can move as they are.</div>`:shown.length?shown.map(card).join(''):`<div class="db-info">${tab==='open'?'Everything is resolved.':'Nothing resolved yet. Pick an option on a dependency, or Ignore it.'}</div>`}
+      ${D.infos.length?`<div class="db-sec"><div class="db-sh">No decision needed</div>${D.infos.map(x=>`<div class="db-info">${I('check',14)}<span>${esc(x.t)}</span></div>`).join('')}</div>`:''}
+      ${D.sel.size?`<div class="db-plan"><div class="h">${sIc(14)}Refactoring plan · ${plan.length}</div><ol>${plan.map(t=>`<li>${t}</li>`).join('')}</ol></div>`:''}
+    </div>
+    <div class="db-f"><span class="db-ns">${I('alert',14)}${open&&D.sel.size?`${open} unresolved. They stay as they are if you save now.`:'Nothing is saved until you press Save.'}</span><div class="db-fb"><button class="btn" data-act="ncclose">Cancel</button><button class="btn primary" data-act="ncgo" ${ok?'':'disabled'}>${D.add?'Save and move':'Save and create'}</button></div></div></div>`; }
+
+/* ---------- canvas ---------- */
+function apiRow(a, D, where, uid){ const R=D.M.res; const iss=D.issues.find(x=>x.type==='api'&&x.api===a); const moving=D.routes.includes(a);
+  let st=''; if(where==='t'){ st = iss ? chip(R[iss.key]?'ok':'warn', R[iss.key]?'Decided':'Shared') : ''; }
+  else { st = moving ? chip('acc','Moves') : (iss ? chip(R[iss.key]?'ok':'warn', R[iss.key]?'Decided':'Shared') : ''); }
+  return `<div class="db-a" data-anc="${where}:${uid}:${esc(a)}"><div class="db-ar">${mp(a)}${st}</div></div>`; }
+function canvasHTML(D){ const M=D.M; const R=M.res;
+  const movCards=D.mov.map(id=>{ const u=UCB[id]; return `<div class="db-c move" draggable="true" data-uc="${u.id}"><div class="db-chd"><span class="grip">${I('grip',14)}</span>${kindIc('usecase',14)}<b title="${esc(u.name)}">${esc(u.name)}</b>${chip('acc','Moves')}</div><div class="db-apis">${u.apis.map(a=>apiRow(a,D,'t',u.id)).join('')}</div></div>`; }).join('');
+  const alone=D.routes.filter(a=>!D.mov.some(id=>UCB[id].apis.includes(a)));
+  const aloneCard = alone.length ? `<div class="db-c move"><div class="db-chd">${kindIc('api',14)}<b>APIs moving on their own</b>${chip('acc',alone.length)}</div><div class="db-apis">${alone.map(a=>apiRow(a,D,'t','alone')).join('')}</div></div>` : '';
+  const tgtCol=`<div class="db-col target" data-drop="1"><div class="db-ch">${kindIc('context',16)}<b>${esc(D.tName)}</b>${chip('acc',D.add?'Target':'New')}</div>${movCards}${aloneCard}${!movCards&&!aloneCard?`<div class="db-empty">${fbI('cubedash',22)}<b>Drop here</b><span>Drag a use case or a single API from the left.</span></div>`:''}</div>`;
+  const involved=new Set(D.part.filter(id=>(M.from||[]).includes(id)&&!D.mov.includes(id)));
+  const srcs=[...new Set([...[...involved].map(id=>UCB[id].ctx), ...D.mov.map(id=>UCB[id].ctx)])].filter(c=>!(D.add&&c===M.to));
+  const srcCols=srcs.map(c=>{ const ghosts=D.mov.filter(id=>UCB[id].ctx===c).map(id=>{ const o=(M.gopen||{})[id]; return `<div class="db-c ghost ${o?'open':''}"><button class="db-chd" data-act="dbghost" data-arg="${id}" aria-expanded="${!!o}">${kindIc('usecase',14)}<b>${esc(nm(id))}</b>${chip('acc','Moving')}<span class="db-cnt">${UCB[id].apis.length} API${UCB[id].apis.length===1?'':'s'}</span>${I(o?'chevron-up':'chevron-down',14)}</button>${o?`<div class="db-apis">${UCB[id].apis.map(a=>`<div class="db-a"><div class="db-ar">${mp(a)}${chip('acc','Moves')}</div></div>`).join('')}</div>`:''}</div>`; }).join('');
+    const cards=[...involved].filter(id=>UCB[id].ctx===c).map(id=>{ const u=UCB[id]; const p=D.part.includes(id); return `<div class="db-c stay"><div class="db-chd">${kindIc('usecase',14)}<b title="${esc(u.name)}">${esc(u.name)}</b>${chip(p?'warn':'out',p?'Partly moves':'Stays')}</div><div class="db-apis">${u.apis.map(a=>apiRow(a,D,'s',u.id)).join('')}</div></div>`; }).join('');
+    const pts=[...D.issues.filter(x=>x.type==='pt'&&x.src===c).map(x=>({iid:x.it.id, label:x.it.label, st:R[x.key]?({stay:'Stays',move:'Moves',event:'Event'})[R[x.key]]:'Shared', cls:R[x.key]?'ok':'warn'})), ...D.infos.filter(x=>INB[x.iid].from===c).map(x=>({iid:x.iid, label:INB[x.iid].label, st:x.st==='internal'?'Internal':'Moves', cls:'acc'}))];
+    return `<div class="db-col"><div class="db-ch">${kindIc('context',16)}<b>${esc(cName(c))}</b></div>${ghosts}${cards}${pts.length?`<div class="db-ph">Integration points</div><div class="db-pts">${pts.map(p=>`<div class="db-p" data-anc="pt:${p.iid}">${kindIc('point',14)}<b title="${esc(p.label)}">${esc(p.label)}</b>${chip(p.cls,p.st)}</div>`).join('')}</div>`:''}</div>`; }).join('');
+  return `<div class="db-cv"><div class="db-vp"><div class="db-cvi">${srcCols}${tgtCol}<svg class="db-lines"></svg></div></div>
+    <div class="db-zm float"><button class="zb" data-act="dbz" data-arg="out" aria-label="Zoom out">${I('zoom-out')}</button><span class="pct">${Math.round((M.zt?M.zt.k:1)*100)}%</span><button class="zb" data-act="dbz" data-arg="in" aria-label="Zoom in">${I('zoom-in')}</button><button class="zb" data-act="dbz" data-arg="fit" aria-label="Fit">${I('fit')}</button></div>
+    <div class="db-leg"><span><i class="w"></i>Shared, to decide</span><span><i class="o"></i>Decided</span><span><i class="n"></i>Reaches</span></div></div>`; }
+function drawLines(D){ const inner=el.querySelector('.db-cvi'), svg=el.querySelector('.db-lines'); if(!inner||!svg) return; const k=(D.M.zt&&D.M.zt.k)||1; const R0=inner.getBoundingClientRect();
+  const pos=e=>{ const r=e.getBoundingClientRect(); return {l:(r.left-R0.left)/k, r:(r.right-R0.left)/k, y:(r.top-R0.top)/k+Math.min(r.height/k/2,16)}; }; let p='';
+  let lane=0; const link=(a,b,cls)=>{ if(!a||!b) return; const A=pos(a), B=pos(b); const ax=A.r<B.l?A.r:A.l, bx=A.r<B.l?B.l:B.r; const dir=bx>ax?1:-1;
+    if(Math.abs(A.y-B.y)<2){ p+=`<path class="${cls}" d="M${ax} ${A.y}H${bx}"/>`; return; }
+    const mx=ax+dir*(24+(lane++%5)*8); const rr=Math.min(6,Math.abs(B.y-A.y)/2), sy=B.y>A.y?1:-1;
+    p+=`<path class="${cls}" d="M${ax} ${A.y}H${mx-dir*rr}Q${mx} ${A.y} ${mx} ${A.y+sy*rr}V${B.y-sy*rr}Q${mx} ${B.y} ${mx+dir*rr} ${B.y}H${bx}"/>`; };
+  const anc=v=>[...el.querySelectorAll('[data-anc]')].find(e=>e.dataset.anc===v); const tRow=a=>[...el.querySelectorAll('[data-anc^="t:"]')].find(e=>e.dataset.anc.endsWith(':'+a));
+  D.issues.forEach(x=>{ const cls=(D.M.res[x.key]?'ok':'warn')+(D.M.focus===x.key?' focus':'');
+    if(x.type==='api') x.st.forEach(s=>link(tRow(x.api), anc('s:'+s+':'+x.api), cls));
+    if(x.type==='part') x.moved.forEach(a=>link(anc('s:'+x.id+':'+a), tRow(a), cls));
+    if(x.type==='pt') D.routes.filter(a=>opInts(a).includes(x.it.id)).forEach(a=>link(tRow(a), anc('pt:'+x.it.id), cls)); });
+  D.infos.forEach(x=>D.routes.filter(a=>opInts(a).includes(x.iid)).forEach(a=>link(tRow(a), anc('pt:'+x.iid), 'info')));
+  svg.setAttribute('width', inner.scrollWidth); svg.setAttribute('height', inner.scrollHeight); svg.innerHTML=p; }
+
+/* ---------- zoom ---------- */
+let zoom=null;
+function bindZoom(D, first){ const vp=el.querySelector('.db-vp'), inner=el.querySelector('.db-cvi'); if(!vp||!inner||!window.d3) return;
+  zoom=d3.zoom().scaleExtent([.3,2]).filter(e=>(e.type==='wheel'||!e.target.closest('[draggable=true],button,input,.db-a')) && !e.button).on('zoom',e=>{ D.M.zt=e.transform; inner.style.transform=`translate(${e.transform.x}px,${e.transform.y}px) scale(${e.transform.k})`; const p=el.querySelector('.db-zm .pct'); if(p) p.textContent=Math.round(e.transform.k*100)+'%'; });
+  d3.select(vp).call(zoom).on('dblclick.zoom',null);
+  const t = D.M.zt || d3.zoomIdentity; d3.select(vp).call(zoom.transform, t);
+  if(first) requestAnimationFrame(()=>fitBoard(false)); }
+function fitBoard(anim){ const vp=el.querySelector('.db-vp'), inner=el.querySelector('.db-cvi'); if(!vp||!inner||!zoom) return; const W=inner.scrollWidth, H=inner.scrollHeight, w=vp.clientWidth, h=vp.clientHeight; if(!W||!w) return;
+  const L0=364, R0=404, aw=Math.max(200,w-L0-R0); const k=Math.max(.3,Math.min(1, aw/(W+20), (h-40)/(H+20))); const t=d3.zoomIdentity.translate(L0+Math.max(0,(aw-W*k)/2), 20).scale(k); (anim?d3.select(vp).transition().duration(250):d3.select(vp)).call(zoom.transform,t); }
+
+let D0=null, wasOpen=false;
+function renderBoard(){ if(!S.nc){ el.hidden=true; el.innerHTML=''; wasOpen=false; return; } const D=model(); D0=D;
+  const ae=document.activeElement; const keepF = ae&&ae.id&&el.contains(ae) ? {id:ae.id, pos:ae.selectionStart} : null;
+  const sc=[...el.querySelectorAll('.db-sc')].map(x=>x.scrollTop), li=el.querySelector('.db-list'), lt=li?li.scrollTop:0;
+  el.hidden=false; el.innerHTML=leftHTML(D)+canvasHTML(D)+rightHTML(D);
+  el.querySelectorAll('.db-sc').forEach((x,i)=>x.scrollTop=sc[i]||0); const li2=el.querySelector('.db-list'); if(li2) li2.scrollTop=lt;
+  bindZoom(D, !wasOpen); wasOpen=true; requestAnimationFrame(()=>drawLines(D));
+  if(keepF){ const f=el.querySelector('#'+keepF.id); if(f){ f.focus(); if(keepF.pos!=null) try{ f.setSelectionRange(keepF.pos,keepF.pos); }catch(e){} } } }
+window.renderNC = function(){ renderBoard(); };
+addEventListener('resize', ()=>{ if(S.nc&&D0) drawLines(D0); });
+
+/* ---------- actions ---------- */
+const toggle = (arr, v, on) => { const i=arr.indexOf(v); if(on===undefined) on=i<0; if(on&&i<0) arr.push(v); if(!on&&i>=0) arr.splice(i,1); };
+const baseGo = ACT.ncgo;
+Object.assign(ACT,{
+  ncopen(a){ const [mode,to]=a.split('|'); S.cx.pop=null; S.nc={mode, to:to||null, name:'', pick:[], sel:[], q:'', res:{}, open:{}}; wasOpen=false; renderBoard(); },
+  ncclose(){ S.nc=null; renderBoard(); },
+  ncpick(id){ const M=ensure(); const u=UCB[id]; if(!u) return; const all=u.apis.every(a=>M.sel.includes(a)); u.apis.forEach(a=>toggle(M.sel,a,!all)); toggle(M.from,id,!all); renderBoard(); },
+  ncclear(){ const M=ensure(); M.sel=[]; M.res={}; M.from=[]; renderBoard(); },
+  dbapi(a){ const M=ensure(); const i=a.indexOf('|'); const uid=i>0&&UCB[a.slice(0,i)]?a.slice(0,i):null; const r=uid?a.slice(i+1):a; toggle(M.sel,r); if(uid){ const u=UCB[uid]; toggle(M.from,uid,u.apis.some(x=>M.sel.includes(x))); } renderBoard(); },
+  dbopen(id){ const M=ensure(); M.open[id]=!M.open[id]; renderBoard(); },
+  dbres(a){ const i=a.lastIndexOf('|'); const k=a.slice(0,i), v=a.slice(i+1); const M=ensure(); const x=model().issues.find(z=>z.key===k); const ok=x&&OPTS(x,model()).some(o=>o[0]===v); M.res[k] = M.res[k]===v ? null : (ok?v:(x?OPTS(x,model())[0][0]:v)); M.focus=k; M.col=M.col||{}; M.col[k]=!!M.res[k]; renderBoard(); },
+  dbfocus(k){ const M=ensure(); M.focus=M.focus===k?null:k; renderBoard(); },
+  dbtab(t){ const M=ensure(); M.dtab=t; renderBoard(); },
+  dbghost(id){ const M=ensure(); M.gopen=M.gopen||{}; M.gopen[id]=!M.gopen[id]; renderBoard(); },
+  dbtog(k){ const M=ensure(); M.col=M.col||{}; const r=M.res[k]; const op=M.col[k]!=null?!M.col[k]:!r; M.col[k]=op; M.focus=op?null:k; renderBoard(); },
+  dbz(a){ const vp=el.querySelector('.db-vp'); if(!vp||!zoom) return; if(a==='fit') fitBoard(true); else d3.select(vp).transition().duration(200).call(zoom.scaleBy, a==='in'?1.25:.8); },
+  ncgo(){ const M=S.nc; if(!M) return; const D=model(); if(!D.sel.size) return; if(!D.add&&(!M.name.trim()||CTX.some(c=>c.name.toLowerCase()===M.name.trim().toLowerCase()))) return;
+    const plan=planOf(D).map(t=>t.replace(/<[^>]+>/g,'')); const name=M.name.trim(), add=D.add, to=M.to; const R=M.res;
+    const ptMove=D.issues.filter(x=>x.type==='pt'&&R[x.key]==='move').map(x=>x.it); const alone=D.routes.filter(a=>!D.mov.some(id=>UCB[id].apis.includes(a))); const mov=[...D.mov];
+    let tgt=add?to:null;
+    if(mov.length){ M.pick=mov; baseGo(); tgt = add ? to : (CTX.find(c=>c.name===name)||{}).id; }
+    else if(!add){ const id='nc'+(CTX.length+1)+'x'; const c={id, name, status:'reviewed', owner:ME, module:'', data:[], why:[], against:[], alt:null, createdBy:ME, createdOn:now()}; CTX.splice(CTX.findIndex(x=>x.id==='unassigned'),0,c); CTB[id]=c; tgt=id; }
+    S.nc=null; renderBoard(); if(!tgt){ render(); return; }
+    alone.forEach(a=>API_OWNER[a]=tgt); ptMove.forEach(it=>it.from=tgt);
+    mov.forEach(id=>{ if(UCR[id]) UCR[id].log.push([ME, `Moved to ${cName(tgt)} · ${plan.length} planned changes`, now()]); });
+    window.LAST_PLAN={to:tgt, plan}; regeo(); S.level=0; render(); if(!mov.length) navigate({v:'item', sel:{t:'ctx', id:tgt}});
+    toast(`Saved. ${mov.length?mov.length+' use case'+(mov.length===1?'':'s'):''}${mov.length&&alone.length?' and ':''}${alone.length?alone.length+' API'+(alone.length===1?'':'s'):''} moved to ${cName(tgt)}.`); }
+});
+document.addEventListener('input', e=>{ const t=e.target; if(!S.nc||!t.closest||!t.closest('#dbd')) return; if(t.id==='ncName') S.nc.name=t.value; else if(t.id==='ncQ') S.nc.q=t.value; else return; renderBoard(); }, true);
+/* drag use cases or single APIs in and out */
+let drag=null;
+document.addEventListener('dragstart', e=>{ const t=e.target.closest&&e.target.closest('#dbd [data-uc], #dbd [data-r]'); if(!t) return; drag=t.dataset.r?{r:t.dataset.r, from:t.dataset.from}:{uc:t.dataset.uc}; try{ e.dataTransfer.setData('text/plain','x'); e.dataTransfer.effectAllowed='move'; }catch(err){} });
+document.addEventListener('dragover', e=>{ if(!S.nc||!drag) return; const c=e.target.closest&&e.target.closest('#dbd .db-col, #dbd .db-l'); el.querySelectorAll('.db-col.over').forEach(x=>x.classList.remove('over')); if(c){ e.preventDefault(); if(c.dataset.drop) c.classList.add('over'); } });
+document.addEventListener('drop', e=>{ if(!S.nc||!drag) return; const c=e.target.closest&&e.target.closest('#dbd .db-col, #dbd .db-l'); const d=drag; drag=null; if(!c) return; e.preventDefault(); const M=ensure(); const into=!!c.dataset.drop;
+  const routes = d.r ? [d.r] : (UCB[d.uc]?UCB[d.uc].apis:[]); routes.forEach(a=>toggle(M.sel,a,into)); const fu=d.r?d.from:d.uc; if(fu&&UCB[fu]) toggle(M.from,fu,UCB[fu].apis.some(x=>M.sel.includes(x))); renderBoard(); });
+document.addEventListener('dragend', ()=>{ drag=null; el.querySelectorAll('.db-col.over').forEach(x=>x.classList.remove('over')); });
+{ const m=document.getElementById('ncModal'); if(m) m.style.display='none'; }
+{ const _r=render; render=function(){ _r(); if(S.nc && S.tab!=='codona'){ S.nc=null; renderBoard(); } }; }
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && S.nc && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)){ e.stopPropagation(); ACT.ncclose(); } }, true);
+})();
+</script>
+<style>
+.np-wait{font:400 12px/18px var(--font);color:var(--warn-text);margin-right:8px}
+.npx.st3 .npb3{overflow:hidden}
+.npx.st3 .npb3 .db-cv{overflow:auto}
+</style>
+<style>
+/* FB40 · APIs grouped by context or use case, API detail lists each use case, one Syntroper chat with threads */
+.apiu{display:flex;flex-direction:column;gap:8px}
+.apiu-h{font:600 14px/20px var(--font);color:var(--text)}
+.apiu-c{display:flex;flex-direction:column;gap:6px;width:100%;padding:10px 12px;border-radius:10px;background:var(--surface);text-align:left}
+.apiu-c:hover{background:var(--surface-strong)}
+.apiu-t{display:flex;align-items:center;gap:8px;min-width:0}
+.apiu-t b{flex:1;min-width:0;font:500 14px/20px var(--font);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.apiu-s{display:flex;flex-wrap:wrap;gap:4px 10px;font:400 12px/18px var(--font);color:var(--text-2)}
+.apiu-s b{color:var(--text);font-weight:500}
+.ai-th{display:flex;align-items:center;gap:8px;width:100%;min-width:0;text-align:left;font:500 12px/18px var(--font);color:var(--text)}
+.ai-th .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-th .k{color:var(--text-3);font-weight:400}
+.ai-thm{position:absolute;left:12px;right:12px;top:84px;z-index:5;max-height:320px;overflow:auto;padding:4px}
+.ai-thm .cx-ph{display:flex;justify-content:space-between}
+.aim .via{display:inline-flex;align-items:center;gap:4px;margin-top:4px;font:500 11px/16px var(--font);color:var(--text-3)}
+.aim .via i{width:6px;height:6px;border-radius:50%;background:var(--accent-on)}
+</style>
+<script>
+/* FB40 */
+(function(){
+const now = () => 'Today, '+nowT();
+/* ---------- APIs layer: group by bounded context or by use case ---------- */
+S.apiGrp = S.apiGrp || 'ctx';
+{ const _lr=layerRows; layerRows=function(n){ if(n!==3 || S.apiGrp!=='uc') return _lr(n);
+    return UC.filter(u=>u.apis.length).map(u=>({g:u.name, rows:u.apis.map(a=>({st:u.status, raw:methodTag(a), act:'gsel', arg:'api:op:'+a, s:u.status}))})); }; }
+{ const _lh=layerHTML; layerHTML=function(n){ const h=_lh(n); if(n!==3) return h;
+    const bar=`<div class="cx-tool"><button class="cx-tb" data-act="apigrp" title="Switch grouping">Group: ${S.apiGrp==='uc'?'Use case':'Bounded context'}${I('chevron-down',14)}</button><span class="sp"></span><span class="cx-tm">${Object.keys(OPS).length} APIs</span></div>`;
+    const i=h.indexOf('<div class="scroll">'); return i>=0 ? h.slice(0,i)+bar+h.slice(i) : h; }; }
+ACT.apigrp = () => { S.apiGrp = S.apiGrp==='uc'?'ctx':'uc'; renderSide(); };
+/* ---------- API detail: every use case that uses it, with persona and the step ---------- */
+{ const _dp=detailParts; detailParts=function(sel){ const d=_dp(sel); if(sel.t!=='api'||!sel.id.startsWith('op:')) return d; const r=sel.id.slice(3); const us=(OPS[r]||{users:[]}).users.map(x=>UCB[x]).filter(u=>u&&UC.includes(u));
+    if(!us.length) return d;
+    d.acts += `<div class="apiu"><div class="apiu-h">Use cases that call it · ${us.length}</div>${us.map(u=>{ const F=FLOW[u.id]; const k=F?F.steps.findIndex(s=>s.apis.includes(r)):-1; const st=k>=0?F.steps[k]:null;
+      return `<button class="apiu-c" data-act="gsel" data-arg="uc:${u.id}"><span class="apiu-t">${kindIc('usecase',14)}<b>${esc(u.name)}</b><span class="rvt ${rvOf(u.id)==='accepted'?'acc':rvOf(u.id)==='changes'?'warn':'out'}">${RV_NAME[rvOf(u.id)]}</span></span>
+        <span class="apiu-s">${st?`<span>Step ${k+1} · <b>${esc(st.t)}</b></span>`:''}<span>${esc(cName2(u.ctx))}</span><span>${(u.personas||[]).map(p=>(PERSONAS.find(x=>x.id===p)||{name:p}).name).join(', ')}</span></span></button>`; }).join('')}</div>`;
+    return d; }; }
+const cName2 = c => c==='unassigned'?'No context':CTB[c]?CTB[c].name:c;
+/* ---------- one Syntroper chat: threads per use case, routed to specialists ---------- */
+S.ai.thm=false;
+const agentOf = m => m.prop ? 'Use case agent' : m.links ? 'Review agent' : /\b(file|code|calls|step \d|\.tsx|\.ts)\b/i.test(m.t||'') ? 'Code agent' : 'Syntroper';
+function aiDecor(){ const el=document.getElementById('aiChat'); if(!el||el.hidden) return;
+    const sd=S.side; const cur = sd.v==='item'&&sd.sel&&sd.sel.t==='uc'&&UCR[sd.sel.id] ? sd.sel.id : 'general';
+    const ctx=el.querySelector('.aictx'); if(ctx && !ctx.dataset.fixed){ ctx.innerHTML=`${cur==='general'?fbI('dataflow4',14):kindIc('usecase',14)}<span class="nm">${esc(cur==='general'?((S.bs&&S.bs.name)||'Commerce platform'):UCB[cur].name)}</span><span class="k">Type / to ask about any use case</span>`; }
+    const old=el.querySelector('.ai-thm'); if(old) old.remove();
+    const T=S.ai.th[cur]||[]; const nodes=el.querySelectorAll('.aith > .aim'); T.forEach((m,i)=>{ const n=nodes[i]; if(n&&m.r==='a'&&!m.think&&!n.querySelector('.via')){ n.insertAdjacentHTML('beforeend',`<span class="via"><i></i>${agentOf(m)}</span>`); } }); }
+{ const _ra=window.renderAI; window.renderAI=function(b){ _ra(b); aiDecor(); }; }
+{ const _r=render; render=function(){ _r(); aiDecor(); }; }
+{ const _ask=window.aiAsk; window.aiAsk=function(){ const r=_ask.apply(this,arguments); setTimeout(aiDecor,700); setTimeout(aiDecor,0); return r; }; }
+Object.assign(ACT,{
+  aithm(){ S.ai.thm=!S.ai.thm; renderAI(); },
+  aith(k){ S.ai.thm=false; if(k==='general'){ S.level=0; ACT.home(); } else ACT.gsel('uc:'+k); S.ai.open=true; render(); }
+});
+document.addEventListener('click', e=>{ if(S.ai&&S.ai.thm && !e.target.closest('.ai-thm,[data-act=aithm]')){ S.ai.thm=false; renderAI(); } }, true);
+
+/* ---------- review guide: this round in red, first ---------- */
+const go = (f) => () => { try{ S.ucx.flow=null; S.rpn=null; S.ai.open=false; S.np=null; renderNP(); S.nc=null; renderNC(); S.cx.pop=null; S.sq.open=null; }catch(e){} f(); };
+const HOME = () => { S.tab='codona'; WN_HOME(); render(); };
+const UC2 = id => { HOME(); ACT.layer(2); ACT.gsel('uc:'+id); };
+const NP = st => { HOME(); ACT.layer(2); ACT.npopen(''); S.np.name='Reorder a past order'; if(st>1){ ACT.npper('shopper'); ACT.npstage(2); ACT.nppick('GET /store/orders/:id'); ACT.nppick('POST /admin/orders/:id/cancel'); } if(st===3){ S.np.ctx='cart'; ACT.npstage(3); } renderNP(); };
+const NEW = [
+  ['Navigation','Syntroper Code and Syntroper Infra','Codona and Architecture library sit under Syntroper Code; Cloud Workloads and Cloud Snapshots under Syntroper Infra. Colours, icons and spacing follow the Figma sidebar.', ()=>{ HOME(); S.nav.open=true; S.nav.code=true; S.nav.infra=true; renderShell(); }, ['#rail .nv-g']],
+  ['Business system','Sync everywhere','The old word is gone. It now reads Sync now, Last synced, Sync history and Sync schedule.', ()=>HOME(), ['.sys-h small.lnks']],
+  ['Use cases','Rejected use cases are hidden','There is no Rejected tab. A rejected use case disappears from lists, the Galaxy and every count.', ()=>{ HOME(); ACT.layer(2); }, ['.rvtabs']],
+  ['Use cases','History','Activity is now History.', ()=>UC2('checkout'), ['.ucr-f .lnk3']],
+  ['New use case','Personas','Step 1 asks who the use case is for. Pick one or more.', ()=>NP(1), ['.npper']],
+  ['Use cases','Filter and group by persona','The filter has a Persona section, and Group can be set to Persona.', ()=>{ HOME(); ACT.layer(2); S.cx.pop='filter'; renderSide(); }, ['.cx-filt']],
+  ['New use case','User action → system response','Every step says what the user does and what the system does back.', ()=>NP(2), ['.npar']],
+  ['New use case','Syntroper suggests the API','Describe the next step in words. Syntroper suggests the API to add. The route search also understands plain words.', ()=>{ NP(2); S.np.ask='the shopper picks a delivery option'; renderNP(); }, ['.npai','.npsg']],
+  ['New use case','Step 3 · Dependencies','See where each API lives and what it reaches, then decide: call the other context, move the use case there, or copy the endpoint.', ()=>NP(3), ['.npb3 .db-i','.npb3 .db-col.target']],
+  ['Diagram','Sequence diagram','The default diagram. Persona, app and system lifelines; user actions, calls and responses; opt / alt frames for other paths.', ()=>{ UC2('cancel-order'); S.ucx.fv='seq'; S.ucx.sl='sys'; ACT.ucview('cancel-order|flow'); }, ['#ucFlow .sq-lh','#ucFlow .sq-frame']],
+  ['Diagram','Three levels of the same diagram','System, Bounded contexts (with events between contexts) and Code (key files as lifelines).', ()=>{ UC2('checkout'); S.ucx.fv='seq'; S.ucx.sl='ctx'; ACT.ucview('checkout|flow'); }, ['.fvt.sql']],
+  ['Diagram','Click a message to see its code','Any message with a code icon opens its code next to the diagram.', ()=>{ UC2('checkout'); S.ucx.fv='seq'; S.ucx.sl='sys'; ACT.ucview('checkout|flow'); ACT.sqmsg('checkout|3'); }, ['.sq-pop']],
+  ['Diagram','Flowchart as the second option','Switch between Sequence diagram and Flowchart at the top.', ()=>{ UC2('checkout'); S.ucx.fv='cards'; ACT.ucview('checkout|flow'); }, ['.fvt']],
+  ['Use cases','Code before APIs','Code comes first in the panel tabs.', ()=>UC2('checkout'), ['.uct5']],
+  ['Bounded contexts','Move use cases on a board','Cards show every API of each use case and what it depends on. Lines show what is shared. Resolve each one in the sidebar before moving.', ()=>{ HOME(); ACT.gsel('ctx:payments'); ACT.ncopen('add|payments'); ACT.ncpick('cancel-order'); }, ['.db-i','.db-col.target']],
+  ['Bounded contexts','Drag use cases in','In New context, drag use cases from the sidebar onto the new context, or drag a card back out.', ()=>{ HOME(); ACT.layer(4); ACT.ncopen('new'); }, ['.db-list','.db-col.target']],
+  ['Bounded contexts','Refactoring plan','Once everything is resolved, Syntroper lists the code changes the move needs.', ()=>{ HOME(); ACT.layer(4); ACT.ncopen('new'); S.nc.name='Returns'; ACT.ncpick('request-return'); dbModel().issues.forEach(x=>ACT.dbres(x.key+'|'+(x.type==='api'?'call':'stay'))); }, ['.db-plan']],
+  ['APIs','Group APIs by use case','The APIs layer groups by bounded context or by use case.', ()=>{ HOME(); ACT.layer(3); }, ['.cx-tool']],
+  ['APIs','Every use case of an API','An API lists each use case that calls it, with the step, context, personas and review status.', ()=>{ HOME(); ACT.gsel('api:op:GET /store/orders/:id'); }, ['.apiu']],
+  ['Business system','Settings on the canvas','Settings open as a panel over the Galaxy: General and Sharing. Repositories and Sync history open from the system card, as before.', ()=>{ HOME(); ACT.bsopen('general'); }, ['#bsSet']],
+  ['Business system','Owner team, archive, sharing','The owner is always a team. Archive hides the system and stops syncing. Sharing sets who can see it and gives a link.', ()=>{ HOME(); ACT.bsopen('general'); }, ['#bsOwner','.bss-danger.arch']],
+  ['Business system','Access in Organization settings','Who can edit each business system is managed in Organization settings › Business system access.', ()=>ACT.cxorg('access'), ['.oacc']],
+  ['Business system','Archived systems','Archived systems sit at the bottom of the list, with Restore.', ()=>{ S.sysArch=true; ACT.sysl(); }, ['.bs-arch']],
+  ['Chat','One Syntroper chat with threads','The chat keeps a thread per use case. Switch threads from the top. Each reply says which specialist answered.', ()=>{ UC2('checkout'); ACT.aiopen('checkout'); }, ['.ai-th']]
+].map(([a,n,how,f,sel])=>({a:'Feedback round · 18 Nov · '+a, r:1, n, how, go:go(f), sel, red:true, r2:true}));
+WN.forEach(f=>{ if(f.red && !f.r2) f.a=f.a.replace(/^Feedback round · /,'Feedback round · 16 Nov · '); });
+WN.unshift(...NEW); WN.forEach((f,i)=>f.i=i+1);
+{ const _l=wnListHTML; wnListHTML=function(){ return _l().replace(/<div class="wn-i ([^"]*?) ?red" data-i/g,'<div class="wn-i $1" data-i').replace(/<div class="wn-i ([^"]*)" data-i="(\d+)">/g,(m,c,i)=>WN[i-1]&&WN[i-1].red?`<div class="wn-i ${c} red" data-i="${i}">`:m).replace(/<div class="wn-g">(Feedback round[^<]*)<\/div>/g,'<div class="wn-g red">$1</div>'); }; }
+{ const _b=wnBoxes; wnBoxes=function(){ _b(); const L=document.getElementById('wnLayer'); if(!L) return; [...L.children].forEach(b=>{ if(!b.classList.contains('wn-b')) return; const n=parseInt(b.textContent.trim(),10); b.classList.toggle('red', !!(WN[n-1]&&WN[n-1].red)); }); }; }
+['#wnPanel','#wnBtn','#wnLayer'].forEach(q=>{ const e=document.querySelector(q); if(e) e.remove(); });
+{ const _s=wnSync; wnSync=function(){ _s(); const leg=document.querySelector('#wnPanel .wn-leg'); if(leg) leg.innerHTML='<span><i class="r"></i>Red · feedback rounds (16 and 18 Nov)</span><span><i></i>Pink · other changes</span>'; }; }
+try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); }catch(e){} }); }catch(e){ console.error(e); }
+})();
+</script>
+<style>
+/* FB41 · board v2 */
+#dbd{grid-template-columns:340px minmax(0,1fr) 380px}
+#dbd .db-r{border-right:0;border-left:1px solid var(--border)}
+#dbd .db-r .db-h{gap:8px}
+#dbd .db-cv{position:relative;overflow:hidden}
+#dbd .db-vp{position:absolute;inset:0;overflow:hidden;cursor:grab}
+#dbd .db-vp:active{cursor:grabbing}
+#dbd .db-cvi{transform-origin:0 0;padding:28px 32px 80px;gap:64px}
+.db-zm{position:absolute;left:16px;bottom:16px;display:flex;align-items:center;gap:2px;padding:5px;z-index:3}
+.db-zm .zb{width:32px;height:32px;border-radius:6px;display:grid;place-items:center;color:var(--text-2)}
+.db-zm .zb:hover{background:var(--surface);color:var(--text)}
+.db-zm .pct{width:44px;text-align:center;font:400 12px/18px var(--font);color:var(--text-2)}
+#dbd .db-leg{position:absolute;right:16px;bottom:16px;left:auto;background:none;padding:0;z-index:3}
+.dbs{flex:none;display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:999px;font:500 12px/18px var(--font);white-space:nowrap}
+.dbs.warn{background:var(--warn-sub);color:var(--warn-text)} .dbs.ok{background:var(--ok-sub);color:var(--ok-text)} .dbs.acc{background:var(--accent-sub);color:var(--accent-on)} .dbs.out{box-shadow:inset 0 0 0 1px var(--border-strong);color:var(--text-2)}
+.db-l .db-sc{gap:16px}
+.db-grow{flex:1;min-height:0}
+.db-l .db-list{max-height:none;flex:1;min-height:0}
+.db-uw{border-radius:8px}
+.db-uw.on{background:rgba(98,78,213,.08)}
+.db-uw .db-u{padding:2px 4px 2px 6px;gap:4px;cursor:grab}
+.db-uw .db-u .l{flex:1;min-width:0;display:flex;align-items:center;gap:8px;height:32px;padding:0 4px;text-align:left;font:400 14px/20px var(--font);color:var(--text)}
+.db-uw .db-u .l span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.db-uw .db-u .l small{font:400 12px/18px var(--font);color:var(--text-3);white-space:nowrap}
+.db-uw .db-u .l svg{color:var(--text-3);flex:none}
+.db-al{display:flex;flex-direction:column;padding:0 4px 6px 30px}
+.db-ap{display:flex;align-items:center;gap:8px;min-height:30px;padding:2px 6px;border-radius:6px;text-align:left;cursor:grab}
+.db-ap:hover{background:var(--surface)}
+.db-ap code{flex:1;min-width:0;font:400 12px/18px var(--mono);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.db-c .db-a{padding:6px 12px}
+.db-c .db-ar .dbs{margin-left:auto}
+.db-chd .dbs{margin-left:auto}
+.db-ph{padding:4px 4px 0;font:600 12px/18px var(--font);color:var(--text-3)}
+.db-p .dbs{margin-left:auto}
+.db-it .dbs{margin-left:auto;align-self:flex-start}
+.db-i{box-shadow:inset 3px 0 0 var(--warn)}
+.db-i.done{box-shadow:inset 3px 0 0 var(--ok)}
+.db-op button.on{background:var(--selected);box-shadow:inset 0 0 0 1px var(--accent);color:var(--text)}
+.db-r .db-f{flex-direction:column;align-items:stretch;gap:10px}
+.db-ns{display:flex;align-items:center;gap:6px;font:400 12px/18px var(--font);color:var(--text-3)}
+.db-fb{display:flex;justify-content:flex-end;gap:8px}
+</style>
+<style>
+/* FB42 · scroll in step 1, persona dropdown, collapsible dependency cards, straight lines */
+.ncm.npm.npx.st1{max-height:94vh}
+.npx.st1 .npb1{flex:1;min-height:0;overflow:auto}
+.db-sc>*{flex:none}
+.db-i,.db-i.done{box-shadow:none!important}
+.db-i{overflow:visible}
+.db-it{align-items:flex-start}
+.db-ir{margin-left:auto;display:flex;flex-wrap:nowrap;align-items:center;gap:6px;flex:none}
+.db-it>span:not(.db-ir){flex:1;min-width:0}
+.db-it .db-ir{flex-direction:row}
+.db-it small.pk span{display:block;min-width:0}
+.db-ir>svg{color:var(--text-3)}
+.db-it .dbs{margin-left:0}
+.db-it small.pk{display:flex;align-items:flex-start;gap:6px;margin-top:4px;color:var(--text)}
+.db-it small.pk svg{flex:none;margin-top:3px;color:var(--ok)}
+.db-i:not(.open) .db-it{padding-bottom:10px}
+.db-selrow{display:flex;align-items:center;gap:10px;min-height:28px}
+.db-selrow .cnt{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;background:var(--selected);box-shadow:inset 0 0 0 1px var(--accent);font:500 12px/18px var(--font);color:var(--text)}
+.db-selrow .sp{flex:1}
+.db-selrow .lnk{font:500 12px/18px var(--font);color:var(--text-2)} .db-selrow .lnk:hover{color:#fff}
+.db-selrow .none{font:400 12px/18px var(--font);color:var(--text-3)}
+.db-lines path{stroke-linejoin:round}
+.pfs{position:relative}
+.pfs-b{display:flex;align-items:center;gap:6px;flex-wrap:wrap;width:100%;min-height:44px;padding:6px 36px 6px 8px;border-radius:8px;background:var(--canvas);border:1px solid var(--border-strong);text-align:left;position:relative}
+.pfs-b:hover{border-color:var(--text-3)}
+.pfs-b.open{border-color:var(--accent)}
+.pfs-b>svg{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text-2)}
+.pfs-b .ph{padding:0 4px;font:400 14px/20px var(--font);color:var(--text-3)}
+.pfs-b .pc{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 4px 0 10px;border-radius:999px;background:var(--surface-strong);font:500 12px/18px var(--font);color:var(--text)}
+.pfs-b .pc .x{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;color:var(--text-2)}
+.pfs-b .pc .x:hover{background:var(--surface);color:#fff}
+.pfs-m{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:20;max-height:340px;overflow:auto;padding:4px;background:var(--panel);border:1px solid var(--border-strong);border-radius:10px;box-shadow:var(--shadow)}
+.pfs-m .cx-opt small{margin-left:auto;font:400 12px/18px var(--font);color:var(--text-3);white-space:nowrap}
+.pfs-new{display:flex;flex-direction:column;gap:6px;padding:8px;border-top:1px solid var(--border);margin-top:4px}
+.pfs-new .row{display:flex;gap:6px}
+.pfs-new input{flex:1;min-width:0;height:36px;padding:0 10px;border-radius:8px;background:var(--canvas);border:1px solid var(--border-strong);font:400 14px/20px var(--font);color:var(--text)}
+.pfs-new input:focus{outline:none;border-color:var(--accent)}
+.pfs-add{display:flex;align-items:center;gap:8px;width:100%;height:36px;padding:0 10px;border-radius:6px;font:500 14px/20px var(--font);color:var(--accent-on);text-align:left}
+.pfs-add:hover{background:var(--surface)}
+</style>
+<script>
+/* FB42 · personas as a multi-select dropdown, with custom personas */
+(function(){
+window.perFieldHTML = M => { const sel=M.per; const open=!!M.pmenu;
+  const chips = sel.length ? sel.map(id=>{ const p=PERSONAS.find(x=>x.id===id); return p?`<span class="pc">${esc(p.name)}<span class="x" role="button" data-act="npper" data-arg="${p.id}" aria-label="Remove ${esc(p.name)}">${I('x',12)}</span></span>`:''; }).join('') : '<span class="ph">Pick who this use case is for</span>';
+  const menu = open ? `<div class="pfs-m" role="listbox" aria-multiselectable="true">${PERSONAS.map(p=>{ const on=sel.includes(p.id); return `<button class="cx-opt" data-act="npper" data-arg="${p.id}" role="option" aria-selected="${on}"><span class="cx-cb ${on?'on':''}">${on?I('check',12,'',2.2):''}</span><span class="l">${esc(p.name)}</span><small>${esc(p.d)}</small></button>`; }).join('')}
+      ${M.pnew!=null?`<div class="pfs-new"><div class="row"><input id="npPn" value="${esc(M.pnew)}" placeholder="Persona name, for example Wholesale buyer" autocomplete="off"></div><div class="row"><input id="npPd" value="${esc(M.pdesc||'')}" placeholder="Short description (optional)" autocomplete="off"><button class="btn primary sm" data-act="nppadd" ${M.pnew.trim()?'':'disabled'}>Add</button></div></div>`
+        :`<button class="pfs-add" data-act="nppnew">${I('plus',14)}Create a persona</button>`}</div>` : '';
+  return `<div class="fld"><span class="nl">Personas <span class="req" aria-hidden="true">*</span></span><div class="pfs"><button class="pfs-b ${open?'open':''}" data-act="nppmenu" aria-expanded="${open}" aria-haspopup="listbox">${chips}${I(open?'chevron-up':'chevron-down',16)}</button>${menu}</div><small class="hint">Who this use case is for. Pick one or more, or create your own.</small></div>`; };
+Object.assign(ACT,{
+  nppmenu(){ S.np.pmenu=!S.np.pmenu; if(!S.np.pmenu) S.np.pnew=null; renderNP(); },
+  nppnew(){ S.np.pnew=''; S.np.pdesc=''; renderNP({id:'npPn'}); },
+  nppadd(){ const M=S.np; const n=(M.pnew||'').trim(); if(!n) return; const id='p-'+n.toLowerCase().replace(/[^a-z0-9]+/g,'-'); if(!PERSONAS.some(p=>p.id===id)) PERSONAS.push({id, name:n, d:(M.pdesc||'').trim()||'Custom persona'}); if(!M.per.includes(id)) M.per.push(id); M.pnew=null; renderNP(); toast(`Added persona “${n}”. It can be used in any use case.`); }
+});
+document.addEventListener('input', e=>{ if(!S.np) return; if(e.target.id==='npPn'){ S.np.pnew=e.target.value; const b=document.querySelector('#npModal [data-act=nppadd]'); if(b) b.disabled=!e.target.value.trim(); } if(e.target.id==='npPd') S.np.pdesc=e.target.value; });
+document.addEventListener('keydown', e=>{ if(S.np && e.target.id==='npPn' && e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); ACT.nppadd(); } }, true);
+document.addEventListener('click', e=>{ if(S.np&&S.np.pmenu&&!e.target.closest('.pfs')){ S.np.pmenu=false; S.np.pnew=null; renderNP(); } }, true);
+})();
+</script>
+<script>
+/* FB43 · Review guide: today (18 Nov) in red, earlier days in pink */
+(function(){
+const go = f => () => { try{ S.ucx.flow=null; S.rpn=null; S.ai.open=false; S.np=null; renderNP(); S.nc=null; renderNC(); S.cx.pop=null; }catch(e){} S.tab='codona'; WN_HOME(); render(); f(); };
+const BOARD = () => { ACT.layer(4); ACT.ncopen('new'); ACT.dbopen('add-item'); ACT.dbapi('add-item|POST /store/carts/:id/line-items'); ACT.ncpick('cancel-order'); };
+const MORE = [
+  ['Bounded contexts','Pick single APIs','Every use case on the left expands to its APIs. Tick one API, or the whole use case, or drag either onto the canvas.', ()=>BOARD(), ['.db-al','.db-selrow']],
+  ['Bounded contexts','Only what you picked is on the canvas','Use case cards appear only for the use cases you picked APIs from. Affected ones show as decisions on the right.', ()=>BOARD(), ['.db-col.target','.db-c.stay']],
+  ['Bounded contexts','Dependencies on the right, collapsible','Each dependency is a card you can open or close. After a decision it collapses to one line with your choice, and it stays in the list.', ()=>{ BOARD(); const x=dbModel().issues[0]; if(x) ACT.dbres(x.key+'|'+(x.type==='part'?'split':x.type==='api'?'call':'stay')); }, ['.db-r .db-i']],
+  ['Bounded contexts','Nothing saves until Save','Decisions are drafts. Save applies everything at once, once every dependency is decided.', ()=>BOARD(), ['.db-ns','.db-fb']],
+  ['Bounded contexts','Zoom and straight lines','Zoom out, in and fit at the bottom left of the canvas. Connections are straight, right-angled lines.', ()=>BOARD(), ['.db-zm','.db-lines']],
+  ['New use case','Personas as a dropdown, with custom ones','One field with chips. Open it to tick personas, or create your own with a name and description.', ()=>{ ACT.layer(2); ACT.npopen(''); ACT.nppmenu(); }, ['.pfs']]
+].map(([a,n,how,f,sel])=>({a:'Feedback round · 18 Nov · '+a, r:1, n, how, go:go(f), sel, red:true, r2:true}));
+const k=WN.findIndex(f=>!f.r2); WN.splice(k<0?WN.length:k, 0, ...MORE);
+WN.forEach(f=>{ f.red=!!f.r2; f.a=f.a.replace(/^Feedback round · 16 Nov · /,'16–17 Nov · '); });
+WN.forEach((f,i)=>f.i=i+1);
+['#wnPanel','#wnBtn','#wnLayer'].forEach(q=>{ const e=document.querySelector(q); if(e) e.remove(); });
+{ const _s=wnSync; wnSync=function(){ _s(); const leg=document.querySelector('#wnPanel .wn-leg'); if(leg) leg.innerHTML='<span><i class="r"></i>Red · today, 18 Nov</span><span><i></i>Pink · earlier, 16–17 Nov</span>'; }; }
+{ const _t=topHTML; topHTML=function(){ return _t().replace(/title="Pink guide marking[^"]*"/,'title="Red: today’s changes. Pink: earlier changes"'); }; }
+try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); }catch(e){} }); }catch(e){ console.error(e); }
+})();
+</script>
+<style>
+/* FB44 · floating panels on the board, tabs, ignore, clearer selection */
+#dbd:not([hidden]){display:block!important}
+#dbd[hidden]{display:none!important}
+#dbd .db-cv{position:absolute;inset:0}
+#dbd .db-side{position:absolute;top:12px;bottom:12px;z-index:5;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+#dbd .db-l{left:12px;width:340px}
+#dbd .db-r{right:12px;width:380px;border-left:1px solid var(--border)}
+#dbd .db-zm{left:364px}
+#dbd .db-leg{right:404px}
+.tabs.dbt{margin:0 0 4px;gap:20px;border-bottom:1px solid var(--border)}
+.tabs.dbt button{padding-bottom:8px;height:auto}
+.db-op button.on{background:rgba(98,78,213,.22)!important;box-shadow:inset 0 0 0 1.5px var(--accent)!important;color:var(--text)!important}
+.db-c.ghost .db-chd{width:100%;text-align:left}
+.db-c.ghost .db-chd>svg:last-child{color:var(--text-3);flex:none}
+.db-c.ghost .db-chd .dbs{margin-left:auto}
+.db-cnt{font:400 12px/18px var(--font);color:var(--text-3);white-space:nowrap}
+.db-c.ghost.open{opacity:.85}
+.db-c.ghost .db-apis{border-top:1px dashed var(--border-strong)}
+</style>
+<style>
+.db-selc{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 4px 0 10px;border-radius:999px;background:var(--selected);box-shadow:inset 0 0 0 1px var(--accent);font:500 12px/18px var(--font);color:var(--text)}
+.db-selc button{display:grid;place-items:center;width:18px;height:18px;border-radius:50%;color:var(--text-2)}
+.db-selc button:hover{background:var(--surface-strong);color:#fff}
+</style>
+<script>/* FB45 · catch text that was on the page before the sync wording pass started */ try{ syncWords(); setTimeout(syncWords,500); }catch(e){}</script>
+<style>
+/* FB46 · slash command in the main chat, diagram controls on the canvas, clearer conditionals */
+.ai-sl{position:absolute;left:12px;right:12px;bottom:150px;z-index:6;max-height:300px;overflow:auto;padding:4px}
+.ai-sl .cx-ph{display:flex;justify-content:space-between}
+.ai-sl .cx-opt.on{background:var(--surface)}
+.ai-sl .cx-opt .n{font:400 12px/18px var(--mono)}
+.ai-tg{display:flex;align-items:center;gap:6px;margin:0 12px -4px;align-self:flex-start}
+.ai-tgc{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 4px 0 10px;border-radius:999px;background:var(--selected);box-shadow:inset 0 0 0 1px var(--accent);font:500 12px/18px var(--font);color:var(--text)}
+.ai-tgc button{display:grid;place-items:center;width:18px;height:18px;border-radius:50%;color:var(--text-2)}
+.ai-tgc button:hover{background:var(--surface-strong);color:#fff}
+.aim .to{display:inline-flex;align-items:center;gap:4px;align-self:flex-end;margin-bottom:2px;height:20px;padding:0 8px;border-radius:999px;background:var(--selected);font:500 11px/16px var(--font);color:var(--accent-on)}
+.aim .about{display:inline-flex;align-items:center;gap:4px;margin-bottom:4px;font:500 11px/16px var(--font);color:var(--accent-on)}
+#cTop .fvt{display:none}
+#dgBar{position:absolute;left:50%;bottom:76px;transform:translateX(-50%);z-index:30;display:flex;flex-wrap:nowrap;align-items:center;gap:8px;white-space:nowrap}
+#dgBar[hidden]{display:none}
+#dgBar .grp{display:flex;align-items:center;gap:2px;padding:4px;border-radius:10px;background:var(--panel);border:1px solid var(--border);box-shadow:var(--shadow)}
+#dgBar .lab{padding:0 8px 0 6px;font:500 12px/18px var(--font);color:var(--text-3)}
+#dgBar button{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border-radius:7px;font:500 12px/18px var(--font);color:var(--text-2)}
+#dgBar button:hover{color:var(--text);background:var(--surface)}
+#dgBar button.on{background:var(--surface-strong);color:var(--text);font-weight:600}
+#dgBar button .lvn{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--surface-strong);font:600 11px/18px var(--font)}
+#dgBar button.on .lvn{background:var(--accent);color:#fff}
+#dgBar button small{font:400 11px/16px var(--font);color:var(--text-3)}
+#dgBar button.on small{color:var(--text-2)}
+/* conditionals */
+#ucFlow svg.fe.sq .sq-frame{fill:rgba(255,204,77,.06);stroke:var(--warn);stroke-width:1.5}
+#ucFlow svg.fe.sq .sq-ftag{fill:var(--warn)}
+#ucFlow svg.fe.sq .sq-altsep{stroke:var(--warn);stroke-dasharray:6 4;opacity:.7}
+.sq-ftxt{color:#2b2000!important;font-weight:800!important;letter-spacing:.04em}
+.sq-cond{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:6px;background:var(--warn-sub);color:var(--warn-text)!important;font:600 12px/18px var(--font)!important}
+.sq-cond b{font-weight:700;color:#fff}
+.sq-note{font-weight:600!important;color:var(--text-2)!important}
+.sq-dec{position:absolute;width:14px;height:14px;transform:rotate(45deg);background:var(--warn);border-radius:2px;box-shadow:0 0 0 3px var(--canvas)}
+.sq-ok{position:absolute;display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:6px;background:var(--ok-sub);font:600 12px/18px var(--font);color:var(--ok-text)}
+</style>
+<script>
+/* FB46 */
+(function(){
+const now = () => 'Today, '+nowT();
+/* ---------- main chat: "/" picks a use case, or Syntroper spots one in the message ---------- */
+S.ai.tgt=null; S.ai.sl=null;
+const curKey = () => { const sd=S.side; return sd.v==='item'&&sd.sel&&sd.sel.t==='uc'&&UCR[sd.sel.id] ? sd.sel.id : 'general'; };
+const slug = id => UCB[id].name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+function detect(t){ const low=t.toLowerCase(); const L=UC.filter(u=>u.name.length>4).sort((a,b)=>b.name.length-a.name.length); const u=L.find(u=>low.includes(u.name.toLowerCase())||low.includes('#'+slug(u.id))); return u?u.id:null; }
+function slHTML(){ const q=S.ai.sl.q.toLowerCase(); const L=UC.filter(u=>!q||u.name.toLowerCase().includes(q)||slug(u.id).includes(q)).slice(0,8); S.ai.sl.L=L.map(u=>u.id); const i=Math.min(S.ai.sl.i, L.length-1);
+  return `<div class="menu ai-sl" role="listbox"><div class="cx-ph"><span>Ask about a use case</span><span>↑↓ Enter</span></div>${L.map((u,k)=>`<button class="cx-opt ${k===i?'on':''}" data-act="aislpick" data-arg="${u.id}" role="option" aria-selected="${k===i}">${kindIc('usecase',14)}<span class="l">${esc(u.name)}</span><span class="n">#${esc(slug(u.id))}</span></button>`).join('')||'<div class="cx-ph">No use case matches</div>'}</div>`; }
+function decorate(){ const el=document.getElementById('aiChat'); if(!el||el.hidden) return; const K=curKey(); const T=S.ai.th[K]||[];
+  const nodes=el.querySelectorAll('.aith > .aim'); T.forEach((m,i)=>{ const n=nodes[i]; if(!n) return;
+    if(m.to&&UCB[m.to]&&!n.querySelector('.to')) n.insertAdjacentHTML('afterbegin',`<span class="to">/ ${esc(UCB[m.to].name)}</span>`);
+    if(m.about&&UCB[m.about]&&!n.querySelector('.about')) n.insertAdjacentHTML('afterbegin',`<span class="about">${kindIc('usecase',12)}About ${esc(UCB[m.about].name)}</span>`); });
+  const old=el.querySelector('.ai-sl'); if(old) old.remove(); if(S.ai.sl) el.insertAdjacentHTML('beforeend', slHTML());
+  const tg=el.querySelector('.ai-tg'); if(tg) tg.remove();
+  if(S.ai.tgt&&UCB[S.ai.tgt]){ const c=el.querySelector('.aicmp'); if(c) c.insertAdjacentHTML('beforebegin',`<div class="ai-tg"><span class="ai-tgc">/ ${esc(UCB[S.ai.tgt].name)}<button data-act="aitgx" aria-label="Stop asking about ${esc(UCB[S.ai.tgt].name)}">${I('x',12)}</button></span></div>`); } }
+{ const _ra=window.renderAI; window.renderAI=function(b){ _ra(b); decorate(); }; }
+{ const _r=render; render=function(){ _r(); decorate(); }; }
+document.addEventListener('input', e=>{ if(e.target.id!=='aiDraft') return; const v=e.target.value; const m=v.match(/(^|\s)\/([\w-]*)$/);
+  if(m){ S.ai.sl={q:m[2], i:0}; } else S.ai.sl=null; decorate(); });
+document.addEventListener('keydown', e=>{ if(e.target.id!=='aiDraft' || !S.ai.sl) return; const L=S.ai.sl.L||[];
+  if(e.key==='ArrowDown'){ e.preventDefault(); S.ai.sl.i=Math.min(L.length-1,S.ai.sl.i+1); decorate(); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); S.ai.sl.i=Math.max(0,S.ai.sl.i-1); decorate(); }
+  else if(e.key==='Enter'||e.key==='Tab'){ if(L.length){ e.preventDefault(); e.stopImmediatePropagation(); ACT.aislpick(L[S.ai.sl.i]||L[0]); } }
+  else if(e.key==='Escape'){ e.stopPropagation(); S.ai.sl=null; decorate(); } }, true);
+const _send=ACT.aisend;
+Object.assign(ACT,{
+  aislpick(id){ S.ai.tgt=id; S.ai.draft=(S.ai.draft||'').replace(/(^|\s)\/[\w-]*$/,'$1').trimStart(); S.ai.sl=null; S.ai.focus=true; renderAI(); },
+  aitgx(){ S.ai.tgt=null; S.ai.focus=true; renderAI(); },
+  aisend(){ const t=(S.ai.draft||'').trim(); if(!t) return; const K=curKey(); const tgt=S.ai.tgt||detect(t);
+    if(!tgt || tgt===K){ S.ai.tgt=null; return _send(); }
+    S.ai.draft=''; S.ai.tgt=null; S.ai.sl=null; const T=S.ai.th[K]||(S.ai.th[K]=[]); T.forEach(m=>{ delete m.chips; });
+    T.push({r:'u', t, to:tgt}); const th={r:'a', think:true, t:'Thinking'}; T.push(th); renderAI(true);
+    aiAsk(tgt, t);
+    setTimeout(()=>{ const X=S.ai.th[tgt]||[]; const last=[...X].reverse().find(m=>m.r==='a'&&!m.think); const i=T.indexOf(th);
+      const copy = last ? Object.assign({}, last, {about:tgt}) : {r:'a', t:'I couldn’t find that.', about:tgt}; if(i>=0) T.splice(i,1,copy); else T.push(copy);
+      if(window.ROOM && ROOM[tgt]) ROOM[tgt].msgs.push({who:'Syntroper', when:now(), t:`${ME} asked about this in the main chat: “${t}”`});
+      if(UCR[tgt]) UCR[tgt].log.push([ME,'Asked Syntroper about it in the main chat',now()]);
+      render(); renderAI(true); }, 800); }
+});
+
+/* ---------- diagram controls on the canvas, always visible ---------- */
+document.getElementById('vCodona').insertAdjacentHTML('beforeend','<div id="dgBar" hidden></div>');
+const bar=document.getElementById('dgBar');
+const LV=[['sys','System','Persona and system'],['ctx','Bounded contexts','Which contexts talk'],['code','Code','Key files']];
+function renderBar(){ const on=!!S.ucx.flow && S.tab==='codona' && UCB[S.ucx.flow]; bar.hidden=!on; if(!on) return; const v=S.ucx.fv==='symbols'?'cards':S.ucx.fv;
+  bar.innerHTML=`<div class="grp" role="tablist" aria-label="Diagram"><span class="lab">Diagram</span>${[['seq','Sequence'],['cards','Flowchart']].map(([k,l])=>`<button role="tab" aria-selected="${v===k}" class="${v===k?'on':''}" data-act="ucfv" data-arg="${k}">${l}</button>`).join('')}</div>
+    ${v==='seq'?`<div class="grp" role="tablist" aria-label="Level"><span class="lab">Level</span>${LV.map(([k,l,d],i)=>`<button role="tab" aria-selected="${S.ucx.sl===k}" class="${S.ucx.sl===k?'on':''}" data-act="ucsl" data-arg="${k}" title="${esc(d)}"><span class="lvn">${i+1}</span>${l}</button>`).join('')}</div>`:''}`;
+  requestAnimationFrame(placeBar); }
+function placeBar(){ if(bar.hidden) return; const d=document.querySelector('#cDock'); const v=document.getElementById('vCodona'); if(!d||!v) return; const r=d.getBoundingClientRect(), pr=v.getBoundingClientRect(); if(!r.width) return;
+  bar.style.left=(r.left-pr.left+r.width/2)+'px'; bar.style.top='auto'; bar.style.bottom=(pr.bottom-r.top+10)+'px'; }
+addEventListener('resize', placeBar);
+{ const _r=render; render=function(){ _r(); renderBar(); }; }
+{ const _f=window.renderFlowCanvas; window.renderFlowCanvas=function(x){ _f(x); renderBar(); }; }
+
+/* ---------- conditionals: a diamond on the lifeline, the happy branch labelled, conditions as chips ---------- */
+{ const _f=window.renderFlowCanvas; window.renderFlowCanvas=function(x){ _f(x); if(S.ucx.fv!=='seq') return; const fw=document.querySelector('#ucFlow .fw'); if(!fw) return;
+    fw.querySelectorAll('.sq-cond').forEach(c=>{ if(c.dataset.ok) return; c.dataset.ok=1; const t=c.textContent.replace(/^\[|\]$/g,''); c.innerHTML=`If <b>${esc(t)}</b>`; });
+    fw.querySelectorAll('.sq-ftxt').forEach(t=>{ if(t.dataset.ok) return; t.dataset.ok=1; t.textContent=t.textContent.toUpperCase();
+      const top=parseFloat(t.style.top)||0, left=parseFloat(t.style.left)||0; t.insertAdjacentHTML('beforebegin',`<span class="sq-dec" style="left:${left-22}px;top:${top+3}px" title="Decision"></span>`); }); }; }
+try{ render(); }catch(e){ console.error(e); }
+})();
+
+/* ---------- review guide: only 17–18 Nov, all pink, use case items first ---------- */
+(function(){
+const ORDER = [
+ ['Use case panel',['Code before APIs','History','Rejected use cases are hidden','Filter and group by persona']],
+ ['Use case diagram',['Sequence diagram','Three levels of the same diagram','Click a message to see its code','Flowchart as the second option','Code inside the flowchart']],
+ ['Use case chat',['One Syntroper chat with threads']],
+ ['New use case',['Personas','Personas as a dropdown, with custom ones','User action → system response','Syntroper suggests the API','Step 3 · Dependencies']],
+ ['Bounded contexts',['Move use cases on a board','Drag use cases in','Pick single APIs','Only what you picked is on the canvas','Dependencies on the right, collapsible','Nothing saves until Save','Zoom and straight lines','Refactoring plan']],
+ ['APIs',['Group APIs by use case','Every use case of an API']],
+ ['Business system',['Sync everywhere','Settings on the canvas','Owner team, archive, sharing','Access in Organization settings','Archived systems']],
+ ['Navigation',['Syntroper Code and Syntroper Infra']]
+];
+const by={}; WN.forEach(f=>{ by[f.n]=f; });
+const NEW=[];
+ORDER.forEach(([area,names])=>names.forEach(n=>{ const f=by[n]; if(!f) return; f.a=area; f.red=false; NEW.push(f); }));
+const chatItem=by['One Syntroper chat with threads']; if(chatItem){ chatItem.n='Ask about any use case with /'; chatItem.how='In the main Syntroper chat, type / and pick a use case, or just name it in your message. The reply is about that use case, and a note goes into its chat room.'; chatItem.sel=['#aiChat .aicmp','#aiChat .aictx']; }
+const room=WN.find(f=>f.n==='A chat room per use case');
+const extra=[
+  {a:'Use case panel', n:'Chat room card', how:'Group icon, #name, three avatars and the people count. Unread messages show as a chip.', go(){ S.tab='codona'; WN_HOME(); render(); ACT.layer(2); ACT.gsel('uc:cancel-order'); }, sel:['.rme2']},
+  {a:'Bounded contexts', n:'Hover to see the list', how:'Hover “Leads to N integration points” or “Shared with other use cases” to see which ones.', go(){ S.tab='codona'; WN_HOME(); render(); ACT.layer(4); ACT.ncopen('new'); ACT.ncpick('checkout'); }, sel:['[data-hp]']}
+];
+extra.forEach(x=>{ const k=NEW.map(f=>f.a).lastIndexOf(x.a); NEW.splice(k+1,0,Object.assign({r:1, red:false}, x)); });
+WN.length=0; WN.push(...NEW); WN.forEach((f,i)=>f.i=i+1);
+['#wnPanel','#wnBtn','#wnLayer'].forEach(q=>{ const e=document.querySelector(q); if(e) e.remove(); });
+{ const _s=wnSync; wnSync=function(){ _s(); const leg=document.querySelector('#wnPanel .wn-leg'); if(leg) leg.innerHTML='<span><i></i>Changes from 17 and 18 Nov</span>'; }; }
+{ const _t=topHTML; topHTML=function(){ return _t().replace(/title="Red: today’s changes[^"]*"/,'title="Pink guide marking the changes from 17 and 18 Nov"'); }; }
+try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); }catch(e){} }); }catch(e){}
+})();
+</script>
+<script>
+/* FB47 · Review guide: only the big additions and fixes */
+(function(){
+const DROP=['Code before APIs','History','Sync everywhere','Personas','Zoom and straight lines','Chat room card','Hover to see the list','Drag use cases in','Only what you picked is on the canvas','Archived systems'];
+const K=WN.filter(f=>!DROP.includes(f.n)); WN.length=0; WN.push(...K); WN.forEach((f,i)=>f.i=i+1);
+['#wnPanel','#wnBtn','#wnLayer'].forEach(q=>{ const e=document.querySelector(q); if(e) e.remove(); });
+try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); }catch(e){} }); }catch(e){}
+})();
+</script>
+<style>
+/* FB48 · no settings gear; repository and sync links in secondary text */
+.sys-h .bs-gear{display:none!important}
+.sys-h small.lnks button{color:var(--text-2)!important}
+.sys-h small.lnks button:hover{color:#fff!important}
+.sys-h small.lnks .cx-newc{color:var(--warn-text)!important}
+</style>
+<script>
+/* FB48 · settings are gone from the business system; drop them from the guide */
+(function(){
+const DROP=['Settings on the canvas','Owner team, archive, sharing'];
+const K=WN.filter(f=>!DROP.includes(f.n)); WN.length=0; WN.push(...K); WN.forEach((f,i)=>f.i=i+1);
+['#wnPanel','#wnBtn','#wnLayer'].forEach(q=>{ const e=document.querySelector(q); if(e) e.remove(); });
+try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); }catch(e){} }); }catch(e){}
+})();
+</script>
+<style>
+/* FB49 · no indicators under the summary */
+.ucf2 .stats{display:none!important}
+</style>
+<script>
+/* FB49 · New use case and New bounded context are not being built now: out of the guide */
+(function(){
+const K=WN.filter(f=>f.a!=='New use case'&&f.a!=='Bounded contexts'); WN.length=0; WN.push(...K); WN.forEach((f,i)=>f.i=i+1);
+['#wnPanel','#wnBtn','#wnLayer'].forEach(q=>{ const e=document.querySelector(q); if(e) e.remove(); });
+try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); }catch(e){} }); }catch(e){}
+})();
+</script>
+<style>
+/* FB50 · sync button back on the system card */
+.sys-h .bs-sync{margin-top:-2px;flex:none}
+.sys-h .bs-sync.spin svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+<script>
+/* FB50 · the system card has a sync button where the settings gear was */
+(function(){
+const ICON='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8M21 3v5h-5"/></svg>';
+function put(){ const h=document.querySelector('#cPanel .sys-h'); if(!h || h.querySelector('.bs-sync')) return; const sel=h.querySelector(':scope > .ib:not(.bs-gear)'); const b=document.createElement('button'); b.className='ib bs-sync'; b.dataset.act='bssync'; b.setAttribute('aria-label','Sync now'); b.title='Sync now'; b.innerHTML=ICON; h.insertBefore(b, sel||null); }
+ACT.bssync = () => { const b=document.querySelector('#cPanel .bs-sync'); if(b){ b.classList.add('spin'); setTimeout(()=>b.classList.remove('spin'),2400); } ACT.cxrescan(); };
+{ const _r=render; render=function(){ _r(); put(); }; }
+put();
+})();
+</script>
 </body>
 </html>
