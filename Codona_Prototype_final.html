@@ -11605,13 +11605,12 @@ const _v=ACT.ucview; ACT.ucview=function(a){ const [id,v]=a.split('|'); if(v==='
 /* FB57 · open on the Commerce platform Galaxy. Business systems stay one click away in the breadcrumb and the navigation. */
 (function(){
 let h0=''; try{ const n=performance.getEntriesByType('navigation')[0]; h0=n?(new URL(n.name).hash):location.hash; }catch(e){ h0=location.hash; }
-const plain = h0.replace(/^#\/?/,'')==='' ;
+const plain = ['','codona','codona/'].includes(h0.replace(/^#\/?/,''));
 if(!plain) return;
 const go=()=>{ try{ S.tab='codona'; S.ucx.flow=null; S.side={v:'home'}; S.stack=[]; S.level=0; goHome(); render(); requestAnimationFrame(()=>{ window.dispatchEvent(new Event('resize')); try{ gC.fit(false); }catch(e){} }); }catch(e){ console.error(e); } };
 go(); setTimeout(go,60);
 })();
-/* the guide list starts closed so it doesn't cover the business system panel; the pink boxes stay on */
-try{ S.wn.open=false; setTimeout(()=>{ try{ S.wn.open=false; wnSync(); }catch(e){} },80); }catch(e){}
+try{ S.wn.open=true; setTimeout(()=>{ try{ S.wn.open=true; wnSync(); }catch(e){} },80); }catch(e){}
 </script>
 </body>
 </html>
