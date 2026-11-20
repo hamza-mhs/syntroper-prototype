@@ -5679,7 +5679,7 @@ function topHTML(){ const cur=SPACES.find(s=>s.cur);
     <button class="tb-me ${S.nav.me?'on':''}" data-act="nvme" aria-expanded="${S.nav.me}" aria-label="Your account">${pAv(ME,28)}${I(S.nav.me?'chevron-up':'chevron-down',14)}</button>
     ${S.nav.me?`<div class="tb-menu" role="menu"><div class="tb-who">${pAv(ME,44)}<span><b>${esc(ME)}</b><small>${esc(CXP[ME].mail)}</small></span></div>
       <button data-act="toast" data-arg="My Settings is not part of this prototype." role="menuitem">${I('settings',18)}My Settings</button>
-      <button data-act="toast" data-arg="Light mode is not part of this prototype." role="menuitemcheckbox" aria-checked="true">${I('moon',18)}Dark Mode<span class="sp"></span><span class="tb-sw on"></span></button>
+      <button data-act="theme" role="menuitemcheckbox" aria-checked="${!document.body.classList.contains('light')}">${I('moon',18)}Dark Mode<span class="sp"></span><span class="tb-sw ${document.body.classList.contains('light')?'':'on'}"></span></button>
       <div class="tb-dv"></div><button class="bad" data-act="toast" data-arg="Sign out is not part of this prototype." role="menuitem">${I('logout',18)}Sign out</button></div>`:''}`; }
 document.body.insertAdjacentHTML('afterbegin','<header id="appTop" aria-label="Account"></header>');
 function renderShell(){ document.body.classList.toggle('nav-open', S.nav.open); $('#rail').innerHTML=railHTML(); $('#appTop').innerHTML=topHTML(); }
@@ -8155,7 +8155,7 @@ function ucReviewHTML(id){ const R=UCR[id], a=ASSIGN['uc:'+id], rv=R.rv, F=FLOW[
   else if(rv==='rejected') call=`<div class="ucr-c bad">${I('ban',16)}<div><b>Rejected · ${esc(rejTxt(R))}</b><span>${R.note?'“'+esc(R.note)+'” ':''}${esc(R.by)} · ${esc(R.when)}. It’s off the Galaxy, and the next scan won’t suggest it again.</span></div><button class="btn sm ghost" data-act="ucrestore" data-arg="${id}">Restore</button></div>`;
   else if(rv==='changes') call=`<div class="ucr-c warn">${I('edit',16)}<div><b>Changes requested</b><span>“${esc(R.note)}” · ${esc(R.by)}, ${esc(R.when)}</span></div></div>`;
   const hint = R.hint && ucOpenRv(id) && UCB[R.hint.ref] ? `<div class="ucr-c ai">${sIc(16)}<div><span>${esc(R.hint.t)}</span><button class="btn sm" data-act="ucrej" data-arg="${id}|${R.hint.why||'part'}|${R.hint.ref}">${R.hint.why==='notgoal'?'Reject as not a user goal':'Reject as part of '+esc(UCB[R.hint.ref].name)}</button></div></div>` : '';
-  const acts = ucOpenRv(id) ? `<div class="ucr-a"><button class="btn primary sm" data-act="ucaccept" data-arg="${id}">${I('check',14)}Accept</button><button class="btn sm" data-act="ucchg" data-arg="${id}">Request changes</button><button class="btn sm rj" data-act="ucrej" data-arg="${id}">Reject</button></div>` : '';
+  const acts = ucOpenRv(id) ? `<div class="ucr-a"><button class="btn primary sm" data-act="ucaccept" data-arg="${id}">${I('check',14)}Accept</button><button class="btn sm ucpc" data-act="ucchg" data-arg="${id}">Propose changes</button><button class="btn sm rj" data-act="ucrej" data-arg="${id}">Reject</button></div>` : '';
   return `<div class="ucr"><div class="ucr-f"><span>Review</span><div>${rvChip(id)}</div><span>Source</span><div>${src}</div><span>Assigned to</span><div>${who}</div></div>${call}${hint}${acts}</div>`; }
 window.ucReviewHTML=ucReviewHTML;
 
@@ -8534,6 +8534,7 @@ try{ render(); }catch(e){ console.error(e); }
 document.body.insertAdjacentHTML('beforeend','<div id="npModal"></div>');
 S.np=null;
 const routeCtx = r => { if(window.API_OWNER&&API_OWNER[r]) return API_OWNER[r]; const o=OPS[r]; return o&&UCB[o.users[0]] ? UCB[o.users[0]].ctx : 'unassigned'; };
+window.routeCtx=routeCtx;
 function npCtx(M){ if(M.ctx!=='auto') return M.ctx; const c={}; M.pick.forEach(r=>{ const k=routeCtx(r); c[k]=(c[k]||0)+1; }); return Object.entries(c).sort((a,b)=>b[1]-a[1])[0]?.[0] || 'unassigned'; }
 function npWho(M){ if(M.who!=='auto'){ const [k,id]=M.who.split('|'); return {k,id}; } const c=CTB[npCtx(M)]; return c&&c.owner ? {k:'person',id:c.owner} : null; }
 const npOk = M => !!M.name.trim() && M.pick.length>0;
@@ -8589,7 +8590,7 @@ function npHTML(){ const M=S.np; if(!M) return ''; const q=M.q.trim().toLowerCas
     <div class="mft">${foot}</div></div>`; }
 /* FB39 · new use case, step 3: see where each API lives and what it reaches, resolve before proposing */
 function npDeps(M){ const tgt=npCtx(M); M.dres=M.dres||{}; const issues=[], reach=[];
-  M.pick.forEach(r=>{ const oc=routeCtx(r); if(oc!==tgt && oc!=='unassigned') issues.push({key:'own:'+r, r, oc});
+  M.pick.forEach(r=>{ const oc=routeCtx(r); const br=oc!==tgt && oc!=='unassigned' && window.npBreaks ? npBreaks(r,oc,tgt) : (oc!==tgt && oc!=='unassigned'); if(br) issues.push({key:'own:'+r, r, oc, why:br.why||''});
     opInts(r).map(i=>INB[i]).filter(Boolean).forEach(it=>reach.push({it, r})); });
   issues.forEach(x=>x.done=!!M.dres[x.key]); return {tgt, issues, reach}; }
 window.npDeps = () => S.np ? npDeps(S.np) : null;
@@ -8597,7 +8598,7 @@ const npOpen = M => npDeps(M).issues.filter(x=>!x.done).length;
 function body3(M){ const D=npDeps(M); const tn=D.tgt==='unassigned'?'No context':CTB[D.tgt].name; const cN=c=>c==='unassigned'?'No context':CTB[c]?CTB[c].name:ctxName(c);
   const mp = a => { const [m,...p]=a.split(' '); return `<span class="meth ${m.toLowerCase()}">${m}</span><code title="${esc(a)}">${esc(p.join(' '))}</code>`; };
   const opts = x => [['call',`Keep it in <b>${esc(cN(x.oc))}</b>. ${esc(tn)} calls it.`],['here',`Put this use case in <b>${esc(cN(x.oc))}</b> instead.`],['copy',`Give ${esc(tn)} its own copy of the endpoint.`]];
-  const iss = D.issues.map(x=>{ const r=M.dres[x.key]; return `<div class="db-i ${r?'done':''}"><div class="db-it">${I(r?'check-circle':'alert',16)}<span><b>API from another context</b><code>${esc(x.r)}</code><small>Owned by ${esc(cN(x.oc))}. This use case lives in ${esc(tn)}.</small></span></div>
+  const iss = D.issues.map(x=>{ const r=M.dres[x.key]; return `<div class="db-i ${r?'done':''}"><div class="db-it">${I(r?'check-circle':'alert',16)}<span><b>${esc(x.r)}</b><small>${x.why||`Owned by ${esc(cN(x.oc))}. This use case lives in ${esc(tn)}.`}</small></span></div>
       <div class="db-op">${opts(x).map(([k,l])=>`<button class="${r===k?'on':''}" data-act="npdres" data-arg="${esc(x.key)}|${k}"><span class="cx-rb ${r===k?'on':''}"></span><span>${l}</span></button>`).join('')}</div></div>`; }).join('');
   const shared = M.pick.filter(r=>(OPS[r]||{users:[]}).users.length);
   const plan = [ `Create “${esc(M.name.trim())}” in ${esc(tn)} with ${M.pick.length} step${M.pick.length===1?'':'s'}`, ...D.issues.filter(x=>M.dres[x.key]==='call').map(x=>`${esc(tn)} calls ${esc(cN(x.oc))} for <code>${esc(x.r)}</code>`), ...D.issues.filter(x=>M.dres[x.key]==='copy').map(x=>`Copy <code>${esc(x.r)}</code> into ${esc(tn)}`) ];
@@ -8617,6 +8618,7 @@ function body3(M){ const D=npDeps(M); const tn=D.tgt==='unassigned'?'No context'
       return `<div class="db-c stay"><div class="db-a ${rs?'ok':'warn'}" data-anc="np-o:${esc(r)}"><div class="db-ar">${mp(r)}</div><div class="db-fl"><span>${us.length} use case${us.length===1?'':'s'} use it</span></div></div></div>`; }).join('')}</div>`).join('');
   const tos=[...new Set(D.reach.map(x=>x.it.to))];
   const reachCol = tos.length ? `<div class="db-col other"><div class="db-ch">${kindIc('external',16)}<b>What it reaches</b><small>${tos.length}</small></div>${tos.map(t=>`<div class="db-p" data-anc="np-to:${esc(t)}">${CTB[t]?kindIc('context',14):kindIc('external',14)}<b>${esc(ctxName(t))}</b><span class="tag out">${new Set(D.reach.filter(x=>x.it.to===t).map(x=>x.it.id)).size} point(s)</span></div>`).join('')}</div>` : '';
+  if(window.npGalaxy) return `<div class="npb3">${side}${npGalaxy(M,D)}</div>`;
   requestAnimationFrame(()=>npLines(D));
   return `<div class="npb3">${side}<div class="db-cv" id="npCv"><div class="db-cvi">${ownCols}<div class="db-col target"><div class="db-ch">${kindIc('context',16)}<b>${esc(tn)}</b><small>lives here</small></div>${ucCard}</div>${reachCol}<svg class="db-lines"></svg></div><div class="db-leg"><span><i class="w"></i>Needs a decision</span><span><i class="o"></i>Resolved</span><span><i class="n"></i>Reaches</span></div></div></div>`; }
 function npLines(D){ const root=document.getElementById('npCv'); if(!root||!S.np) return; const inner=root.querySelector('.db-cvi'), svg=root.querySelector('.db-lines'); const R0=inner.getBoundingClientRect();
@@ -9313,6 +9315,7 @@ const room = id => ROOM[id] || (ROOM[id]={unread:0, msgs:[rm('Syntroper', UCR[id
 const slug = id => UCB[id].name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 const openReqs = id => room(id).msgs.filter(m=>m.req && !m.done);
 const members = id => { const s=new Set(); (S.inv&&S.inv[id]||[]).forEach(a=>(a.k==='team'?teamMembers(a.id):[a.id]).forEach(n=>s.add(n))); room(id).msgs.forEach(m=>{ if(m.who!=='Syntroper') s.add(m.who); }); const a=ASSIGN['uc:'+id]; if(a) (a.k==='team'?teamMembers(a.id):[a.id]).forEach(n=>s.add(n)); const c=CTB[UCB[id].ctx]; if(c&&c.owner) s.add(c.owner); s.add(ME); return [...s]; };
+window.roomMembers=members;
 function syncRv(id){ const R=UCR[id]; if(!R||R.rv==='accepted'||R.rv==='rejected') return; R.rv = openReqs(id).length ? 'changes' : 'review'; UCB[id].status='suggested'; }
 Object.keys(ROOM).forEach(id=>{ if(UCR[id]) syncRv(id); });
 S.room = {draft:{}, flag:{}, sum:{}, draftFor:{}};
@@ -9329,8 +9332,7 @@ function roomHTML(id){ const R=room(id), u=UCB[id]; const mem=members(id); const
     return `<div class="cx-msg">${sys?sIc(28):pAv(m.who,28)}<div class="b"><div class="h"><b>${esc(m.who)}</b><span>${esc(m.when)}</span></div><p>${richText(m.t).replace(/@Syntroper/g,'<span class="cx-at">@Syntroper</span>')}</p>${m.btn?`<div class="aichips"><button data-act="${m.btn[1]}" data-arg="${id}">${esc(m.btn[0])}</button></div>`:''}</div></div>`; }).join('');
   const fl=!!S.room.flag[id];
   return `<section class="card fill room-card"><div class="ch flat"><div class="rp-h"><button class="back" data-act="rpback">${I('arrow-left',16)}<span>${esc(u.name)}</span></button><span class="sp"></span><button class="ib" data-act="rpclose" aria-label="Close details">${I('x',16)}</button></div></div>
-    <div class="room-h"><span class="room-k">Chat room</span><div class="t"><h2># ${esc(slug(id))}</h2><span class="sp"></span><button class="slk" data-act="roomslack" data-arg="${id}" title="Also in Slack"><i></i>Slack</button></div>
-      <div class="room-m"><button class="room-who" data-act="invopen" data-arg="${id}"><span class="stack">${mem.slice(0,5).map(n=>pAv(n,20)).join('')}</span><span>${mem.length} people</span></button><span class="sp"></span><button class="btn sm" data-act="invopen" data-arg="${id}">${I('user-plus',14)}Invite</button></div></div>
+    <div class="room-h"><span class="room-k">Chat room</span><div class="t"><h2># ${esc(slug(id))}</h2><span class="sp"></span><button class="room-who rw2" data-act="rmem" data-arg="${id}" aria-haspopup="dialog" aria-label="${mem.length} members"><span class="stack">${mem.slice(0,3).map(n=>pAv(n,22)).join('')}</span>${mem.length>3?`<span class="more">+${mem.length-3}</span>`:''}${I('chevron-right',14)}</button></div></div>
     <div class="room-th" id="roomTh">${msgs}</div>
     <div class="room-c">${sum}<textarea id="roomDraft" rows="2" placeholder="${fl?'What should change?':'Message #'+esc(slug(id))+', or @Syntroper'}">${esc(S.room.draft[id]||'')}</textarea>
       <div class="f"><button class="room-flag ${fl?'on':''}" data-act="roomflag" data-arg="${id}" aria-pressed="${fl}">${I('flag',14)}Change request</button><span class="sp"></span><button class="aic-s" data-act="roompost" data-arg="${id}" aria-label="Send" ${(S.room.draft[id]||'').trim()?'':'disabled'}>${I('send',15)}</button></div></div></section>`; }
@@ -9432,7 +9434,7 @@ const pre = (b, all) => { const n=b.lines.length, h0=b.hl.length?b.hl[0]:0; cons
 const blockKindIc = k => k==='Screen'?'browser':k==='Server action'?'zap':k==='API route'?'socket':k==='Workflow'?'dataflow4':k==='Workflow step'?'footprints':k==='Subscriber'?'zap':k==='Module link'?'link2':'filecode';
 function blockHTML(id, b, k){ const key=id+'|'+b.file+'|'+b.name; const all=!!S.uct.code[key]; const n=b.lines.length;
   return `<div class="cbk"><div class="cbk-h"><span class="cbk-i">${fbI(blockKindIc(b.kind),14)}</span><b title="${esc(b.name)}">${esc(b.name)}</b><span class="sp"></span><span class="ityp">${esc(b.kind)}</span></div>
-    <div class="cbk-f"><code title="${esc(b.file)}">${esc(b.file.split('/').slice(-3).join('/'))}</code><span>L${b.start}–${b.start+n-1}</span>${b.it?`<button class="lnk2" data-act="fbev" data-arg="${esc(b.file)}">Open</button>`:''}</div>
+    <div class="cbk-f"><code title="${esc(b.file)}">${esc(b.file.split('/').slice(-3).join('/'))}</code><span>L${b.start}–${b.start+n-1}</span><button class="lnk2" data-act="fbev" data-arg="${esc(b.file)}" title="Open ${esc(b.file)}">${fbI('filecode',12)}Open entire file</button></div>
     ${pre(b, all)}${n>12?`<button class="cbk-more" data-act="cbkmore" data-arg="${esc(key)}">${I(all?'chevron-up':'chevron-down',14)}${all?'Show less':`Show all ${n} lines`}</button>`:''}</div>`; }
 
 function stepOfApi(F,a){ const k=F.steps.findIndex(s=>s.apis.includes(a)); return k>=0?k+1:null; }
@@ -9468,14 +9470,16 @@ function summaryText(id){ const F=ucFlowOf(id), u=UCB[id]; const alts=F.alts.fil
     const pts=[]; x.apis.forEach(a=>opInts(a).forEach(t=>{ if(INB[t]&&!pts.some(z=>z[0].id===t)) pts.push([INB[t],a]); }));
     return `${w}, the ${esc(who)} ${esc(vb(x.t))}${files.length?` ${/ in /.test(x.t)?'via':'in'} ${files.map(f=>fchip(f,i)).join(' and ')}`:''}, and the system ${esc(lf(respOf(x)))}${x.apis.length?` through ${x.apis.map(a=>achip(a,i)).join(' and ')}`:''}${pts.length?`, which reaches ${pts.map(([t,a])=>pchip(t,i,a)).join(', ')}`:''}.`; });
   const A=alts.slice(0,2).map(a=>`If ${esc(lf(a.t))}${a.at?` at step ${a.at}`:''}, ${esc(lf(a.steps[0]||''))}${a.end?`. Result: ${esc(lf(a.end))}`:''}.`);
-  return `${esc(u.goal)} ${L.join(' ')}${A.length?` <span class="sxalt">${A.join(' ')}</span>`:''}`; }
+  const AP=[], PT=[]; steps.forEach(x=>{ const i=F.steps.indexOf(x)+1; x.apis.forEach(a=>{ if(!AP.some(z=>z[0]===a)) AP.push([a,i]); opInts(a).forEach(t=>{ if(INB[t]&&!PT.some(z=>z[0].id===t)) PT.push([INB[t],i,a]); }); }); });
+  const more=(n,k)=>n>k?` and ${n-k} more`:'';
+  const first=steps[0], last=steps[steps.length-1];
+  return `${esc(u.goal)} ${steps.length} step${steps.length===1?'':'s'}, from “${esc(first?first.t:'')}” to “${esc(last?last.t:'')}”.${AP.length?` Calls ${AP.slice(0,2).map(([a,i])=>achip(a,i)).join(' ')}${more(AP.length,2)}`:''}${PT.length?`${AP.length?', which reaches':' Reaches'} ${PT.slice(0,2).map(([t,i,a])=>pchip(t,i,a)).join(' ')}${more(PT.length,2)}`:''}${AP.length||PT.length?'.':''}${alts.length?` <span class="sxalt">${alts.length===1?'One other path':alts.length+' other paths'}: ${alts.slice(0,2).map(a=>esc(lf(a.t))).join(', ')}${more(alts.length,2)}.</span>`:''}`; }
 function ucf2HTML(id){ const F=ucFlowOf(id); const pv=S.ai.pend[id]; const tab=S.uct.tab[id]||'code'; const on=S.ucx.flow===id; const hl=S.ucx.hl&&S.ucx.hl.id===id?S.ucx.hl.i:null;
   const dec=new Set(F.alts.filter(a=>!a._del&&a.at).map(a=>a.at)).size, nAlt=F.alts.filter(a=>!a._del).length; const pl=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
   const apis=new Set(F.steps.flatMap(s=>s.apis)).size, pts=UCB[id].i.filter(i=>INB[i]).length, aff=impactOf([id]).others.length, blocks=codeOf(id).length;
   const T=[['code','Code blocks',blocks],['apis','APIs',apis],['pts','Integration points',pts],['aff','Affected use cases',aff]];
   return `<div class="ucf2">${pv?`<div class="ucpv">${sIc(16)}<span>Previewing Syntroper’s change in the flowchart</span><button class="btn sm" data-act="aidiscard" data-arg="${id}">Discard</button><button class="btn primary sm" data-act="aiapply" data-arg="${id}">Apply</button></div>`:''}
-    <div class="ucf2-h"><b>Diagram</b><span class="sp"></span><button class="btn sm ${on?'':'primary'}" data-act="ucview" data-arg="${id}|${on?'text':'flow'}">${I(on?'x':'flow',14)}${on?'Close diagram':'Open diagram'}</button></div>
-    <div class="aisum"><div><small>Summary by Syntroper</small><p>${summaryText(id)}</p></div></div>
+    <div class="aisum"><div><small><svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs><linearGradient id="spkG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f472b6"/><stop offset="1" stop-color="#a78bfa"/></linearGradient></defs><path fill="url(#spkG)" d="M10 2.5l1.9 5.1 5.1 1.9-5.1 1.9L10 16.5l-1.9-5.1L3 9.5l5.1-1.9zM18 13l.95 2.55L21.5 16.5l-2.55.95L18 20l-.95-2.55L14.5 16.5l2.55-.95zM18.5 2l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6z"/></svg>Steps summary</small><button class="btn ${on?'':'primary'} aisb" data-act="ucview" data-arg="${id}|${on?'text':'flow'}">${I(on?'x':'flow',14)}${on?'Close sequence steps':'Open sequence steps'}</button><p>${summaryText(id)}</p></div></div>
     <div class="stats"><span>${I('fc-proc',14)}${pl(F.steps.length,'step')}</span><span>${I('fc-dec',14)}${pl(dec,'decision')}</span><span>${I('fc-alt',14)}${pl(nAlt,'other path')}</span></div>
     <button class="ucask" data-act="aiopen" data-arg="${id}">${sIc(20)}<span>Ask Syntroper to change this</span>${I('arrow-right',14)}</button></div>`; }
 { const _ih=itemHTML; itemHTML=function(sel,o={}){ let h=_ih(sel,o); if((o&&o.lib)||sel.t!=='uc'||!UCR[sel.id]) return h; const id=sel.id;
@@ -9557,19 +9561,26 @@ function fxSum(id,i,s){ const bs=codeOf(id).filter(b=>b.step===i); const nf=new 
   return parts.length?`<button class="fxtg" data-act="fxexp" data-arg="${id}|${i}" aria-expanded="false">${I('chevron-down',14)}<span>${parts.join(' · ')}</span></button>`:''; }
 let lastL=null;
 const fxO = (id,i) => S.fx.open[id+'|'+i];
-function fxChips(id,i,s){ const O=fxO(id,i); const bs=codeOf(id).filter(b=>b.step===i); const files=[...new Set(bs.map(b=>b.file))];
-  const fc=files.map(f=>{ const n=bs.filter(b=>b.file===f).length; const k=bs.find(b=>b.file===f).kind; const on=O&&O.k==='f'&&O.v===f;
-    return `<button class="fxf ${on?'on':''}" data-act="fxopen" data-arg="${id}|${i}|f|${esc(f)}" title="${esc(f)} · ${esc(k)}">${fbI(blockKindIc(k),12)}<span>${esc(f.split('/').pop())}</span>${n>1?`<em>${n}</em>`:''}</button>`; }).join('');
-  const ac=s.apis.map(a=>{ const [m,...p]=a.split(' '); const on=O&&O.k==='a'&&O.v===a; const ni=opInts(a).length;
-    return `<button class="apc fxa ${on?'on':''}" data-act="fxopen" data-arg="${id}|${i}|a|${esc(a)}" title="${esc(a)}"><span class="meth ${m.toLowerCase()}">${m}</span><code>${esc(p.join(' '))}</code>${ni?`<em class="hpt" data-hp="i|${esc(a)}">${kindIc('point',12)}${ni}</em>`:''}</button>`; }).join('');
-  const all=O&&O.k==='all';
-  const pts=[]; s.apis.forEach(a=>opInts(a).forEach(t=>{ if(INB[t]&&!pts.some(z=>z[0].id===t)) pts.push([INB[t],a]); }));
-  const pc=pts.map(([it,a])=>{ const on=O&&O.k==='a'&&O.v===a&&S.fx.int[id+'|'+i]===it.id; return `<button class="fxp ${on?'on':''}" data-act="fxpt" data-arg="${id}|${i}|${it.id}|${esc(a)}" title="${esc(intKind(it)[1])} · ${esc(CTB[it.from]?CTB[it.from].name:'')} → ${esc(ctxName(it.to))}">${kindIc('point',12)}<span>${esc(it.label)}</span><em>${esc(ctxName(it.to))}</em></button>`; }).join('');
+function fxChips(id,i,s){ const O=fxO(id,i); const bs=codeOf(id).filter(b=>b.step===i); const files=[...new Set(bs.map(b=>b.file))]; const key=id+'|'+i; S.fx.more=S.fx.more||{};
+  const base=f=>f.split('/').pop(); const dupe=f=>files.filter(x=>base(x)===base(f)).length>1; const short=f=>dupe(f)?f.split('/').slice(-3,-1).join('/').replace(/^\[?[^/]*\]?\//,'')+'/'+base(f):base(f);
+  const FN=5, AN=4; const mf=!!S.fx.more[key+'|f'], ma=!!S.fx.more[key+'|a'];
+  const fileBtn=f=>{ const n=bs.filter(b=>b.file===f).length; const k=bs.find(b=>b.file===f).kind; const on=O&&O.k==='f'&&O.v===f;
+    return `<button class="fxf ${on?'on':''}" data-act="fxopen" data-arg="${id}|${i}|f|${esc(f)}" title="${esc(f)} · ${esc(k)}">${fbI(blockKindIc(k),12)}<span>${esc(short(f))}</span>${n>1?`<em>${n}</em>`:''}</button>`; };
+  const apiRow=a=>{ const [m,...p]=a.split(' '); const on=O&&O.k==='a'&&O.v===a; const ints=opInts(a).map(t=>INB[t]).filter(Boolean);
+    return `<div class="fxar"><button class="apc fxa ${on?'on':''}" data-act="fxopen" data-arg="${id}|${i}|a|${esc(a)}" title="${esc(a)}"><span class="meth ${m.toLowerCase()}">${m}</span><code>${esc(p.join(' '))}</code></button>${ints.map(it=>{ const onp=on&&S.fx.int[key]===it.id; return `<button class="fxp ${onp?'on':''}" data-act="fxpt" data-arg="${id}|${i}|${it.id}|${esc(a)}" title="${esc(intKind(it)[1])} · ${esc(ctxName(it.to))}">${kindIc('point',12)}<span>${esc(it.label)}</span><em>${esc(ctxName(it.to))}</em></button>`; }).join('')}</div>`; };
+  const fShow=mf?files:files.slice(0,FN), aShow=ma?s.apis:s.apis.slice(0,AN);
+  const more=(k,n,on)=>n>0?`<button class="fxmore" data-act="fxmore" data-arg="${key}|${k}">${on?'Show less':`+${n} more`}</button>`:'';
+  const nPts=new Set(s.apis.flatMap(opInts).filter(x=>INB[x])).size;
   const us=[...new Set(s.apis.flatMap(a=>(OPS[a]||{users:[]}).users))].filter(x=>x!==id&&UCB[x]&&rvOf(x)!=='rejected');
-  const sh=us.length?`<span class="fxsh" title="${esc(us.map(x=>UCB[x].name).join(', '))}">${kindIc('usecase',12)}Its APIs are shared with ${us.length} other use case${us.length===1?'':'s'}: ${esc(us.slice(0,2).map(x=>UCB[x].name).join(', '))}${us.length>2?` +${us.length-2}`:''}</span>`:'';
-  return `${fc?`<span class="fxfs">${fc}</span>`:''}${ac?`<span class="ap">${ac}</span>`:''}${pc?`<span class="fxps">${pc}</span>`:''}${sh}${bs.length?`<button class="fxall ${all?'on':''}" data-act="fxopen" data-arg="${id}|${i}|all|">${fbI('code',12)}${all?'Hide code':`Show all ${bs.length} code block${bs.length===1?'':'s'}`}</button>`:''}`; }
+  const all=O&&O.k==='all';
+  return `${files.length?`<div class="fxg"><div class="fxgh">${fbI('filecode',12)}Code files<span class="count">${files.length}</span><span class="sp"></span><button class="fxlnk" data-act="fxide" data-arg="${esc(files[0])}">Open in editor</button></div><span class="fxfs">${fShow.map(fileBtn).join('')}${more('f',files.length-FN,mf)}</span></div>`:''}
+    ${s.apis.length?`<div class="fxg"><div class="fxgh">${kindIc('api',12)}APIs<span class="count">${s.apis.length}</span>${nPts?`<span class="fxgs">${kindIc('point',12)}${nPts} integration point${nPts===1?'':'s'}</span>`:''}</div>${aShow.map(apiRow).join('')}${more('a',s.apis.length-AN,ma)}</div>`:''}
+    ${us.length?`<span class="fxsh" title="${esc(us.map(x=>UCB[x].name).join(', '))}">${kindIc('usecase',12)}Shared with ${us.length} other use case${us.length===1?'':'s'}</span>`:''}
+    ${bs.length?`<button class="fxall ${all?'on':''}" data-act="fxopen" data-arg="${id}|${i}|all|">${fbI('code',12)}${all?'Hide code':`Show all ${bs.length} code block${bs.length===1?'':'s'}`}</button>`:''}`; }
 function fxPanel(id,i,O){ const bs=codeOf(id).filter(b=>b.step===i); let body='', title='', sub='';
-  if(O.k==='f'){ const L=bs.filter(b=>b.file===O.v); title=esc(O.v.split('/').slice(-3).join('/')); sub=`${L.length} block${L.length===1?'':'s'} in this file`; body=L.map(b=>blockHTML(id,b)).join(''); }
+  if(O.k==='f'){ const L=bs.filter(b=>b.file===O.v); const files=[...new Set(bs.map(b=>b.file))]; title=esc(O.v.split('/').slice(-3).join('/')); sub=`${L.length} block${L.length===1?'':'s'} in this file`;
+    body=(files.length>1?`<div class="fxtabs" role="tablist">${files.map(f=>`<button role="tab" aria-selected="${f===O.v}" class="${f===O.v?'on':''}" data-act="fxopen" data-arg="${id}|${i}|f|${esc(f)}" title="${esc(f)}">${fbI(blockKindIc(bs.find(b=>b.file===f).kind),12)}${esc(files.filter(x=>x.split('/').pop()===f.split('/').pop()).length>1?f.split('/').slice(-2).join('/'):f.split('/').pop())}</button>`).join('')}</div>`:'')
+      +`<button class="fxlnk fxide" data-act="fxide" data-arg="${esc(O.v)}">${fbI('filecode',12)}Open ${esc(O.v.split('/').pop())} in the editor</button>`+L.map(b=>blockHTML(id,b)).join(''); }
   else if(O.k==='a'){ const r=O.v; const b=codeOf(id).find(x=>x.route===r); const ints=opInts(r).map(x=>INB[x]).filter(Boolean); const us=(OPS[r]||{users:[]}).users.filter(x=>x!==id&&UCB[x]&&rvOf(x)!=='rejected');
     title=esc(r); sub='API route, and what it leads to';
     body=(b?blockHTML(id,b):'')+
@@ -9582,6 +9593,8 @@ function fxPanel(id,i,O){ const bs=codeOf(id).filter(b=>b.step===i); let body=''
 function keepPos(before,i){ renderFlowCanvas(); const after=lastL&&lastL.N.find(n=>n.k==='proc'&&n.i===i);
   if(before&&after&&(before.x!==after.x||before.y!==after.y)){ d3.select(box).call(zoom.transform, d3.zoomIdentity.translate(T.x-(after.x-before.x)*T.k, T.y-(after.y-before.y)*T.k).scale(T.k)); } }
 Object.assign(ACT,{
+  fxmore(a){ const p=a.split('|'); const k=p.slice(0,2).join('|')+'|'+p[2]; S.fx.more=S.fx.more||{}; S.fx.more[k]=!S.fx.more[k]; const before=lastL&&lastL.N.find(n=>n.k==='proc'&&n.i===+p[1]); keepPos(before,+p[1]); },
+  fxide(f){ if(window.ideOpen) ideOpen(f); },
   fxexp(a){ const [id,si]=a.split('|'); const i=+si; const before=lastL&&lastL.N.find(n=>n.k==='proc'&&n.i===i);
     if(S.fx.exp[a]||S.fx.open[a]){ delete S.fx.exp[a]; delete S.fx.open[a]; S.fx.int[a]=null; } else S.fx.exp[a]=true; keepPos(before,i); },
   fxpt(a){ const [id,si,itid,...r]=a.split('|'); const i=+si, api=r.join('|'); const key=id+'|'+i; const before=lastL&&lastL.N.find(n=>n.k==='proc'&&n.i===i); const cur=S.fx.open[key];
@@ -9600,7 +9613,7 @@ Object.assign(ACT,{
 { const _c=ACT.cbkmore; ACT.cbkmore=function(k){ _c(k); if(S.ucx.flow) renderFlowCanvas(); }; }
 
 /* FB38 · sequence diagram, three levels of the same story: System · Bounded contexts · Code */
-S.ucx.sl = S.ucx.sl || 'sys'; S.sq = {open:null};
+S.ucx.sl = S.ucx.sl || 'sys'; S.sq = {open:null, dec:{}, dmenu:null};
 const rCtx = r => { if(window.API_OWNER&&API_OWNER[r]) return API_OWNER[r]; const o=OPS[r]; return o&&UCB[o.users[0]] ? UCB[o.users[0]].ctx : 'unassigned'; };
 const cLabel = c => c==='unassigned' ? 'No context' : (CTB[c]?CTB[c].name:c);
 function seqModel(id){ const F=ucFlowOf(id), u=UCB[id]; const lv=S.ucx.sl; const B=codeOf(id);
@@ -9608,14 +9621,16 @@ function seqModel(id){ const F=ucFlowOf(id), u=UCB[id]; const lv=S.ucx.sl; const
   const app = u.ch==='both'?'Storefront · Admin':u.ch==='none'?'Jobs and webhooks':CHANNELS[u.ch].name;
   const L=[]; const lane=(k,label,sub,kind)=>{ let x=L.find(l=>l.k===k); if(!x){ x={k,label,sub,kind}; L.push(x); } return x; };
   lane('p', per||'User', 'Persona', 'person');
-  lane('app', lv==='code'?'Screens':app, lv==='code'?app:(u.ch==='none'?'Trigger':'App'), 'channel');
   const sysName=(S.bs&&S.bs.name)||'Commerce platform'; const M=[];
-  F.steps.forEach((s,i)=>{ const st=i+1; const fl={nw:!!s._new, dl:!!s._del};
+  if(lv==='sys') lane('sys', sysName, 'Business system', 'system'); else lane('app', lv==='code'?'Screens':app, lv==='code'?app:(u.ch==='none'?'Trigger':'App'), 'channel');
+  const UI = lv==='sys' ? 'sys' : 'app'; let stop=false;
+  F.steps.forEach((s,i)=>{ if(stop) return; const st=i+1; const fl={nw:!!s._new, dl:!!s._del};
     M.push({row:'step', step:st, t:s.t, ...fl});
     const scr=B.find(b=>b.step===st&&(b.kind==='Screen'||b.kind==='Server action'));
-    M.push({f:'p', to:'app', label:s.t, kind:'act', step:st, code:scr, O:scr?{k:'f',v:scr.file}:null, ...fl});
+    /* system level: one arrow per user action; the APIs behind it are sidebar detail */
+    M.push({f:'p', to:UI, label:s.t, kind:'act', step:st, code:scr, apis:s.apis, O: lv==='sys'&&s.apis.length?{k:'a',v:s.apis[0]}:(scr?{k:'f',v:scr.file}:null), ...fl});
     s.apis.forEach(a=>{ const rb=B.find(b=>b.route===a);
-      if(lv==='sys'){ lane('sys', sysName, 'Business system', 'system'); M.push({f:'app', to:'sys', label:a, kind:'call', mono:1, step:st, code:rb, O:{k:'a',v:a}, ...fl}); }
+      if(lv==='sys'){ return; }
       else if(lv==='ctx'){ const oc=rCtx(a); const ol=lane('c:'+oc, cLabel(oc), 'Bounded context', 'context'); M.push({f:'app', to:ol.k, label:a, kind:'call', mono:1, step:st, code:rb, O:{k:'a',v:a}, ...fl});
         opInts(a).forEach(iid=>{ const it=INB[iid]; if(!it) return; const tk=CTB[it.to]?'c:'+it.to:'x:'+it.to; const fk=CTB[it.from]?'c:'+it.from:ol.k;
           if(!L.find(l=>l.k===fk)) lane(fk, cLabel(it.from), 'Bounded context', 'context');
@@ -9630,33 +9645,32 @@ function seqModel(id){ const F=ucFlowOf(id), u=UCB[id]; const lv=S.ucx.sl; const
           M.push({f:rl.k, to:fk, label:it.symbol.length>34?it.symbol.slice(0,32)+'…':it.symbol, kind:/event/i.test(it.type)?'event':'call', mono:1, step:st, code:ib, O:ib?{k:'f',v:ib.file}:null, ...fl}); });
         M.push({f:rl.k, to:'app', label:'', kind:'ret', step:st, ...fl}); }
     });
-    if(lv==='sys' && s.apis.length) M.push({f:'sys', to:'app', label:'', kind:'ret', step:st, ...fl});
-    M.push({f:'app', to:'p', label:respOf(s), kind:'ret', step:st, sys:1, ...fl});
-    const al=F.alts.map((a,k)=>({a,k})).filter(x=>x.a.at===st); if(al.length) M.push({row:'alt', step:st, al});
+    M.push({f:UI, to:'p', label:respOf(s), kind:'ret', step:st, sys:1, ...fl});
+    const al=F.alts.map((a,k)=>({a,k})).filter(x=>x.a.at===st&&!x.a._del);
+    if(al.length){ const cur=S.sq.dec[id+'|'+st]||'ok'; M.push({row:'dec', step:st, al, cur, lane:UI, next:F.steps[st]?F.steps[st].t:F.result});
+      if(cur!=='ok' && F.alts[+cur]){ const a=F.alts[+cur]; (a.steps||[]).forEach(t=>M.push({f:UI, to:'p', label:t, kind:'ret', step:st, sys:1, altk:a.kind}));
+        M.push({row:'end', t:a.back?`Back to step ${a.back}`:(a.end||a.t), alt:a.kind, back:a.back}); stop=true; } }
   });
-  const any=F.alts.map((a,k)=>({a,k})).filter(x=>!x.a.at); if(any.length) M.push({row:'alt', step:0, al:any});
-  M.push({row:'end', t:F.result});
+  if(!stop) M.push({row:'end', t:F.result});
   return {L, M, F, lv}; }
 const LANE_IC = {person:()=>I('user',14), channel:()=>kindIc('channel',14), system:()=>fbI('cube4',14), context:()=>kindIc('context',14), external:()=>kindIc('external',14), api:()=>kindIc('api',14), code:()=>fbI('filecode',14)};
-function buildSeq(id){ const X=seqModel(id); const LW=X.L.length<=4?320:250, G=56, TOP=86; const n=X.L.length; const cx=i=>G+i*LW+LW/2; const li=k=>X.L.findIndex(l=>l.k===k);
+function buildSeq(id){ const X=seqModel(id); const F2=X.F; const LW=X.L.length<=4?320:250, G=56, TOP=86; const n=X.L.length; const cx=i=>G+i*LW+LW/2; const li=k=>X.L.findIndex(l=>l.k===k);
   const hl=S.ucx.hl&&S.ucx.hl.id===id?S.ucx.hl.i:null; let y=TOP; let svg='', html=''; const W=G+n*LW;
   const arrow=(x,yy,dir,open)=>dir>0?`M${x-7} ${yy-4}L${x} ${yy}L${x-7} ${yy+4}${open?'':'Z'}`:`M${x+7} ${yy-4}L${x} ${yy}L${x+7} ${yy+4}${open?'':'Z'}`;
   X.L.forEach((l,i)=>{ html+=`<div class="sq-lh k-${l.kind}" style="left:${cx(i)-LW/2+12}px;top:0;width:${LW-24}px">${(LANE_IC[l.kind]||LANE_IC.code)()}<span><b title="${esc(l.label)}">${esc(l.label)}</b><small>${esc(l.sub||'')}</small></span></div>`; });
   const rows=[];
-  X.M.forEach((m,k)=>{ const on = hl!=null && m.step===hl;
-    if(m.row==='step'){ y+=10; html+=`<button class="sq-step ${on?'on':''} ${m.nw?'nw':''} ${m.dl?'dl':''}" data-act="ucstep" data-arg="${id}|${m.step}" style="left:6px;top:${y}px" title="Step ${m.step}">${m.step}</button>`; svg+=`<line class="sq-sep" x1="${G-8}" y1="${y+12}" x2="${W-8}" y2="${y+12}"/>`; y+=24; return; }
-    if(m.row==='alt'){ const x0=G+6, x1=W-6, y0=y+6, SH=64; const ax0=cx(li('app')), ax1=cx(li('p'));
-      m.al.forEach(({a},j)=>{ const t=y0+j*SH; if(j) svg+=`<line class="sq-altsep" x1="${x0}" y1="${t}" x2="${x1}" y2="${t}"/>`;
-        html+=`<span class="sq-cond" style="left:${x0+(j?10:58)}px;top:${t+3}px">[${esc(a.t)}]</span>`;
-        html+=`<span class="sq-lbl alt ${a.kind}" style="left:${Math.min(ax0,ax1)+10}px;top:${t+22}px;width:${Math.abs(ax0-ax1)-20}px" title="${esc(a.steps.join(' · '))}"><span>${esc(a.steps[0]||a.t)}</span></span>`;
-        svg+=`<line class="sq-m ret alt ${a.kind}" x1="${ax0}" y1="${t+46}" x2="${ax1+2}" y2="${t+46}"/><path class="sq-ah ret alt ${a.kind}" d="${arrow(ax1,t+46,-1,true)}"/>`;
-        html+=`<span class="sq-note ${a.kind}" style="left:${ax0+16}px;top:${t+36}px">${a.back?'↩ back to step '+a.back:'■ ends · '+esc(a.end||'')}</span>`; });
-      const h=m.al.length*SH+4; svg+=`<rect class="sq-frame" x="${x0}" y="${y0}" width="${x1-x0}" height="${h}" rx="6"/><path class="sq-ftag" d="M${x0+6} ${y0}H${x0+46}V${y0+12}l-8 8H${x0}V${y0+6}A6 6 0 0 1 ${x0+6} ${y0}Z"/>`;
-      html+=`<span class="sq-ftxt" style="left:${x0+8}px;top:${y0+1}px">${m.al.length>1?'alt':'opt'}</span>`;
-      y=y0+h+14; return; }
-    if(m.row==='end'){ y+=12; const a=cx(0), b=cx(1); html+=`<div class="sq-end" style="left:${a-20}px;top:${y}px;width:${b-a+40}px">${I('check-circle',14)}<span>${esc(m.t)}</span></div>`; y+=48; return; }
+  const SEL=S.sq.open, selStep=SEL!=null&&X.M[SEL]?X.M[SEL].step:null;
+  X.M.forEach((m,k)=>{ const on = SEL===k; const rel = !on && (SEL!=null ? m.step===selStep : hl!=null && m.step===hl); const dim = (SEL!=null||hl!=null) && !on && !rel;
+    if(m.row==='step'){ y+=10; html+=`<button class="sq-step ${(SEL!=null?m.step===selStep:hl===m.step)?'on':''} ${m.nw?'nw':''} ${m.dl?'dl':''}" data-act="ucstep" data-arg="${id}|${m.step}" style="left:6px;top:${y}px" title="Step ${m.step}">${m.step}</button>`; svg+=`<line class="sq-sep" x1="${G-8}" y1="${y+12}" x2="${W-8}" y2="${y+12}"/>`; y+=24; return; }
+    if(m.row==='dec'){ const xi=cx(li(m.lane)); const yy=y+18; const cur=m.cur==='ok'?null:F2.alts[+m.cur];
+      const opts=[{k:'ok', t:'Works as expected', sub:m.next?`Continues: ${m.next}`:'Continues', kind:'ok', on:!cur}, ...m.al.map(({a,k})=>({k, t:a.t, sub:a.back?`Back to step ${a.back}`:`Ends · ${a.end||''}`, kind:a.kind, on:cur===a}))];
+      const RH=30, top=yy-9; html+=`<span class="sq-dia ${cur?'alt':''}" style="left:${xi-9}px;top:${top}px" title="Decision at step ${m.step}"></span>`;
+      const bx=Math.max(xi,cx(X.L.length-1))+22; html+=`<div class="sq-brs" style="left:${bx}px;top:${top-3}px" role="radiogroup" aria-label="Step ${m.step} · what happens next">${opts.map((o,n)=>`<button class="sq-br ${o.kind} ${o.on?'on':''}" role="radio" aria-checked="${o.on}" data-act="sqdecset" data-arg="${id}|${m.step}|${o.k}" style="top:${n*RH}px"><span class="dk ${o.kind}"></span><b>${n?'Else if ':'If '}${esc(o.t.charAt(0).toLowerCase()+o.t.slice(1))}</b><small>${esc(o.sub)}</small></button>`).join('')}</div>`;
+      svg+=opts.map((o,n)=>`<path class="sq-brl ${o.on?'on':''}" d="M${xi+9} ${top+9}H${bx-6}V${top+9+n*RH}H${bx}"/>`).join('');
+      y=top+opts.length*RH+10; return; }
+    if(m.row==='end'){ y+=12; const a=cx(0), b=cx(1); html+=`<div class="sq-end ${m.alt?'alt '+m.alt:''}" style="left:${a-20}px;top:${y}px;width:${b-a+40}px">${I(m.alt?(m.back?'corner-up-left':'alert'):'check-circle',14)}<span>${esc(m.t)}</span></div>`; y+=48; return; }
     const i0=li(m.f), i1=li(m.to); if(i0<0||i1<0) return; const x0=cx(i0), x1=cx(i1); const dir=x1>x0?1:-1; const hasL=!!m.label; const yy=y+(hasL?22:10);
-    const cls=`${m.kind} ${on?'on':''} ${m.nw?'nw':''} ${m.dl?'dl':''}`;
+    const cls=`${m.kind} ${on?'on':''} ${rel?'rel':''} ${dim?'dim':''} ${m.altk?'altk '+m.altk:''} ${m.nw?'nw':''} ${m.dl?'dl':''}`;
     if(i0===i1){ svg+=`<path class="sq-m ${cls}" d="M${x0} ${yy-6}h36v14h-34"/><path class="sq-ah ${cls}" d="${arrow(x0+2,yy+8,-1,m.kind!=='call'&&m.kind!=='act')}"/>`; }
     else { svg+=`<line class="sq-m ${cls}" x1="${x0}" y1="${yy}" x2="${x1-dir*2}" y2="${yy}"/><path class="sq-ah ${cls}" d="${arrow(x1,yy,dir,m.kind==='ret'||m.kind==='event')}"/>`; }
     if(hasL){ const L0=Math.min(x0,x1)+10, Wl=Math.max(120,Math.abs(x1-x0)-20); const tag = m.kind==='event'?'<em>event</em>':m.kind==='act'?'<em>user</em>':m.sys?'<em>system</em>':'';
@@ -9677,7 +9691,9 @@ Object.assign(ACT,{
   ucsl(v){ S.ucx.sl=v; S.sq.open=null; render(); },
   sqmsg(a){ const p=a.split('|'); const k=+p[1]; S.sq.open = S.sq.open===k ? null : k; const m=S.sq.open!=null?seqModel(p[0]).M[k]:null; if(m) S.ucx.hl={id:p[0], i:m.step}; renderSide(); renderFlowCanvas();
     if(S.sq.open!=null && lastL){ const ar=area(); const kz=Math.max(T.k,.85); d3.select(box).transition().duration(300).call(zoom.transform, d3.zoomIdentity.translate(ar.x+ar.w-640*kz-16-(lastL.popX)*kz, ar.y+16-(lastL.popY-20)*kz).scale(kz)); } },
-  sqclose(){ S.sq.open=null; renderFlowCanvas(); }
+  sqclose(){ S.sq.open=null; renderFlowCanvas(); },
+  sqdec(a){ const [id,st]=a.split('|'); S.sq.dmenu = S.sq.dmenu===+st ? null : +st; renderFlowCanvas(); },
+  sqdecset(a){ const [id,st,v]=a.split('|'); S.sq.dec[id+'|'+st]=v; S.sq.dmenu=null; S.sq.open=null; renderFlowCanvas(); }
 });
 
 ACT.ucfv = v => { S.ucx.fv=v; S.sq.open=null; render(); };
@@ -9860,18 +9876,37 @@ document.body.insertAdjacentHTML('beforeend','<div id="invPop" hidden></div>');
 S.ip=null;
 function ipHTML(){ const id=S.ip.id; const P=peopleOf(id); const q=S.ip.q.toLowerCase();
   const tm=TEAMS.filter(t=>!q||t.name.toLowerCase().includes(q)), pp=Object.keys(CXP).filter(n=>n!=='Liam Carter'&&(!q||n.toLowerCase().includes(q)));
-  const inv=(S.inv[id]||[]);
-  return `<div class="ip" role="dialog" aria-label="Invite to ${esc(UCB[id].name)}"><div class="ip-h">People in ${esc(UCB[id].name)}</div>
-    <p class="ip-p">Invited people can see this use case and its room, and get notified. They aren’t asked to review it. To give someone the review, assign it.</p>
+  const inv=(S.inv[id]||[]); const SEL=S.ip.sel||(S.ip.sel=new Set());
+  return `<div class="ip" role="dialog" aria-label="Invite to ${esc(UCB[id].name)}">${S.ip.back?`<button class="ipback" data-act="ipback">${I('arrow-left',14)}Back to members</button>`:''}<div class="ip-h">Invite to ${esc(UCB[id].name)}</div>
     <div class="ip-s"><label class="field">${I('search',16)}<input id="ipQ" value="${esc(S.ip.q)}" placeholder="Invite people or teams"></label></div>
     <div class="ip-l">${q?'':`<div class="cx-ph">In this use case · ${P.size}</div>${[...P].map(([n,why])=>`<div class="cx-opt">${pAv(n,22)}<span class="l">${esc(n)}</span><span class="role">${esc(why)}</span></div>`).join('')}`}
-      <div class="cx-ph">Teams</div>${tm.map(t=>{ const on=inv.some(x=>x.k==='team'&&x.id===t.id); return `<button class="cx-opt" data-act="invadd" data-arg="${id}|team|${t.id}" ${on?'disabled':''}>${tAv(t.id,22)}<span class="l">${esc(t.name)}</span><span class="n">${on?'Invited':teamMembers(t.id).length+' people'}</span></button>`; }).join('')}
-      <div class="cx-ph">People</div>${pp.filter(n=>!P.has(n)).map(n=>`<button class="cx-opt" data-act="invadd" data-arg="${id}|person|${esc(n)}">${pAv(n,22)}<span class="l">${esc(n)}</span><span class="n">${esc(CXP[n].teams.map(x=>TEAM_BY[x].name).join(', ')||'No team')}</span></button>`).join('')||'<div class="cx-ph">Everyone is already in</div>'}</div></div>`; }
+      <div class="cx-ph">Teams</div>${tm.map(t=>{ const on=inv.some(x=>x.k==='team'&&x.id===t.id); const k='team|'+t.id; const ck=SEL.has(k); return `<button class="cx-opt ipck ${ck?'on':''}" data-act="invsel" data-arg="${k}" ${on?'disabled':''} role="checkbox" aria-checked="${ck}"><span class="cx-cb ${ck?'on':''}">${ck?I('check',12,'',2.2):''}</span>${tAv(t.id,22)}<span class="l">${esc(t.name)}</span><span class="n">${on?'Invited':teamMembers(t.id).length+' people'}</span></button>`; }).join('')}
+      <div class="cx-ph">People</div>${pp.filter(n=>!P.has(n)).map(n=>{ const k='person|'+n; const ck=SEL.has(k); return `<button class="cx-opt ipck ${ck?'on':''}" data-act="invsel" data-arg="${esc(k)}" role="checkbox" aria-checked="${ck}"><span class="cx-cb ${ck?'on':''}">${ck?I('check',12,'',2.2):''}</span>${pAv(n,22)}<span class="l">${esc(n)}</span><span class="n">${esc(CXP[n].teams.map(x=>TEAM_BY[x].name).join(', ')||'No team')}</span></button>`; }).join('')||'<div class="cx-ph">Everyone is already in</div>'}</div>
+    <div class="ip-f"><button class="btn sm" data-act="invx">Cancel</button><span class="sp"></span><button class="btn primary sm" data-act="invgo" ${SEL.size?'':'disabled'}>${SEL.size?`Invite ${SEL.size}`:'Invite'}</button></div></div>`; }
 function renderIP(){ const el=$('#invPop'); if(!S.ip){ el.hidden=true; el.innerHTML=''; return; } el.hidden=false; el.innerHTML=ipHTML(); const b=el.firstElementChild, r=S.ip.anchor; const w=b.offsetWidth, h=b.offsetHeight;
   let x=Math.max(12,Math.min(r.right-w, innerWidth-w-12)), y=r.bottom+6; if(y+h>innerHeight-12) y=Math.max(12,r.top-6-h); el.style.left=x+'px'; el.style.top=y+'px';
   const qi=$('#ipQ'); if(qi){ qi.oninput=()=>{ S.ip.q=qi.value; renderIP(); const n=$('#ipQ'); n.focus(); n.setSelectionRange(n.value.length,n.value.length); }; } }
-document.addEventListener('click', e=>{ if(S.ip && !e.target.closest('#invPop') && !e.target.closest('[data-act=invopen]')){ S.ip=null; renderIP(); } }, true);
+document.addEventListener('click', e=>{ if(S.ip && !e.target.closest('#invPop') && !e.target.closest('[data-act=invopen]') && !e.target.closest('[data-act=rminv]') && !e.target.closest('#memPop')){ S.ip=null; renderIP(); } }, true);
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && S.ip){ e.stopPropagation(); S.ip=null; renderIP(); } }, true);
+/* FB68 · members popover */
+document.body.insertAdjacentHTML('beforeend','<div id="memPop" hidden role="dialog" aria-label="Members"></div>');
+const pop=document.getElementById('memPop'); S.rmem=null;
+const drawMem=()=>{ if(!S.rmem){ pop.hidden=true; pop.innerHTML=''; return; } const id=S.rmem.id; const mem=window.roomMembers?roomMembers(id):[]; pop.hidden=false;
+  pop.innerHTML=`<div class="mh"><span>#${esc(UCB[id]?UCB[id].name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''):id)} · ${mem.length} member${mem.length===1?'':'s'}</span><span class="sp"></span><button class="ib" data-act="rmemx" aria-label="Close">${I('x',14)}</button></div>
+    <div class="ml">${mem.map(n=>`<div class="mr">${pAv(n,28)}<span>${esc(n)}${(window.CXP&&CXP[n]&&CXP[n].mail)?`<small>${esc(CXP[n].mail)}</small>`:''}</span></div>`).join('')}</div>
+    <div class="mf"><button class="btn primary sm" data-act="rminv" data-arg="${id}">${I('user-plus',14)}Invite people</button></div>`;
+  const r=S.rmem.anchor; const w=pop.offsetWidth, h=pop.offsetHeight; pop.style.left=Math.max(12,Math.min(r.right-w,innerWidth-w-12))+'px'; let y=r.bottom+6; if(y+h>innerHeight-12) y=Math.max(12,r.top-6-h); pop.style.top=y+'px'; };
+Object.assign(ACT,{
+  rmem(id){ const b=window.__lastBtn; const r=b?b.getBoundingClientRect():{left:600,right:760,top:120,bottom:150}; S.rmem=S.rmem&&S.rmem.id===id?null:{id,anchor:{left:r.left,right:r.right,top:r.top,bottom:r.bottom}}; drawMem(); },
+  rmemx(){ S.rmem=null; drawMem(); },
+  rminv(id){ const a=S.rmem&&S.rmem.anchor; S.rmem=null; drawMem(); window.__cxBtn=null; ACT.invopen(id); if(S.ip){ if(a) S.ip.anchor=a; S.ip.back=true; S.ip.sel=new Set(); renderIP(); } },
+  ipback(){ const id=S.ip&&S.ip.id, a=S.ip&&S.ip.anchor; S.ip=null; renderIP(); if(id){ S.rmem={id,anchor:a}; drawMem(); } }
+});
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-act=rmem]'); if(b) window.__lastBtn=b; },true);
+document.addEventListener('click',e=>{ if(S.rmem&&!e.target.closest('#memPop')&&!e.target.closest('[data-act=rmem]')){ S.rmem=null; drawMem(); } },true);
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&S.rmem){ S.rmem=null; drawMem(); } });
+
+
 
 /* ---------- activity (dummy data until dev decides what to log) ---------- */
 function activityOf(id){ const u=UCB[id], R=UCR[id], F=ucFlowOf(id); const own=CTB[u.ctx]&&CTB[u.ctx].owner||'Ryan S.'; const a=ASSIGN['uc:'+id];
@@ -9902,6 +9937,11 @@ function activityHTML(id){ const u=UCB[id]; const f=S.act.f[id]||'all'; const L=
 
 Object.assign(ACT,{
   invopen(id){ const b=window.__cxBtn; const r=b?b.getBoundingClientRect():{left:420,top:200,bottom:220,right:520}; S.ip={id, q:'', anchor:{left:r.left,top:r.top,bottom:r.bottom,right:r.right}}; renderIP(); },
+  invsel(k){ if(!S.ip) return; const S2=S.ip.sel||(S.ip.sel=new Set()); S2.has(k)?S2.delete(k):S2.add(k); renderIP(); },
+  invx(){ if(S.ip&&S.ip.back){ ACT.ipback(); return; } S.ip=null; renderIP(); },
+  invgo(){ if(!S.ip||!S.ip.sel||!S.ip.sel.size) return; const id=S.ip.id; const L=[...S.ip.sel]; const quiet=window.toast; let names=[];
+    L.forEach(k=>{ const [kind,...w]=k.split('|'); const who=w.join('|'); (S.inv[id]=S.inv[id]||[]).push({k:kind,id:who}); const nm=kind==='team'?TEAM_BY[who].name:who; names.push(nm); UCR[id].log.push([ME,`Invited ${nm}`,now()]); const R=window.ROOM&&ROOM[id]; if(R) R.msgs.push({who:ME, when:now(), t:`${ME} invited ${nm}`, ev:true}); });
+    const back=S.ip.back, a=S.ip.anchor; S.ip=null; renderIP(); render(); toast(`Invited ${names.length===1?names[0]:names.length+' people and teams'}.`); if(back){ S.rmem={id,anchor:a}; drawMem(); } },
   invadd(a){ const [id,k,who]=a.split('|'); (S.inv[id]=S.inv[id]||[]).push({k,id:who}); const nm=k==='team'?TEAM_BY[who].name:who;
     UCR[id].log.push([ME,`Invited ${nm}`,now()]); if(ROOM[id]||true) { const R=window.ROOM&&ROOM[id]; if(R) R.msgs.push({who:ME, when:now(), t:`${ME} invited ${nm}`, ev:true}); }
     toast(`Invited ${nm}. ${k==='team'?'They':'They'} can see ${UCB[id].name} and its room.`); renderIP(); render(); },
@@ -10773,18 +10813,18 @@ function model(){ const M=ensure(); const add=M.mode==='add'; const tgt=add?M.to
     if(it.to===tgt){ infos.push({t:`“${it.label}” becomes internal to ${tName}`, iid, st:'internal'}); return; }
     const stay=usersOf(iid).filter(u=>live(u.id)&&!mov.has(u.id)&&!u.apis.some(x=>routes.has(x)));
     if(stay.length) issues.push({key:'pt:'+iid, type:'pt', it, src:it.from, stay:stay.map(u=>u.id)}); else infos.push({t:`“${it.label}” moves with them`, iid, st:'moves'}); }));
-  issues.forEach(x=>x.done=!!R[x.key]);
+  if(window.dbRealistic) window.dbRealistic(issues,{tName,tgt,add,sel,routes:[...routes]}); M.saved=M.saved||{}; issues.forEach(x=>x.done=!!R[x.key]&&!!M.saved[x.key]);
   return {M, add, tgt, tName, sel, full, part, mov:[...mov], routes:[...routes], issues, infos}; }
 window.dbModel = model;
 const IGN = ['ignore','Ignore for now. Nothing changes for it.'];
 const OPTS = (x,D) => [...OPTS0(x,D), IGN];
-const OPTS0 = (x,D) => x.type==='part' ? [['split',`Keep <b>${esc(nm(x.id))}</b> in ${esc(cName(UCB[x.id].ctx))}. It calls ${esc(D.tName)} for ${x.moved.length===1?'this API':'these '+x.moved.length+' APIs'}.`],['all',`Move all of <b>${esc(nm(x.id))}</b>.`],['none',`Don’t move its APIs.`]]
+const OPTS0 = (x,D) => x.opts ? x.opts.map(o=>[o[0],o[1]]) : x.type==='part' ? [['split',`Keep <b>${esc(nm(x.id))}</b> in ${esc(cName(UCB[x.id].ctx))}. It calls ${esc(D.tName)} for ${x.moved.length===1?'this API':'these '+x.moved.length+' APIs'}.`],['all',`Move all of <b>${esc(nm(x.id))}</b>.`],['none',`Don’t move its APIs.`]]
   : x.type==='api' ? [['with',`Move ${list2(x.st)} too.`],['call',`Move it. ${list2(x.st)} call${x.st.length===1?'s':''} ${esc(D.tName)} for it.`],['keep',`Leave it in ${esc(cName(x.src))}. The moved use cases call it there.`],['copy',`Both keep their own copy.`]]
   : [['stay',`Keep it in ${esc(cName(x.src))}. ${esc(D.tName.charAt(0).toUpperCase()+D.tName.slice(1))} calls it.`],['move',`Move it to ${esc(D.tName)}. ${list2(x.stay)} call${x.stay.length===1?'s':''} it there.`],['event',`Turn it into an event both listen to.`]];
 function planOf(D){ const R=D.M.res, tn=D.tName, L=[];
   D.mov.forEach(id=>{ const u=UCB[id]; L.push(`Move ${esc(u.name)} from ${esc(cName(u.ctx))} to ${esc(tn)}`); });
   const alone=D.routes.filter(a=>!D.mov.some(id=>UCB[id].apis.includes(a))); if(alone.length) L.push(`Move ${alone.length} API${alone.length===1?'':'s'} on their own: ${alone.map(a=>`<code>${esc(a)}</code>`).join(', ')}`);
-  D.issues.forEach(x=>{ const r=R[x.key]; if(!r) return;
+  D.issues.forEach(x=>{ const r=R[x.key]; if(!r) return; if(x.opts){ const o=x.opts.find(q=>q[0]===r); if(o&&o[2]){ L.push(o[2]); return; } }
     if(x.type==='part' && r==='split') L.push(`${esc(nm(x.id))} calls ${esc(tn)} for ${x.moved.length} moved API${x.moved.length===1?'':'s'}`);
     if(x.type==='api' && r==='call') L.push(`${x.st.map(nm).map(esc).join(', ')} call${x.st.length===1?'s':''} ${esc(tn)} for <code>${esc(x.api)}</code>`);
     if(x.type==='api' && r==='keep') L.push(`${esc(tn)} calls ${esc(cName(x.src))} for <code>${esc(x.api)}</code>`);
@@ -10792,6 +10832,7 @@ function planOf(D){ const R=D.M.res, tn=D.tName, L=[];
     if(x.type==='pt') L.push(r==='stay'?`${esc(tn)} calls ${esc(cName(x.src))} for “${esc(x.it.label)}”`:r==='move'?`Move “${esc(x.it.label)}” to ${esc(tn)}`:`Publish “${esc(x.it.label)}” as an event`); });
   return L; }
 
+window.dbH={cName,nm,OPTS,planOf,chip,mp,model,get el(){return el;}};
 /* ---------- left: use cases with every API ---------- */
 function leftHTML(D){ const M=D.M; const q=(M.q||'').trim().toLowerCase();
   const groups=CTX.filter(c=>!(D.add&&c.id===M.to)).map(c=>({c, us:ucsOf(c.id).filter(u=>u.apis.length&&(!q||u.name.toLowerCase().includes(q)||u.apis.some(a=>a.toLowerCase().includes(q))))})).filter(g=>g.us.length);
@@ -10811,11 +10852,11 @@ function leftHTML(D){ const M=D.M; const q=(M.q||'').trim().toLowerCase();
 function rightHTML(D){ const M=D.M; const open=D.issues.filter(x=>!x.done).length; const nameErr=!D.add && (!M.name.trim() || CTX.some(c=>c.name.toLowerCase()===M.name.trim().toLowerCase()));
   const ok = D.sel.size && !nameErr; const plan=planOf(D); const tab=M.dtab||'open'; const shown=D.issues.filter(x=>tab==='open'?!x.done:x.done);
   const ap = r => { const [m,...p]=r.split(' '); return `<span class="dbap"><span class="meth ${m.toLowerCase()}">${m}</span><code>${esc(p.join(' '))}</code></span>`; };
-  const head = x => x.type==='part' ? `<b>${esc(nm(x.id))}</b><span class="dbk">Only ${x.moved.length} of ${x.moved.length+x.kept.length} APIs move</span>${x.moved.map(ap).join('')}`
+  const head = x => x.type==='part' ? `<b>${esc(nm(x.id))}</b>${x.moved.map(ap).join('')}`
     : x.type==='api' ? `<b>${esc(x.st.length===1?nm(x.st[0]):x.st.length+' use cases')}</b><span class="dbk">Also uses an API you’re moving</span>${ap(x.api)}`
-    : `<b>${esc(x.it.label)}</b><span class="dbk">Integration point · ${esc(cName(x.src))} → ${esc(ctxName(x.it.to))}</span>${x.stay.slice(0,2).map(id=>`<span class="dbk2">Still used by ${esc(nm(id))}</span>`).join('')}`;
-  const card = x => { const r=M.res[x.key]; M.col=M.col||{}; const op = M.col[x.key]!=null ? !M.col[x.key] : !r; const pick=r?(OPTS(x,D).find(o=>o[0]===r)||[])[1]:'';
-    return `<div class="db-i ${r?'done':''} ${M.focus===x.key?'focus':''} ${op?'open':''}"><button class="db-it" data-act="dbtog" data-arg="${esc(x.key)}" aria-expanded="${op}">${I(r?'check-circle':'alert',16)}<span>${head(x)}${!op&&pick?`<small class="pk">${I('check',12)}<span>${pick}</span></small>`:''}</span><span class="db-ir">${(r?chip('ok','Decided'):'')}${I(op?'chevron-up':'chevron-down',16)}</span></button>
+    : `<b>${esc(x.it.label)}</b><span class="dbk">Integration point · ${esc(cName(x.src))} → ${esc(ctxName(x.it.to))}</span>`;
+  const card = x => { const r=M.res[x.key]; const dn=x.done; M.col=M.col||{}; const op = M.col[x.key]!=null ? !M.col[x.key] : !dn; const pick=r?(OPTS(x,D).find(o=>o[0]===r)||[])[1]:'';
+    return `<div class="db-i ${dn?'done':''} ${r&&!dn?'picked':''} ${M.focus===x.key?'focus':''} ${op?'open':''}"><button class="db-it" data-act="dbtog" data-arg="${esc(x.key)}" aria-expanded="${op}">${I(dn?'check-circle':'alert',16)}<span>${head(x)}${x.why?`<span class="dbwhy">${x.why}</span>`:''}${!op&&pick?`<small class="pk">${I('check',12)}<span>${pick}</span></small>`:''}</span><span class="db-ir">${dn?chip('ok','Resolved'):r?chip('acc','Selected'):''}${I(op?'chevron-up':'chevron-down',16)}</span></button>
     ${op?`<div class="db-op">${OPTS(x,D).map(([k,l])=>`<button class="${r===k?'on':''}" data-act="dbres" data-arg="${esc(x.key)}|${k}" role="radio" aria-checked="${r===k}"><span class="cx-rb ${r===k?'on':''}"></span><span>${l}</span></button>`).join('')}</div>`:''}</div>`; };
   return `<div class="db-side db-r"><div class="db-h"><b>Dependencies</b>${D.issues.length?chip(open?'warn':'ok', open?`${open} to decide`:'All decided'):''}</div>
     <div class="db-sc">
@@ -10873,12 +10914,12 @@ let D0=null, wasOpen=false;
 function renderBoard(){ if(!S.nc){ el.hidden=true; el.innerHTML=''; wasOpen=false; return; } const D=model(); D0=D;
   const ae=document.activeElement; const keepF = ae&&ae.id&&el.contains(ae) ? {id:ae.id, pos:ae.selectionStart} : null;
   const sc=[...el.querySelectorAll('.db-sc')].map(x=>x.scrollTop), li=el.querySelector('.db-list'), lt=li?li.scrollTop:0;
-  el.hidden=false; el.innerHTML=leftHTML(D)+canvasHTML(D)+rightHTML(D);
+  el.hidden=false; const IMP=!!window.impactHTML; el.innerHTML=leftHTML(D)+(IMP?impactHTML(D):canvasHTML(D))+(IMP&&window.impactRight?impactRight(D,rightHTML(D)):rightHTML(D));
   el.querySelectorAll('.db-sc').forEach((x,i)=>x.scrollTop=sc[i]||0); const li2=el.querySelector('.db-list'); if(li2) li2.scrollTop=lt;
-  bindZoom(D, !wasOpen); wasOpen=true; requestAnimationFrame(()=>drawLines(D));
+  if(IMP){ impactBind(D, !wasOpen); } else { bindZoom(D, !wasOpen); requestAnimationFrame(()=>drawLines(D)); } wasOpen=true;
   if(keepF){ const f=el.querySelector('#'+keepF.id); if(f){ f.focus(); if(keepF.pos!=null) try{ f.setSelectionRange(keepF.pos,keepF.pos); }catch(e){} } } }
 window.renderNC = function(){ renderBoard(); };
-addEventListener('resize', ()=>{ if(S.nc&&D0) drawLines(D0); });
+addEventListener('resize', ()=>{ if(S.nc&&D0&&!window.impactHTML) drawLines(D0); });
 
 /* ---------- actions ---------- */
 const toggle = (arr, v, on) => { const i=arr.indexOf(v); if(on===undefined) on=i<0; if(on&&i<0) arr.push(v); if(!on&&i>=0) arr.splice(i,1); };
@@ -10890,7 +10931,7 @@ Object.assign(ACT,{
   ncclear(){ const M=ensure(); M.sel=[]; M.res={}; M.from=[]; renderBoard(); },
   dbapi(a){ const M=ensure(); const i=a.indexOf('|'); const uid=i>0&&UCB[a.slice(0,i)]?a.slice(0,i):null; const r=uid?a.slice(i+1):a; toggle(M.sel,r); if(uid){ const u=UCB[uid]; toggle(M.from,uid,u.apis.some(x=>M.sel.includes(x))); } renderBoard(); },
   dbopen(id){ const M=ensure(); M.open[id]=!M.open[id]; renderBoard(); },
-  dbres(a){ const i=a.lastIndexOf('|'); const k=a.slice(0,i), v=a.slice(i+1); const M=ensure(); const x=model().issues.find(z=>z.key===k); const ok=x&&OPTS(x,model()).some(o=>o[0]===v); M.res[k] = M.res[k]===v ? null : (ok?v:(x?OPTS(x,model())[0][0]:v)); M.focus=k; M.col=M.col||{}; M.col[k]=!!M.res[k]; renderBoard(); },
+  dbres(a){ const i=a.lastIndexOf('|'); const k=a.slice(0,i), v=a.slice(i+1); const M=ensure(); const x=model().issues.find(z=>z.key===k); const ok=x&&OPTS(x,model()).some(o=>o[0]===v); M.res[k] = M.res[k]===v ? null : (ok?v:(x?OPTS(x,model())[0][0]:v)); M.focus=k; M.col=M.col||{}; M.col[k]=false; renderBoard(); },
   dbfocus(k){ const M=ensure(); M.focus=M.focus===k?null:k; renderBoard(); },
   dbtab(t){ const M=ensure(); M.dtab=t; renderBoard(); },
   dbghost(id){ const M=ensure(); M.gopen=M.gopen||{}; M.gopen[id]=!M.gopen[id]; renderBoard(); },
@@ -11612,5 +11653,657 @@ go(); setTimeout(go,60);
 })();
 try{ S.wn.open=true; setTimeout(()=>{ try{ S.wn.open=true; wnSync(); }catch(e){} },80); }catch(e){}
 </script>
+<style>
+/* FB59 · context board: Galaxy impact view in the middle, Summary / Connected tabs on the right */
+#dbd .imp{position:absolute;inset:0;overflow:hidden}
+#dbd .imp svg.ig{position:absolute;top:0;bottom:0;left:364px;width:calc(100% - 768px);height:100%;cursor:grab}
+#dbd .imp svg.ig:active{cursor:grabbing}
+.ig .arc{fill:var(--surface);stroke:var(--border-strong);stroke-width:1}
+.ig .arc.tg{fill:var(--sel-soft,rgba(98,78,213,.18));stroke:var(--sel);stroke-width:1.5;stroke-dasharray:5 4}
+.ig .arc.src{stroke:var(--text-3)}
+.ig .alb{font:600 12px var(--font);fill:var(--text-2);letter-spacing:.02em}
+.ig .alb.tg{fill:var(--on-accent-sub,#d3bdff)}
+.ig .bar{stroke:var(--surface-strong);stroke-width:3;stroke-linecap:round}
+.ig .bar.mv{stroke:var(--sel)} .ig .bar.gh{stroke:var(--sel);stroke-dasharray:2 3;opacity:.6}
+.ig .bar.dep{stroke:var(--danger)}
+.ig .ulb{font:500 11px var(--font);fill:var(--text-2)}
+.ig .ulb.mv{fill:var(--text)} .ig .ulb.dep{fill:var(--danger-text);font-weight:600}
+.ig .dot{fill:var(--canvas);stroke:var(--text-3);stroke-width:1.5}
+.ig .dot.ev{fill:var(--danger);stroke:var(--danger)} .ig .dot.dep{stroke:var(--danger)} .ig .dot.mv{stroke:var(--sel);fill:var(--sel)}
+.ig .lk{fill:none;stroke-width:1.6;transition:opacity .15s}
+.ig .lk.mv{stroke:var(--sel)}
+.ig .lk.dep{stroke:var(--danger);stroke-dasharray:4 4}
+.ig .lk.ev{stroke:var(--danger);stroke-width:2}
+.ig .lk.info{stroke:var(--text-3);stroke-dasharray:2 4}
+.ig .lk.ok{stroke:var(--text-3);stroke-dasharray:4 4;opacity:.7}
+.ig .nd{cursor:pointer}
+.ig .ptl{font:500 10px var(--mono);fill:var(--text-2)} .ig .ptl.ev,.ig .ptl.dep{fill:var(--danger-text)}
+.ig.hv .lk:not(.on),.ig.hv .nd:not(.on){opacity:.15}
+.ig .nd.sel .bar,.ig .nd.sel .dot{stroke-width:5}
+.ig .ctr{font:600 13px var(--font);fill:var(--text)} .ig .ctr2{font:400 11px var(--font);fill:var(--text-3)}
+.imp .ileg{position:absolute;left:376px;bottom:16px;display:flex;flex-wrap:wrap;gap:14px;padding:8px 12px;border-radius:10px;background:var(--panel);border:1px solid var(--border);font:500 12px/16px var(--font);color:var(--text-2);max-width:calc(100% - 900px);min-width:260px}
+.imp .ileg span{display:flex;align-items:center;gap:6px}
+.imp .ileg i{width:20px;height:0;border-top:2px solid}
+.imp .ileg i.mv{border-color:var(--sel)} .imp .ileg i.dep{border-color:var(--danger);border-top-style:dashed} .imp .ileg i.ev{border-color:var(--danger)} .imp .ileg i.info{border-color:var(--text-3);border-top-style:dotted}
+.imp .izm{position:absolute;right:416px;bottom:16px;display:flex;gap:2px;padding:4px;border-radius:10px;background:var(--panel);border:1px solid var(--border)}
+.imp .izm button{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;color:var(--text-2)} .imp .izm button:hover{background:var(--surface);color:var(--text)}
+.imp .iempty{position:absolute;top:0;bottom:0;left:364px;right:404px;display:grid;place-items:center;text-align:center;color:var(--text-3);font:400 13px/20px var(--font);pointer-events:none}
+.imp .iempty b{display:block;color:var(--text);font:600 14px/20px var(--font);margin-bottom:4px}
+.imp .itip{position:absolute;z-index:3;pointer-events:none;padding:8px 10px;border-radius:8px;background:var(--surface-strong);font:500 12px/18px var(--font);color:var(--text);max-width:260px;box-shadow:var(--shadow)}
+.imp .itip small{display:block;color:var(--text-2);font-weight:400}
+.db-r .itabs{display:flex;gap:20px;padding:0 16px;border-bottom:1px solid var(--border)}
+.db-r .itabs button{height:38px;font:500 12px/18px var(--font);color:var(--text-2);border-bottom:2px solid transparent;margin-bottom:-1px;display:flex;align-items:center;gap:6px}
+.db-r .itabs button.on{color:var(--text);font-weight:600;border-color:var(--text)}
+.isum{font:400 13px/20px var(--font);color:var(--text-2)} .isum b{color:var(--text);font-weight:600} .isum .r{color:var(--danger-text)}
+.icg{display:flex;flex-direction:column;gap:2px}
+.icg .h{display:flex;align-items:center;gap:8px;font:600 12px/18px var(--font);color:var(--text-2);margin-bottom:4px}
+.icg .h .count{margin-left:auto}
+.icg button{display:flex;align-items:center;gap:8px;min-height:32px;padding:4px 8px;margin:0 -8px;border-radius:6px;text-align:left;font:400 13px/18px var(--font);color:var(--text)}
+.icg button:hover,.icg button.on{background:var(--surface)}
+.icg button .m{margin-left:auto;font-size:12px;color:var(--text-3);white-space:nowrap}
+.icg button.r .l{color:var(--danger-text)}
+.icg .l{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icg .tagr{font:600 11px/16px var(--font);padding:0 6px;border-radius:999px;background:var(--danger-sub);color:var(--danger-text);white-space:nowrap}
+.icg .tagm{font:600 11px/16px var(--font);padding:0 6px;border-radius:999px;background:var(--selected);color:var(--on-accent-sub,#d3bdff);white-space:nowrap}
+</style>
+<script>
+/* FB59 */
+(function(){
+const H=window.dbH; if(!H) return;
+const NS='http://www.w3.org/2000/svg';
+let VT=null, hov=null;
+function graph(D){ const M=D.M; const tgt=D.add?M.to:'__new';
+  const ctxs=CTX.filter(c=>ucsOf(c.id).length&&c.id!==tgt);
+  const moved=new Set(D.mov); const dep=new Map(); const pts=new Map(); const links=[];
+  D.issues.forEach(x=>{ if(x.type==='part') dep.set(x.id,{key:x.key, why:`Uses APIs that move`});
+    if(x.type==='api') x.st.forEach(u=>dep.set(u,{key:x.key, why:`Uses ${x.api}`}));
+    if(x.type==='pt'){ pts.set(x.it.id,{it:x.it, k:'dep', key:x.key}); x.stay.forEach(u=>{ if(!dep.has(u)) dep.set(u,{key:x.key, why:`Still uses “${x.it.label}”`}); }); } });
+  D.infos.forEach(x=>{ if(!pts.has(x.iid)) pts.set(x.iid,{it:INB[x.iid], k:'info'}); });
+  D.routes.forEach(a=>opInts(a).forEach(iid=>{ const it=INB[iid]; if(it&&/event/i.test(it.type)) pts.set(iid,{it, k:'ev', key:(pts.get(iid)||{}).key}); }));
+  return {tgt, ctxs, moved, dep, pts}; }
+function layout(G,D){ const R=250, segs=[]; const tName=D.tName; const all=[...G.ctxs.map(c=>({id:c.id,name:c.name,us:ucsOf(c.id).filter(u=>!G.moved.has(u.id)||true)})), {id:G.tgt, name:tName.replace(/^the new context$/,'New context'), us:[...G.moved].map(id=>UCB[id]), tg:true}];
+  const w=all.map(c=>c.tg?Math.max(6,c.us.length*2):Math.max(3,c.us.length)); const tot=w.reduce((a,b)=>a+b,0); const gap=.045; const span=Math.PI*2-gap*all.length; let a0=-Math.PI/2+gap/2;
+  all.forEach((c,i)=>{ const da=span*w[i]/tot; segs.push(Object.assign(c,{a0,a1:a0+da})); a0+=da+gap; });
+  const U={}, C={}; segs.forEach(sg=>{ C[sg.id]=sg; const n=sg.us.length; sg.us.forEach((u,j)=>{ const a=sg.a0+(sg.a1-sg.a0)*(j+.5)/Math.max(n,1); (U[u.id]=U[u.id]||{})[sg.tg?'t':'s']={a,sg}; }); });
+  return {R, segs, U, C}; }
+const P=(a,r)=>[Math.cos(a)*r, Math.sin(a)*r];
+const arcPath=(a0,a1,r0,r1)=>{ const [x0,y0]=P(a0,r1),[x1,y1]=P(a1,r1),[x2,y2]=P(a1,r0),[x3,y3]=P(a0,r0); const lg=a1-a0>Math.PI?1:0; return `M${x0} ${y0}A${r1} ${r1} 0 ${lg} 1 ${x1} ${y1}L${x2} ${y2}A${r0} ${r0} 0 ${lg} 0 ${x3} ${y3}Z`; };
+const curve=(a,b,ra,rb,bend=.25)=>{ const [x0,y0]=P(a,ra),[x1,y1]=P(b,rb); let da=Math.abs(b-a)%(Math.PI*2); if(da>Math.PI) da=Math.PI*2-da; const f=Math.max(.12,.85-da/Math.PI*.75); const [c0x,c0y]=P(a,ra*f),[c1x,c1y]=P(b,rb*f); return `M${x0} ${y0}C${c0x} ${c0y} ${c1x} ${c1y} ${x1} ${y1}`; };
+function svgHTML(D){ const G=graph(D), L=layout(G,D); const R=L.R; let s='';
+  const nodes=[], lk=[];
+  /* arcs */
+  L.segs.forEach(sg=>{ const mid=(sg.a0+sg.a1)/2; const [lx,ly]=P(mid,R-30); const src=[...G.moved].some(id=>UCB[id].ctx===sg.id); const dp=[...G.dep.keys()].some(id=>UCB[id]&&UCB[id].ctx===sg.id);
+    s+=`<g class="nd" data-n="c:${sg.id}"><path class="arc ${sg.tg?'tg':''} ${src?'src':''}" d="${arcPath(sg.a0,sg.a1,R-12,R)}"><title>${esc(sg.name)}</title></path>
+      <text class="alb ${sg.tg?'tg':''}" x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central">${esc(sg.name.length>16?sg.name.slice(0,15)+'…':sg.name)}${dp?' ●':''}</text></g>`; });
+  /* use case bars */
+  L.segs.forEach(sg=>sg.us.forEach(u=>{ const pos=L.U[u.id][sg.tg?'t':'s']; const a=pos.a; const mv=G.moved.has(u.id); const dp=G.dep.has(u.id);
+    const cls=sg.tg?'mv':mv?'gh':dp?'dep':''; const len=cls?24:12; const [x0,y0]=P(a,R+4),[x1,y1]=P(a,R+4+len);
+    const lab=cls&&cls!=='gh'; const [tx,ty]=P(a,R+34); const deg=a*180/Math.PI; const flip=Math.cos(a)<0;
+    s+=`<g class="nd" data-n="u:${u.id}:${sg.tg?'t':'s'}"><line class="bar ${cls}" x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}"/><line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="transparent" stroke-width="10"/>
+      ${lab?`<text class="ulb ${cls}" transform="translate(${tx} ${ty}) rotate(${flip?deg+180:deg})" text-anchor="${flip?'end':'start'}" dominant-baseline="central">${esc(u.name)}</text>`:''}</g>`; }));
+  /* moved links: ghost in source → bar in target */
+  G.moved.forEach(id=>{ const p=L.U[id]; if(p&&p.s&&p.t) lk.push({c:'mv', d:curve(p.s.a,p.t.a,R+2,R+2,.55), n:[`u:${id}:s`,`u:${id}:t`]}); });
+  /* integration points on the inner ring, at their source context */
+  const byCtx={}; G.pts.forEach((v,iid)=>{ const c=v.it.from; (byCtx[c]=byCtx[c]||[]).push(iid); });
+  const PT={}; Object.entries(byCtx).forEach(([c,ids])=>{ let sg=L.C[c]; if(!sg) sg=L.C[G.tgt]; ids.forEach((iid,j)=>{ const a=sg.a0+(sg.a1-sg.a0)*(j+.5)/ids.length; PT[iid]=a; }); });
+  G.pts.forEach((v,iid)=>{ const a=PT[iid]; const [x,y]=P(a,R-62); const [tx,ty]=P(a,R-78); const flip=Math.cos(a)<0; const deg=a*180/Math.PI;
+    s+=`<g class="nd" data-n="p:${iid}"><circle class="dot ${v.k==='ev'?'ev':v.k==='dep'?'dep':''}" cx="${x}" cy="${y}" r="5"><title>${esc(v.it.label)}</title></circle>
+      ${v.k==='ev'?`<text class="ptl ${v.k}" transform="translate(${tx} ${ty}) rotate(${flip?deg+180:deg})" text-anchor="${flip?'start':'end'}" dominant-baseline="central">${esc(v.it.label.length>24?v.it.label.slice(0,23)+'…':v.it.label)}</text>`:''}</g>`;
+    const ta=L.U[[...G.moved].find(id=>UCB[id].apis.some(r=>opInts(r).includes(iid)))||'']; const fromA = ta&&ta.t ? ta.t.a : (L.C[G.tgt].a0+L.C[G.tgt].a1)/2;
+    lk.push({c:v.k==='ev'?'ev':v.k==='dep'?'dep':'info', d:curve(fromA,a,R-14,R-56,.2), n:[`c:${G.tgt}`,`p:${iid}`]});
+    if(v.k==='ev'){ const to=L.C[v.it.to]; if(to){ const b=(to.a0+to.a1)/2; lk.push({c:'ev', d:curve(a,b,R-56,R-14,.2), n:[`p:${iid}`,`c:${v.it.to}`]}); } } });
+  /* dependents: red dotted from the dependent use case to the new context (or to the integration point it still uses) */
+  G.dep.forEach((v,id)=>{ const p=L.U[id]; if(!p||!p.s) return; const x=D.issues.find(z=>z.key===v.key); const tg=L.C[G.tgt]; const ta=(tg.a0+tg.a1)/2;
+    if(x&&x.type==='pt'&&PT[x.it.id]!=null) lk.push({c:D.M.res[v.key]?'ok':'dep', d:curve(p.s.a,PT[x.it.id],R-14,R-56,.3), n:[`u:${id}:s`,`p:${x.it.id}`], key:v.key});
+    else lk.push({c:D.M.res[v.key]?'ok':'dep', d:curve(p.s.a,ta,R-14,R-14,.15), n:[`u:${id}:s`,`c:${G.tgt}`], key:v.key}); });
+  const links=`<defs><marker id="imA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--sel)" stroke-width="1.6" stroke-linecap="round"/></marker><marker id="imR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--danger)" stroke-width="1.6" stroke-linecap="round"/></marker></defs>`+lk.map((l,i)=>`<path class="lk ${l.c}" data-l="${i}" data-a="${l.n[0]}" data-b="${l.n[1]}" d="${l.d}" ${l.c==='mv'?'marker-end="url(#imA)"':l.c==='ev'?'marker-end="url(#imR)"':''}/>`).join('');
+  const nMv=G.moved.size, nRt=D.routes.length;
+  const ctr=`<text class="ctr" x="0" y="-8" text-anchor="middle">${nMv?`${nMv} use case${nMv===1?'':'s'} move`:nRt?`${nRt} API${nRt===1?'':'s'} move`:''}</text><text class="ctr2" x="0" y="12" text-anchor="middle">${nMv||nRt?`to ${esc(D.tName)}`:''}</text>`;
+  return {html:`<g class="vp">${links}${s}${ctr}</g>`, G, L}; }
+window.impactHTML=function(D){ const r=svgHTML(D); const any=D.sel.size;
+  return `<div class="imp db-cv"><svg class="ig" viewBox="-420 -420 840 840" preserveAspectRatio="xMidYMid meet" aria-label="Impact on the Galaxy">${r.html}</svg>
+    ${any?'':'<div class="iempty"><span><b>Nothing picked yet</b>Pick use cases or APIs on the left to see what they affect.</span></div>'}
+    <div class="ileg"><span><i class="mv"></i>Moves</span><span><i class="dep"></i>Depends on it, to decide</span><span><i class="ev"></i>Event it fires</span><span><i class="info"></i>Moves with it</span></div>
+    <div class="izm"><button data-act="imz" data-arg="out" aria-label="Zoom out">${I('zoom-out')}</button><button data-act="imz" data-arg="in" aria-label="Zoom in">${I('zoom-in')}</button><button data-act="imz" data-arg="fit" aria-label="Fit">${I('fit')}</button></div></div>`; };
+window.impactBind=function(D, first){ const root=H.el.querySelector('.imp'); if(!root) return; const svg=root.querySelector('svg.ig'), vp=svg.querySelector('g.vp');
+  if(window.d3){ const z=d3.zoom().scaleExtent([.5,4]).on('zoom',e=>{ VT=e.transform; vp.setAttribute('transform',e.transform.toString()); }); d3.select(svg).call(z).on('dblclick.zoom',null); root.__z=z; d3.select(svg).call(z.transform, (!first&&VT)||d3.zoomIdentity); }
+  const tip=document.createElement('div'); tip.className='itip'; tip.hidden=true; root.appendChild(tip);
+  const L=[...svg.querySelectorAll('.lk')];
+  const focus=n=>{ svg.classList.toggle('hv',!!n); svg.querySelectorAll('.on').forEach(x=>x.classList.remove('on')); if(!n) return; const g=svg.querySelector(`[data-n="${n}"]`); if(g) g.classList.add('on');
+    L.filter(l=>l.dataset.a===n||l.dataset.b===n).forEach(l=>{ l.classList.add('on'); [l.dataset.a,l.dataset.b].forEach(m=>{ const q=svg.querySelector(`[data-n="${m}"]`); if(q) q.classList.add('on'); }); }); };
+  const label=n=>window.impTip(n,D,graph(D));
+  svg.addEventListener('mousemove',e=>{ const g=e.target.closest('.nd'); const n=g&&g.dataset.n; if(n!==hov){ hov=n; focus(n||S.nc.isel||null); }
+    if(n){ const r=root.getBoundingClientRect(); tip.hidden=false; tip.innerHTML=label(n); tip.style.left=(e.clientX-r.left+14)+'px'; tip.style.top=(e.clientY-r.top+14)+'px'; } else tip.hidden=true; });
+  svg.addEventListener('mouseleave',()=>{ hov=null; tip.hidden=true; focus(S.nc&&S.nc.isel||null); });
+  svg.addEventListener('click',e=>{ const g=e.target.closest('.nd'); const n=g&&g.dataset.n||null; ACT.imsel(n); });
+  if(S.nc.isel){ focus(S.nc.isel); const g=svg.querySelector(`[data-n="${S.nc.isel}"]`); if(g) g.classList.add('sel'); } };
+/* right panel: Summary / Connected */
+window.impactRight=function(D, html){ const M=D.M; const tab=M.itab||'sum'; const G=graph(D);
+  html=html.replace('<b>Dependencies</b>','<b>Impact</b>');
+  const a=html.indexOf('<div class="db-sc">'), b=html.indexOf('<div class="db-f">'); if(a<0||b<0) return html;
+  let inner=html.slice(a+19, html.lastIndexOf('</div>',b));
+  const ev=[...G.pts.values()].filter(v=>v.k==='ev'); const open=D.issues.filter(x=>!x.done).length;
+  const sum=D.sel.size?`<div class="isum">${G.moved.size?`<b>${G.moved.size} use case${G.moved.size===1?'':'s'}</b> and `:''}<b>${D.routes.length} API${D.routes.length===1?'':'s'}</b> move to <b>${esc(D.tName)}</b>. ${G.dep.size?`<span class="r"><b>${G.dep.size}</b> use case${G.dep.size===1?'':'s'} depend on them</span>`:'Nothing else depends on them'}${ev.length?`, and <span class="r"><b>${ev.length}</b> event${ev.length===1?'':'s'}</span> they fire ${ev.length===1?'is':'are'} affected`:''}. ${open?`${open} to decide.`:''}</div>`:'';
+  const tabs='';
+  const con=`<button role="tab" aria-selected="${tab==='con'}" class="${tab==='con'?'on':''}" data-act="imtab" data-arg="con">Summary</button>`;
+  const planM=inner.match(/<div class="db-plan">[\s\S]*?<\/ol><\/div>/); const plan=planM?planM[0]:''; if(planM) inner=inner.replace(planM[0],'');
+  const m=inner.match(/<div class="tabs dbt" role="tablist">([\s\S]*?)<\/div>/);
+  let body;
+  const nPick=D.issues.filter(x=>M.res[x.key]&&!x.done).length;
+  const bar=nPick&&(M.dtab||'open')==='open'?`<div class="dbsave"><span>${nPick} option${nPick===1?'':'s'} selected</span><button class="btn primary sm" data-act="dbsavedec">Save decision${nPick===1?'':'s'}</button></div>`:'';
+  if(tab!=='con'){ body = m ? inner.replace(m[0], `<div class="tabs dbt" role="tablist">${m[1]}${con}</div>`+bar) : `<div class="tabs dbt" role="tablist">${con}</div>`+bar+inner; }
+  else { const row = m ? `<div class="tabs dbt" role="tablist">${m[1].replace(/class="on"/g,'class=""').replace(/aria-selected="true"/g,'aria-selected="false"')}${con}</div>` : `<div class="tabs dbt" role="tablist">${con}</div>`;
+    body = row + window.impCon(D,G,M.isel,plan); }
+  return html.slice(0,a)+tabs+'<div class="db-sc">'+body+'</div>'+html.slice(b); };
+Object.assign(ACT,{
+  imtab(t){ S.nc.itab=t; renderNC(); },
+  imsel(n){ const M=S.nc; M.isel = !n||M.isel===n ? null : n; if(M.isel&&M.isel.startsWith('u:')){ const id=M.isel.split(':')[1]; const D=H.model(); const x=D.issues.find(z=>z.type==='part'&&z.id===id||z.type==='api'&&z.st.includes(id)||z.type==='pt'&&z.stay.includes(id)); if(x){ M.focus=x.key; M.col=M.col||{}; M.col[x.key]=false; } } renderNC(); },
+  imz(a){ const root=H.el.querySelector('.imp'); if(!root||!root.__z) return; const svg=d3.select(root.querySelector('svg.ig')); if(a==='fit') svg.transition().duration(250).call(root.__z.transform,d3.zoomIdentity); else svg.transition().duration(200).call(root.__z.scaleBy,a==='in'?1.25:.8); }
+});
+})();
+</script>
+<style>
+/* FB60 · sequence: single-arrow selection, decisions on the lifeline */
+#ucFlow svg.fe.sq .sq-m.on,#ucFlow svg.fe.sq .sq-ah.on{stroke:var(--sel)!important;stroke-width:2.5}
+#ucFlow svg.fe.sq .sq-ah.on{fill:var(--sel)}
+#ucFlow svg.fe.sq .sq-m.rel,#ucFlow svg.fe.sq .sq-ah.rel{stroke:var(--rel)}
+#ucFlow svg.fe.sq .sq-m.dim,#ucFlow svg.fe.sq .sq-ah.dim{opacity:.22}
+.sq-lbl.on{color:#fff!important;background:var(--sel);border-radius:6px}
+.sq-lbl.rel{color:var(--text)} .sq-lbl.dim{opacity:.3}
+.sq-lbl.altk{color:var(--warn-text)}
+#ucFlow svg.fe.sq .sq-m.altk{stroke:var(--warn);stroke-dasharray:4 3}
+.sq-dia{position:absolute;width:18px;height:18px;transform:rotate(45deg);border-radius:3px;background:var(--warn);box-shadow:0 0 0 3px var(--canvas);z-index:2}
+.sq-dia:hover{box-shadow:0 0 0 3px var(--canvas),0 0 0 5px var(--sel-hov)}
+.sq-dv{position:absolute;display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:6px;background:var(--panel);border:1px solid var(--border-strong);font:500 12px/18px var(--font);color:var(--text);white-space:nowrap;z-index:2}
+.sq-dv:hover{border-style:dashed;border-color:var(--sel-hov)}
+.sq-dv.alt{color:var(--warn-text);border-color:var(--warn)}
+.sq-dm{position:absolute;z-index:5;width:300px;padding:4px}
+.sq-dm button{display:flex;gap:10px;align-items:flex-start;width:100%;padding:8px 10px;border-radius:6px;text-align:left}
+.sq-dm button:hover,.sq-dm button.on{background:var(--surface)}
+.sq-dm b{display:block;font:500 13px/18px var(--font)} .sq-dm small{font:400 12px/18px var(--font);color:var(--text-2)}
+.sq-dm .dk{width:10px;height:10px;border-radius:2px;transform:rotate(45deg);margin-top:5px;flex:none;background:var(--ok)}
+.sq-dm .dk.error{background:var(--danger)} .sq-dm .dk.validation{background:var(--warn)} .sq-dm .dk.cancel{background:var(--text-3)}
+.sq-end.alt{background:var(--warn-sub);color:var(--warn-text)}
+</style>
+<style>
+/* FB61 · sidebar: sticky header, actions at the bottom, steps list. One set of interaction rules for every diagram. */
+.ucst{display:flex;flex-direction:column;gap:4px}
+.ucst-h{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;height:26px;padding:0 6px;margin-left:-6px;border-radius:6px;font:500 12px/18px var(--font);color:var(--text-2)}
+.ucst-h:hover{color:var(--text);background:var(--surface)}
+.ucst ol{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:2px}
+.ucst li button{display:flex;gap:10px;align-items:flex-start;width:100%;padding:6px 8px;border-radius:8px;text-align:left}
+.ucst li button:hover{background:var(--surface)} .ucst li button.on{background:var(--selected)}
+.ucst .n{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--surface-strong);font:600 11px/1 var(--font)}
+.ucst li button.on .n{background:var(--sel);color:#fff}
+.ucst b{display:block;font:500 13px/18px var(--font)} .ucst small{display:block;font:400 12px/18px var(--font);color:var(--text-2)}
+.aisum p{display:-webkit-box;-webkit-box-orient:vertical}
+#cxItem .hasfoot{display:flex;flex-direction:column;min-height:0}
+#cxItem .hasfoot>.scroll{flex:1 1 auto;min-height:0}
+#cxItem .ucfoot{flex:none;display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-top:1px solid var(--border);background:var(--panel)}
+#cxItem .ucfoot .ucask{margin-top:0}
+#cxItem>.ch{flex:none;position:relative;z-index:2;background:var(--panel)}
+.sq-pop{width:720px!important;max-height:72vh;overflow:auto}
+.cbk-f .lnk2{display:inline-flex;align-items:center;gap:4px}
+
+/* ---- interaction rules (all diagrams) ----
+   rest: solid borders and lines, no dashes (dashes only for suggested / unresolved)
+   hover: dashed outline in --sel-hov, nothing else changes
+   selected: solid --sel, thicker
+   related to the selection: --rel
+   everything else: dimmed */
+.fx-c.alt{border-style:solid!important}
+.fx-c.alt.error{box-shadow:inset 3px 0 0 var(--danger)} .fx-c.alt.validation{box-shadow:inset 3px 0 0 var(--warn)} .fx-c.alt.cancel{box-shadow:inset 3px 0 0 var(--text-3)}
+.fx-c.term{border-color:color-mix(in srgb,var(--ok) 55%,var(--border-strong))}
+.fx-c.dec{border-color:color-mix(in srgb,var(--warn) 60%,var(--border-strong))}
+.fx-c:not(.on):hover,.fn.fx-c:not(.on):hover{outline:none!important;box-shadow:none!important;border-style:dashed!important;border-color:var(--sel-hov)!important}
+.fn.on.fx-c{border-style:solid!important;border-color:var(--sel)!important;box-shadow:0 0 0 1px var(--sel)!important}
+#cWorld .dcard:not(.sel):hover{outline:none!important;box-shadow:none!important;border-style:dashed!important;border-color:var(--sel-hov)!important}
+#cWorld .dcard.sel,#cWorld .dcard.sel:hover{border-style:solid!important}
+.eg:hover:not(.on) .edge,.seg-eg:hover:not(.on) .sedge{stroke:var(--sel-hov)!important;stroke-dasharray:5 4!important}
+.el[data-k=ctx].hov:not(.tgt):not(.pri) .arc,.el[data-k=ext].hov:not(.tgt):not(.pri) .box,.el.hov .chip{stroke:var(--sel-hov)!important;stroke-dasharray:5 4!important;stroke-width:1.5!important}
+.el[data-k=int].hov:not(.tgt):not(.pri) .curve,.el[data-k=uc].hov:not(.tgt):not(.pri) .bar{stroke:var(--sel-hov)!important;stroke-dasharray:5 4!important}
+.el[data-k=pt].hov:not(.tgt) .dot{stroke:var(--sel-hov)!important;stroke-dasharray:3 2!important}
+.sq-lbl:not(.on):hover{outline:1px dashed var(--sel-hov);outline-offset:1px;border-radius:6px}
+#fxKey{position:absolute;left:50%;bottom:76px;transform:translateX(-50%);z-index:20;display:flex;gap:14px;align-items:center;padding:8px 12px;border-radius:10px;background:var(--panel);border:1px solid var(--border);box-shadow:var(--shadow);font:500 12px/16px var(--font);color:var(--text-2);pointer-events:none}
+#fxKey[hidden]{display:none}
+#fxKey span{display:flex;align-items:center;gap:6px}
+#fxKey i{width:14px;height:10px;border-radius:3px;border:1.5px solid var(--border-strong);background:var(--panel)}
+#fxKey i.t{border-radius:999px;border-color:var(--ok)} #fxKey i.d{width:10px;height:10px;transform:rotate(45deg);border-color:var(--warn)} #fxKey i.a{box-shadow:inset 3px 0 0 var(--danger)}
+#fxKey i.s{background:var(--sel);border-color:var(--sel)} #fxKey i.r{border-color:var(--rel)} #fxKey i.h{border-style:dashed;border-color:var(--sel-hov)}
+</style>
+<script>
+/* FB61 */
+(function(){
+S.ucst=S.ucst||{};
+ACT.ucstt=id=>{ S.ucst[id]=!S.ucst[id]; renderSide(); };
+const side=document.getElementById('cxItem');
+const tidy=()=>{ const side=document.getElementById('cxItem'); if(!side) return; const sc=side.querySelector('.scroll'); if(!sc) return; const a=sc.querySelector('.ucr-a'), k=sc.querySelector('.ucask'); if(!a&&!k) return;
+  const host=sc.parentNode; let f=host.querySelector(':scope>.ucfoot'); if(!f){ f=document.createElement('div'); f.className='ucfoot'; host.appendChild(f); } f.innerHTML=''; if(a) f.appendChild(a); if(k) f.appendChild(k); host.classList.add('hasfoot'); };
+{ const _r=render; render=function(){ _r(); tidy(); }; }
+if(window.renderSide){ const _s=renderSide; renderSide=function(){ _s.apply(this,arguments); tidy(); }; }
+/* legend on the canvas for the flowchart and the sequence diagram */
+document.getElementById('vCodona').insertAdjacentHTML('beforeend','<div id="fxKey" hidden aria-hidden="true"></div>');
+const key=document.getElementById('fxKey');
+const put=()=>{ const on=!!S.ucx.flow&&S.tab==='codona'; key.hidden=!on; if(!on) return; const seq=S.ucx.fv==='seq';
+  key.innerHTML=(seq?'':'<span><i class="t"></i>Start, end</span><span><i></i>Step</span><span><i class="d"></i>Decision</span><span><i class="a"></i>Other path</span>')+'<span><i class="h"></i>Hover</span><span><i class="s"></i>Selected</span><span><i class="r"></i>Related</span>'; };
+{ const _r=render; render=function(){ _r(); put(); }; }
+{ const _f=window.renderFlowCanvas; if(_f) window.renderFlowCanvas=function(x){ _f(x); put(); }; }
+try{ render(); }catch(e){}
+})();
+</script>
+<style>
+/* FB62 · impact: clearer change list, tooltips and lines */
+.ig .lk{stroke-linecap:round;opacity:.75}
+.ig .lk.dep,.ig .lk.ok{opacity:.6}
+.ig.hv .lk.on{opacity:1;stroke-width:2.4}
+.imp .itip{padding:10px 12px;min-width:220px;max-width:300px;background:var(--panel);border:1px solid var(--border-strong);border-radius:10px;display:flex;flex-direction:column;gap:6px}
+.itip .k{font:600 11px/16px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-3)}
+.itip .k.r{color:var(--danger-text)} .itip .k.m{color:var(--on-accent-sub,#d3bdff)}
+.itip b{font:600 13px/18px var(--font);color:var(--text)}
+.itip .ft{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font:400 12px/18px var(--font);color:var(--text-2)}
+.cxp{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:6px;background:var(--surface);font:500 12px/18px var(--font);color:var(--text)}
+.cxp.new{background:var(--selected);color:var(--on-accent-sub,#d3bdff)}
+.iap{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 6px;border-radius:5px;background:var(--surface);font:500 11px/16px var(--mono);color:var(--text);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.iap .meth{font:600 10px/16px var(--mono)}
+.itip .aps,.ich .aps{display:flex;flex-wrap:wrap;gap:4px}
+.itip .st{font:500 12px/18px var(--font);color:var(--text-2)} .itip .st.r{color:var(--danger-text)}
+.ich{display:flex;flex-direction:column;gap:14px}
+.ich .sec{display:flex;flex-direction:column;gap:6px}
+.ich .sh{display:flex;align-items:center;gap:8px;font:600 12px/18px var(--font);color:var(--text)}
+.ich .sh .count{margin-left:auto}
+.ich .sub{font:500 11px/16px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-3);margin-top:4px}
+.ich .it{display:flex;flex-direction:column;gap:6px;padding:8px 10px;border-radius:8px;background:var(--canvas);border:1px solid var(--border);text-align:left;width:100%}
+.ich .it:hover{border-color:var(--sel-hov);border-style:dashed} .ich .it.on{border-color:var(--sel);border-style:solid}
+.ich .it .r1{display:flex;align-items:center;gap:8px;min-width:0}
+.ich .it .r1 b{font:500 13px/18px var(--font);color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ich .it .r1 .sp{flex:1}
+.ich .it small{font:400 12px/18px var(--font);color:var(--text-2)}
+.ich .tg2{font:600 11px/16px var(--font);padding:0 7px;border-radius:999px;white-space:nowrap;flex:none}
+.ich .tg2.m{background:var(--selected);color:var(--on-accent-sub,#d3bdff)} .ich .tg2.r{background:var(--danger-sub);color:var(--danger-text)} .ich .tg2.ok{background:var(--ok-sub);color:var(--ok-text)} .ich .tg2.n{background:var(--surface);color:var(--text-2)}
+.ich .ctxsum{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font:400 12px/18px var(--font);color:var(--text-2)}
+</style>
+<script>
+/* FB62 */
+(function(){
+const H=window.dbH; if(!H) return;
+const pl=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
+const api=r=>{ const [m,...p]=r.split(' '); return `<span class="iap" title="${esc(r)}"><b class="meth ${m.toLowerCase()}">${m}</b>${esc(p.join(' '))}</span>`; };
+const strip=h=>String(h||'').replace(/<[^>]+>/g,'');
+const decided=(D,key)=>{ const r=D.M.res[key]; if(!r) return null; const x=D.issues.find(z=>z.key===key); const o=x&&H.OPTS(x,D).find(q=>q[0]===r); return o?strip(o[1]):'Decided'; };
+const cx=(c,nw)=>`<span class="cxp ${nw?'new':''}">${esc(nw?c:H.cName(c))}</span>`;
+const movedApis=(D,id)=>UCB[id].apis.filter(a=>D.routes.includes(a));
+function depInfo(D,id){ const out=[]; D.issues.forEach(x=>{ if(x.type==='part'&&x.id===id) out.push({x, apis:x.moved, t:`Uses ${x.moved.length===1?'an API':'APIs'} that move to ${D.tName}`});
+  if(x.type==='api'&&x.st.includes(id)) out.push({x, apis:[x.api], t:`Uses an API that moves to ${D.tName}`});
+  if(x.type==='pt'&&x.stay.includes(id)) out.push({x, apis:[], t:`Still uses “${x.it.label}”`}); }); return out; }
+function ptInfo(D,G,iid){ const v=G.pts.get(iid); const it=v.it; const inf=D.infos.find(x=>x.iid===iid); const iss=D.issues.find(x=>x.type==='pt'&&x.it.id===iid);
+  const st = v.k==='ev' ? ['r','Event it fires'] : iss ? (D.M.res[iss.key]?['ok',decided(D,iss.key)]:['r','Shared · to decide']) : inf&&inf.st==='internal' ? ['m','Becomes internal'] : ['m','Moves with it'];
+  return {it, st, apis:D.routes.filter(a=>opInts(a).includes(iid))}; }
+window.impTip=function(n,D,G){ const [k,id,side]=n.split(':');
+  if(k==='u'){ const u=UCB[id]; if(G.moved.has(id)){ const A=movedApis(D,id);
+      return `<span class="k m">Use case · moves</span><b>${esc(u.name)}</b><span class="ft">${cx(u.ctx)}→${cx(D.tName,1)}</span>${A.length?`<span class="aps">${A.slice(0,4).map(api).join('')}${A.length>4?`<span class="st">+${A.length-4}</span>`:''}</span>`:''}`; }
+    const L=depInfo(D,id); if(L.length){ const d=L[0]; const dc=decided(D,d.x.key);
+      return `<span class="k r">Use case · affected</span><b>${esc(u.name)}</b><span class="ft">Stays in ${cx(u.ctx)}</span><span class="st">${esc(d.t)}</span>${d.apis.length?`<span class="aps">${d.apis.slice(0,3).map(api).join('')}</span>`:''}<span class="st ${dc?'':'r'}">${dc?esc(dc):'To decide'}</span>`; }
+    return `<span class="k">Use case</span><b>${esc(u.name)}</b><span class="ft">In ${cx(u.ctx)} · not affected</span>`; }
+  if(k==='p'){ if(!G.pts.has(id)){ const it=INB[id]; return `<span class="k">Integration point</span><b>${esc(it.label)}</b>`; } const P=ptInfo(D,G,id);
+    return `<span class="k ${P.st[0]==='r'?'r':'m'}">${/event/i.test(P.it.type)?'Event':'Integration point'}</span><b>${esc(P.it.label)}</b><span class="ft">${cx(P.it.from)}→<span class="cxp">${esc(ctxName(P.it.to))}</span></span>${P.apis.length?`<span class="aps">${P.apis.slice(0,3).map(api).join('')}</span>`:''}<span class="st ${P.st[0]==='r'?'r':''}">${esc(P.st[1])}</span>`; }
+  if(k==='c'){ if(id===G.tgt){ return `<span class="k m">${D.add?'Target context':'New context'}</span><b>${esc(D.tName)}</b><span class="st">Gets ${pl(G.moved.size,'use case')} and ${pl(D.routes.length,'API')}</span>`; }
+    const out=[...G.moved].filter(x=>UCB[x].ctx===id).length, aff=[...G.dep.keys()].filter(x=>UCB[x]&&UCB[x].ctx===id).length;
+    return `<span class="k">Bounded context</span><b>${esc(H.cName(id))}</b><span class="st">${out?`${pl(out,'use case')} move out`:'Nothing moves out'}${aff?` · <span style="color:var(--danger-text)">${aff} affected</span>`:''}</span>`; }
+  return ''; };
+window.impCon=function(D,G,sel,plan){ if(!D.sel.size) return '<div class="db-info">Pick use cases or APIs on the left. Everything they change shows here.</div>';
+  const row=(n,inner)=>`<button class="isr ${sel===n?'on':''}" data-act="imsel" data-arg="${n}">${inner}</button>`;
+  const sec=(t,n,inner)=>n?`<section class="iss"><h4>${t}<span class="count">${n}</span></h4>${inner}</section>`:'';
+  const bySrc={}; [...G.moved].forEach(id=>(bySrc[UCB[id].ctx]=bySrc[UCB[id].ctx]||[]).push(id));
+  const alone=D.routes.filter(a=>![...G.moved].some(id=>UCB[id].apis.includes(a)));
+  const mv=Object.entries(bySrc).map(([c,ids])=>`<div class="isub">From ${esc(H.cName(c))}</div>`+ids.map(id=>{ const A=movedApis(D,id); return row('u:'+id+':t',`<span class="l">${esc(UCB[id].name)}</span>${A.length?`<span class="aps">${A.map(api).join('')}</span>`:''}`); }).join('')).join('')
+    + (alone.length?`<div class="isub">APIs on their own</div>`+alone.map(a=>row('c:'+G.tgt,`<span class="aps">${api(a)}</span>`)).join(''):'');
+  const dep=[...G.dep.keys()].map(id=>{ const d=depInfo(D,id)[0]; const dc=d&&decided(D,d.x.key);
+    return row('u:'+id+':s',`<span class="l">${esc(UCB[id].name)}<em class="${dc?'ok':'r'}">${dc?'Decided':'To decide'}</em></span><small>Stays in ${esc(H.cName(UCB[id].ctx))}${dc?` · ${esc(dc)}`:''}</small>${d&&d.apis.length?`<span class="aps">${d.apis.map(api).join('')}</span>`:''}`); }).join('');
+  const pts=[...G.pts.keys()].map(iid=>{ const P=ptInfo(D,G,iid); return row('p:'+iid,`<span class="l">${esc(P.it.label)}<em class="${P.st[0]}">${esc(P.st[1])}</em></span><small>${esc(H.cName(P.it.from))} → ${esc(ctxName(P.it.to))}</small>`); }).join('');
+  const srcs=[...new Set([...G.moved].map(id=>UCB[id].ctx))];
+  const ctxs=srcs.map(c=>{ const n=[...G.moved].filter(x=>UCB[x].ctx===c).length; const a=[...G.moved].filter(x=>UCB[x].ctx===c).reduce((s,id)=>s+movedApis(D,id).length,0); return row('c:'+c,`<span class="l">${esc(H.cName(c))}<em class="n">−${pl(n,'use case')} · −${pl(a,'API')}</em></span>`); }).join('')
+    + row('c:'+G.tgt,`<span class="l">${esc(D.tName)}<em class="m">+${pl(G.moved.size,'use case')} · +${pl(D.routes.length,'API')}</em></span>`);
+  const pl2=plan?plan.replace('<div class="db-plan">','<section class="iss iplan">').replace(/<div class="h">[\s\S]*?<\/div>/,'<h4>Refactoring plan</h4>').replace(/<\/ol><\/div>$/,'</ol></section>'):'';
+  return `<div class="ich2">${pl2}${sec(`Moves to ${esc(D.tName)}`,G.moved.size+alone.length,mv)}${sec('Affected, stays where it is',G.dep.size,dep)}${sec('Integration points and events',G.pts.size,pts)}${sec('Contexts after the move',srcs.length+1,ctxs)}</div>`; };
+try{ if(S.nc) renderNC(); }catch(e){}
+})();
+</script>
+<style>
+/* FB63 · sidebar: sticky title and chat room, no "Use cases" label, Propose changes. Flowchart symbols in the four reference colours. */
+#cxItem .card:has(.ucr) .ch.flat .rp-h .k{visibility:hidden}
+#cxItem .ucfoot .ucask{display:none!important}
+.ucpc svg{flex:none}
+.ucstk{position:sticky;top:0;z-index:4;margin:0 -22px;padding:12px 22px;background:var(--panel);border-bottom:1px solid var(--border);display:none;flex-direction:column;gap:8px;box-shadow:0 8px 12px -10px rgba(0,0,0,.6)}
+.ucstk.on{display:flex}
+.ucstk h3{margin:0;font:600 16px/22px var(--font);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ucstk .rme2{margin:0}
+:root{--fs-term:#7cc04f;--fs-step:#7b97f0;--fs-dec:#f0a36b;--fs-alt:#9a84f2}
+.fx-c.term .sym svg,.fx-c.term .hd>svg,.fx-c.term .hd>.kic2{color:var(--fs-term)!important}
+.fx-c:not(.term):not(.dec):not(.alt) .sym svg{color:var(--fs-step)!important}
+.fx-c.dec .sym svg{color:var(--fs-dec)!important}
+.fx-c.alt .sym svg{color:var(--fs-alt)!important}
+.fx-c.term{border-color:color-mix(in srgb,var(--fs-term) 55%,var(--border-strong))!important}
+.fx-c.dec{border-color:color-mix(in srgb,var(--fs-dec) 60%,var(--border-strong))!important}
+.fx-c.alt{box-shadow:inset 3px 0 0 var(--fs-alt)!important}
+.fx-c:not(.term):not(.dec):not(.alt):not(.on){border-left:3px solid color-mix(in srgb,var(--fs-step) 70%,transparent)}
+.fn.on.fx-c{border-left-width:1px}
+.f2-term{border-color:var(--fs-term)!important} .f2-dec polygon{stroke:var(--fs-dec)!important}
+.ucf2 .stats span:nth-child(1) svg{color:var(--fs-step)} .ucf2 .stats span:nth-child(2) svg{color:var(--fs-dec)} .ucf2 .stats span:nth-child(3) svg{color:var(--fs-alt)}
+#fxKey i.t{border-color:var(--fs-term)} #fxKey i:not([class]){border-color:var(--fs-step)} #fxKey i.d{border-color:var(--fs-dec)} #fxKey i.a{box-shadow:inset 3px 0 0 var(--fs-alt)}
+</style>
+<script>
+/* FB63 */
+(function(){
+{ const _t=ACT.dbtab; ACT.dbtab=function(t){ if(S.nc) S.nc.itab='sum'; return _t(t); }; }
+const stick=()=>{ const side=document.getElementById('cxItem'); if(!side) return; const sc=side.querySelector('.scroll'); if(!sc) return; const det=sc.querySelector('.det'); const room=sc.querySelector('.rme2');
+  if(room&&typeof room.cloneNode!=='function') return; let bar=sc.querySelector(':scope>.ucstk'); if(!det||!room||!det.querySelector('.ucr')){ if(bar) bar.remove(); return; }
+  const title=(det.querySelector('h2 span')||det.querySelector('h2')).textContent;
+  if(!bar){ bar=document.createElement('div'); bar.className='ucstk'; sc.insertBefore(bar,sc.firstChild); }
+  bar.innerHTML=`<h3>${esc(title)}</h3>`; bar.appendChild(room.cloneNode(true));
+  const upd=()=>{ const r=room.getBoundingClientRect(), t=sc.getBoundingClientRect().top; const past=r.bottom < t+4; bar.classList.toggle('on',past); };
+  if(!sc.__stk){ sc.__stk=1; sc.addEventListener('scroll',upd,{passive:true}); } upd(); };
+{ const _r=render; render=function(){ _r(); stick(); }; }
+if(window.renderSide){ const _s=renderSide; renderSide=function(){ _s.apply(this,arguments); stick(); }; }
+try{ render(); }catch(e){}
+})();
+</script>
+<style>
+/* FB64 · close in the title row, sticky bar padding, decisions shown in full, tighter dependency cards, Summary tab */
+#cxItem .card:has(.ucr)>.ch.flat{position:absolute;top:8px;right:8px;z-index:6;border:0;padding:0;background:transparent}
+#cxItem .card:has(.ucr)>.ch.flat .rp-h .k{display:none}
+#cxItem .card:has(.ucr) .det h2{padding-right:36px}
+.ucstk{margin:0!important;padding:14px 22px 12px!important}
+.ucstk h3{padding-right:36px}
+.ucstk .rme2{margin:0!important}
+.sq-dia{pointer-events:none}
+.sq-brs{position:absolute;z-index:2}
+.sq-br{position:absolute;left:0;display:flex;align-items:center;gap:8px;height:24px;padding:0 10px 0 8px;border-radius:6px;background:var(--panel);border:1px solid var(--border-strong);white-space:nowrap;font:400 12px/18px var(--font);color:var(--text-2)}
+.sq-br b{font-weight:500;color:var(--text)}
+.sq-br small{color:var(--text-3);font-size:11px}
+.sq-br:not(.on){opacity:.75}
+.sq-br:hover{opacity:1;border-style:dashed;border-color:var(--sel-hov)}
+.sq-br.on{opacity:1;border-color:var(--sel);box-shadow:0 0 0 1px var(--sel)}
+.sq-br .dk{width:9px;height:9px;border-radius:2px;transform:rotate(45deg);flex:none;background:var(--ok)}
+.sq-br .dk.error{background:var(--danger)} .sq-br .dk.validation{background:var(--warn)} .sq-br .dk.cancel{background:var(--text-3)}
+#ucFlow svg.fe.sq .sq-brl{fill:none;stroke:var(--border-strong);stroke-width:1.2}
+#ucFlow svg.fe.sq .sq-brl.on{stroke:var(--sel)}
+#dbd .db-r .db-sc{gap:10px}
+#dbd .db-i .db-it{padding-top:12px;padding-bottom:12px}
+#dbd .db-i .db-op{padding-top:0}
+.ich2{display:flex;flex-direction:column}
+.ich2 .iss{display:flex;flex-direction:column;padding:14px 0;border-bottom:1px solid var(--border)}
+.ich2 .iss:first-child{padding-top:4px}
+.ich2 .iss:last-child{border-bottom:0}
+.ich2 h4{display:flex;align-items:center;gap:8px;margin:0 0 6px;font:600 13px/18px var(--font);color:var(--text)}
+.ich2 h4 .count{margin-left:auto}
+.ich2 .isub{font:500 11px/16px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-3);margin:8px 0 2px}
+.ich2 .isr{display:flex;flex-direction:column;gap:4px;width:100%;padding:8px 6px;margin:0 -6px;width:calc(100% + 12px);border-radius:6px;text-align:left;border-bottom:1px solid var(--border)}
+.ich2 .isr:last-child{border-bottom:0}
+.ich2 .isr:hover{background:var(--surface)} .ich2 .isr.on{background:var(--selected)}
+.ich2 .isr .l{display:flex;align-items:center;gap:8px;font:500 13px/18px var(--font);color:var(--text)}
+.ich2 .isr .l em{margin-left:auto;font:500 12px/18px var(--font);font-style:normal;white-space:nowrap}
+.ich2 em.r{color:var(--danger-text)} .ich2 em.ok{color:var(--ok-text)} .ich2 em.m{color:var(--on-accent-sub,#d3bdff)} .ich2 em.n{color:var(--text-2)}
+.ich2 .isr small{font:400 12px/18px var(--font);color:var(--text-2)}
+.ich2 .iplan ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font:400 13px/20px var(--font);color:var(--text-2)}
+.ich2 .iplan code{font:500 12px/18px var(--mono);color:var(--text)}
+</style>
+<style>
+/* FB65 · flowchart steps with many files and APIs, step summary, light mode */
+.fx-c .fxg{display:flex;flex-direction:column;gap:6px;padding-top:8px;border-top:1px solid var(--border)}
+.fx-c .fxgh{display:flex;align-items:center;gap:6px;font:600 11px/16px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-3)}
+.fx-c .fxgh .count{text-transform:none;letter-spacing:0}
+.fx-c .fxgh .sp{flex:1}
+.fx-c .fxgs{display:inline-flex;align-items:center;gap:4px;margin-left:auto;text-transform:none;letter-spacing:0;font-weight:500;color:var(--text-2)}
+.fx-c .fxgs svg{color:var(--k-integration-point,#fb923c)}
+.fx-c .fxar{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.fx-c .fxmore,.fx-c .fxlnk,.fxx .fxlnk{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:6px;font:500 12px/18px var(--font);color:var(--accent-on);text-transform:none;letter-spacing:0}
+.fx-c .fxmore:hover,.fx-c .fxlnk:hover,.fxx .fxlnk:hover{background:var(--surface)}
+.fx-c .fxmore{align-self:flex-start;background:var(--surface);color:var(--text-2)}
+.fxx .fxtabs{display:flex;gap:2px;overflow-x:auto;padding-bottom:4px;margin-bottom:6px;border-bottom:1px solid var(--border);scrollbar-width:thin}
+.fxx .fxtabs button{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:6px 6px 0 0;white-space:nowrap;font:500 12px/18px var(--mono);color:var(--text-2);border-bottom:2px solid transparent}
+.fxx .fxtabs button:hover{color:var(--text);background:var(--surface)}
+.fxx .fxtabs button.on{color:var(--text);border-bottom-color:var(--sel)}
+.fxx .fxide{margin:2px 0 6px}
+/* step summary */
+.aisum{background:linear-gradient(140deg,rgba(236,72,153,.20) 0%,rgba(168,85,247,.16) 38%,rgba(98,78,213,.12) 70%,rgba(98,78,213,.04) 100%)!important;box-shadow:inset 0 0 0 1px rgba(217,119,255,.28)!important}
+.aisum small{display:flex!important;align-items:center;gap:6px;font:600 12px/18px var(--font)!important;background:linear-gradient(90deg,#f472b6,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent!important}
+.aisum small svg{flex:none}
+.aisum .aisb{width:100%;justify-content:center;margin:10px 0 12px}
+.ucf2-h{display:none!important}
+body.light .aisum{background:linear-gradient(140deg,rgba(236,72,153,.12) 0%,rgba(168,85,247,.10) 40%,rgba(98,78,213,.07) 75%,rgba(255,255,255,0) 100%)!important;box-shadow:inset 0 0 0 1px rgba(168,85,247,.25)!important}
+body.light .aisum small{background:linear-gradient(90deg,#db2777,#7c3aed);-webkit-background-clip:text;background-clip:text}
+/* ===== light mode · Figma "Mapped / Light" ===== */
+body.light{color-scheme:light;--canvas:#f6f7fb;--panel:#ffffff;--surface:#f1f2f6;--surface-strong:#e4e6ed;--surface-strong-h:#d7dae3;--border:#e4e6ed;--border-strong:#cfd3dc;--text:#141821;--text-2:#4b5263;--text-3:#7d8497;--shadow:3px 3px 0 rgba(20,24,33,.08),0 2px 10px rgba(20,24,33,.06);--accent-on:#5b3fd6;--hl-ink:#fff;--sel-hov:rgba(98,78,213,.55)}
+body.light .ilbl text,body.light .el[data-k=ext] .t1{fill:var(--text)!important}
+body.light #cWorld .dcard.fade,body.light #cWorld .dcard.dim{background:#f3f4f8!important;border-color:#e6e8ee!important}
+
+/* ===== Light mode · tokens from Figma "Mapped / Light" (Syntroper - Product) ===== */
+body.light{
+  --canvas:#f5f5f5; --panel:#ffffff; --surface:#f5f5f5; --surface-strong:#e4e7f0; --surface-strong-h:#c1bdda;
+  --border:#e4e7f0; --border-strong:#c1bdda;
+  --text:#131620; --text-2:#3a3d46; --text-3:#60636b;
+  --accent:#624ed5; --accent-hover:#392c89; --accent-on:#624ed5; --accent-sub:rgba(98,78,213,.12); --selected:rgba(98,78,213,.08); --row-sel:rgba(98,78,213,.08);
+  --warn:#ffcc4d; --warn-sub:rgba(255,204,77,.16); --warn-text:#4a3500;
+  --ok:#34c759; --ok-sub:rgba(52,199,89,.14); --ok-text:#15803d; --ok-bg:rgba(52,199,89,.14);
+  --danger:#ea4d44; --danger-sub:rgba(234,77,68,.16); --danger-text:#4d0a00;
+  --l1:#002743; --l2:#19004a; --l3:#042f2e; --l4:#3e004a; --l5:#ff8b4d; --l6:#3a3d46;
+  --k-channel:#002743; --k-people:#991b1b; --k-integration-point:#ff8b4d;
+  --sel:#624ed5; --sel-hov:#8673f2; --sel-soft:rgba(98,78,213,.08); --rel:#b8bcc8; --sel-dn:#b8bcc8; --sel-up:#b8bcc8; --chip-rel:#14161d;
+  --hl:#624ed5; --hl-ink:#ffffff; --ev-bg:rgba(98,78,213,.08);
+  --shadow:0 1px 2px rgba(19,22,32,.06),0 4px 12px rgba(19,22,32,.06);
+  --hv:#7b97f0; --cn:#4d70e6; --sl:#624ed5; --slf:rgba(98,78,213,.08);
+}
+body.light .stage,body.light #ucFlow,body.light .wstage,body.light #__none{background-color:#f5f5f5;background-image:radial-gradient(circle at 1px 1px,#c1bdda 1px,transparent 1.2px)}
+/* status chips */
+body.light .tag.ok,body.light .st-ok,body.light [class*=reviewed]{background:rgba(52,199,89,.14)!important;color:#15803d!important}
+body.light .tag.warn,body.light [class*=suggested]:not(.el){background:rgba(255,138,61,.14)!important;color:#c2410c!important}
+body.light .tag{background:#e4e7f0;color:#3a3d46}
+/* lines and labels: related-line #b8bcc8, labels on white with the strong border */
+body.light .edge,body.light .sedge,body.light .slink .ln{stroke:#b8bcc8}
+body.light .eg:not(.hot):not(.on):not(.dn):not(.up):not(.ghost) .edge{stroke:#b8bcc8!important}
+body.light .e-label rect,body.light .elab rect{fill:#ffffff!important;stroke:#c1bdda!important}
+body.light .e-label text,body.light .elab text{fill:#3a3d46!important}
+body.light .eg.on .e-label rect{fill:#624ed5!important;stroke:#624ed5!important} body.light .eg.on .e-label text{fill:#fff!important}
+body.light .eg:is(.hot,.dn,.up):not(.on) .e-label text{fill:#2f56c9!important}
+body.light marker path{fill:#b8bcc8}
+/* cards */
+body.light #cWorld .dcard{background:#ffffff;border-color:#e4e7f0;box-shadow:0 1px 2px rgba(19,22,32,.06)}
+body.light #cWorld .dcard.fade,body.light #cWorld .dcard.dim{background:#f4f5f7!important;border-color:#e6e8ec!important}
+body.light #cWorld .dcard .chip,body.light #cWorld .dcard .ucc,body.light #cWorld .dcard [class*=uc-chip]{background:#f5f5f5;color:#3a3d46}
+body.light .owns,body.light [class*=owns]{background:#ffffff!important;color:#131620!important;border-color:#c1bdda!important}
+/* galaxy */
+body.light .el[data-k=ctx] .arc{fill:#e4e7f0;stroke:#c1bdda}
+body.light .el[data-k=ctx] .arclbl{fill:#3a3d46}
+body.light .el[data-k=int] .curve{stroke:#b8bcc8}
+body.light .el[data-k=uc] .bar{stroke:#c1bdda}
+body.light .el .chip{fill:#ffffff;stroke:#e4e7f0}
+body.light .el text{fill:#3a3d46}
+body.light .el[data-k=pt] .dot{fill:#ffffff;stroke:#60636b}
+body.light .el[data-k=ext] .box{fill:rgba(255,138,61,.08)} body.light .el[data-k=ext] .t1{fill:#c2410c!important}
+/* sequence and flowchart */
+body.light .sq-lh,body.light .fx-c{background:#ffffff;border-color:#e4e7f0}
+body.light #ucFlow svg.fe.sq .sq-m.call,body.light #ucFlow svg.fe.sq .sq-ah.call{stroke:#3a3d46;fill:#3a3d46}
+body.light #ucFlow svg.fe.sq .sq-m.ret,body.light #ucFlow svg.fe.sq .sq-ah.ret{stroke:#b8bcc8}
+body.light #ucFlow svg.fe.sq .sq-m.act,body.light #ucFlow svg.fe.sq .sq-ah.act{stroke:#624ed5;fill:#624ed5}
+body.light .sq-lbl.act{color:#624ed5}
+body.light .sq-ftxt{color:#ffffff!important}
+body.light .sq-cond{background:rgba(255,138,61,.14)!important;color:#c2410c!important}
+body.light .sq-ok,body.light .sq-end{background:rgba(52,199,89,.14);color:#15803d}
+
+/* Galaxy light: white nodes, same base and states as the other diagrams */
+body.light #gxC .el[data-k=uc] .bar{stroke:#ffffff!important;filter:drop-shadow(0 0 .4px rgba(19,22,32,.45)) drop-shadow(0 1px 1.5px rgba(19,22,32,.10));opacity:1!important}
+body.light #gxC .el[data-k=ctx] .arc{fill:#ffffff!important;stroke:#c1bdda!important;opacity:1!important}
+body.light #gxC .el[data-k=ctx] .arclbl{fill:#3a3d46!important}
+body.light #gxC .el .chip{fill:#ffffff!important;stroke:#e4e7f0!important}
+body.light #gxC .el[data-k=pt] .dot{fill:#ffffff!important;stroke:#60636b!important}
+body.light #gxC .el[data-k=ext] .box{fill:#ffffff!important}
+body.light #gxC .el[data-k=int] .curve{stroke:#b8bcc8}
+body.light #gxC .el[data-k=uc]:is(.tgt,.pri) .bar{stroke:var(--sel)!important;filter:none}
+body.light #gxC .el[data-k=uc]:is(.hi,.dn,.up):not(.tgt):not(.pri) .bar{stroke:#b8bcc8!important}
+body.light #gxC .el[data-k=ctx]:is(.tgt,.pri) .arc{fill:var(--sel)!important;stroke:var(--sel)!important}
+body.light #gxC .el[data-k=ctx]:is(.tgt,.pri) .arclbl{fill:#ffffff!important}
+body.light #gxC .el[data-k=int]:is(.tgt,.pri) .curve{stroke:var(--sel)!important}
+body.light #gxC .el[data-k=uc].hov:not(.tgt):not(.pri) .bar{stroke:#ffffff!important;filter:drop-shadow(0 0 1px var(--sel-hov)) drop-shadow(0 0 1px var(--sel-hov))}
+body.light #gxC .el[data-k=ctx].hov:not(.tgt):not(.pri) .arc{stroke:var(--sel-hov)!important;stroke-dasharray:5 4!important}
+
+body.light{background:var(--canvas);color:var(--text)}
+body.light:not(.nodots) .stage,body.light:not(.nodots) #ucFlow,body.light:not(.nodots) #dbd,body.light:not(.nodots) .wstage{background-image:radial-gradient(circle at 1px 1px,#c1bdda 1.1px,transparent 1.3px)!important;background-size:18px 18px!important}
+body.light #rail,body.light #appTop{background:#ffffff;border-color:#e4e7f0}
+body.light .card,body.light .float,body.light .menu,body.light .tb-menu,body.light .db-side,body.light .md,body.light .epop,body.light .sq-pop{background:#ffffff;border-color:#e4e7f0}
+body.light .btn.primary{color:#fff}
+body.light .lnk:hover,body.light .lnk2:hover,body.light .lnk3:hover,body.light .lnks button:hover,body.light .sq-lbl.on{color:var(--accent-hover)}
+body.light .sq-lbl.on{color:#fff!important}
+body.light .ucstk{background:#ffffff;box-shadow:0 8px 12px -10px rgba(19,22,32,.18)}
+body.light .tag.ok,body.light .dbs.ok{background:rgba(52,199,89,.14)!important;color:#15803d!important}
+body.light .rvt.warn,body.light .tag.warn,body.light .dbs.warn{background:rgba(255,204,77,.24)!important;color:#4a3500!important}
+body.light .cbk pre,body.light .cbk .code,body.light .cbk-b{background:#f5f5f5!important;color:#131620}
+body.light ::selection{background:rgba(98,78,213,.18)}
+</style>
+<script>
+/* FB65 */
+(function(){
+/* a step with many files and APIs, to show how it scales */
+const st=FLOW['request-return']&&FLOW['request-return'].steps[1];
+const EXTRA=["POST /store/returns/:id/items", "GET /store/return-reasons", "GET /store/return-reasons/:id", "GET /store/orders/:id/returnable-items", "POST /store/returns/:id/shipping-method", "GET /store/shipping-options/return", "POST /store/returns/:id/confirm", "GET /store/regions/:id", "GET /store/customers/me", "GET /store/customers/me/addresses", "POST /store/returns/:id/notes", "GET /store/products/:id", "GET /store/variants/:id", "POST /store/payment-collections/:id/refunds", "GET /store/returns/:id", "DELETE /store/returns/:id/items/:item_id", "POST /store/returns/:id/upload", "GET /store/stock-locations/:id", "POST /store/carts/:id/exchange"];
+if(st){ EXTRA.forEach(a=>{ if(!st.apis.includes(a)) st.apis.push(a); }); }
+const SFX='apps/storefront/src/modules/', CF2='packages/core/core-flows/src/', MD='packages/medusa/src/api/store/';
+const XF=[[SFX+'order/components/return-reason-select/index.tsx','Screen','ReturnReasonSelect'],[SFX+'order/components/return-item-row/index.tsx','Screen','ReturnItemRow'],[SFX+'order/components/return-summary/index.tsx','Screen','ReturnSummary'],[SFX+'order/components/return-shipping/index.tsx','Screen','ReturnShipping'],[SFX+'order/actions/create-return.ts','Server action','createReturn'],[SFX+'order/actions/upload-photos.ts','Server action','uploadReturnPhotos'],[MD+'return-reasons/route.ts','API route','GET /store/return-reasons'],[MD+'returns/[id]/items/route.ts','API route','POST /store/returns/:id/items'],[MD+'returns/[id]/confirm/route.ts','API route','POST /store/returns/:id/confirm'],[CF2+'order/workflows/return/begin-return.ts','Workflow','beginReturnOrderWorkflow'],[CF2+'order/workflows/return/request-item-return.ts','Workflow','requestItemReturnWorkflow'],[CF2+'order/steps/create-returns.ts','Workflow step','createReturnsStep'],[CF2+'order/steps/update-return-items.ts','Workflow step','updateReturnItemsStep'],[CF2+'fulfillment/steps/create-return-fulfillment.ts','Workflow step','createReturnFulfillmentStep'],[CF2+'payment/steps/refund-payment.ts','Workflow step','refundPaymentStep']];
+const _c=window.codeOf; if(_c){ window.codeOf=codeOf=function(id){ const out=_c(id); if(id!=='request-return') return out; const have=new Set(out.map(b=>b.file));
+  XF.forEach(([f,k,n],j)=>{ if(have.has(f)) return; out.push({step:2, file:f, kind:k, name:n, start:12+j*7, lines:[`// ${n}`,`export ${k==='Screen'?'default function '+n+'(props) {':k==='API route'?'async function '+n.split(' ')[0]+'(req, res) {':'const '+n+' = createStep("'+n+'", async (input, { container }) => {'}`,`  const svc = container?.resolve?.("order") ?? props`,`  const result = await svc.${n.charAt(0).toLowerCase()+n.slice(1)}?.(input)`,`  return result`,`}`] }); });
+  return out; }; }
+/* light mode */
+ACT.theme=function(){ document.body.classList.toggle('light'); try{ if(window.monaco) monaco.editor.setTheme(document.body.classList.contains('light')?'vs':'codona'); }catch(e){} render(); try{ if(window.gC) gC.draw&&gC.draw(); }catch(e){} };
+try{ render(); }catch(e){}
+})();
+</script>
+<style>
+/* FB66 · realistic dependencies, select first then save */
+.dbwhy{display:block;margin-top:4px;font:400 12px/18px var(--font);color:var(--text-2)}
+.dbwhy code,.db-op code{font:500 12px/18px var(--mono);color:var(--text)}
+.db-i.picked{box-shadow:inset 3px 0 0 var(--sel)!important}
+.dbsave{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;padding:8px 10px 8px 12px;border-radius:10px;background:var(--selected);box-shadow:inset 0 0 0 1px var(--accent-sub);font:500 12px/18px var(--font);color:var(--text)}
+.dbsave span{flex:1}
+</style>
+<script>
+/* FB66 · only show a dependency when the move would break something */
+(function(){
+const cN=c=>c==='unassigned'?'No context':CTB[c]?CTB[c].name:ctxName(c);
+const inproc=t=>/module call|workflow step|module link|grpc/i.test(t||'');
+const names=ids=>{ const n=ids.map(id=>UCB[id]?UCB[id].name:id); return n.length===1?n[0]:`${n[0]} and ${n.length-1} more`; };
+const sym=it=>`<code>${esc(it.symbol&&it.symbol.length<40?it.symbol:it.label)}</code>`;
+window.dbRealistic=function(issues,c){ const T=esc(c.tName); const keep=[];
+  issues.forEach(x=>{
+    if(x.type==='part'||x.type==='api'){ const apis=x.type==='part'?x.moved:[x.api]; const users=x.type==='part'?[x.id]:x.st; const src=x.type==='part'?UCB[x.id].ctx:x.src;
+      let hit=null; apis.forEach(a=>opInts(a).forEach(iid=>{ const it=INB[iid]; if(it&&!hit&&inproc(it.type)&&it.from===src) hit={a,it}; }));
+      if(!hit) return;   /* the route path stays the same, so HTTP callers keep working */
+      const U=esc(names(users)), A=esc(hit.a);
+      x.why=`${U} stay${users.length===1?'s':''} in ${esc(cN(src))} and call ${sym(hit.it)} in-process. After the move that code lives in ${T}, so ${users.length===1?'its':'their'} import breaks.`;
+      x.opts = x.type==='part'
+        ? [['split',`Keep it in ${esc(cN(src))}. It calls ${T} over HTTP for <code>${A}</code>.`,`${U} calls ${T} over HTTP for <code>${A}</code>`],
+           ['all',`Move all of <b>${U}</b> to ${T}.`,`Move ${U} to ${T}`],
+           ['none',`Don’t move <code>${A}</code>. It stays in ${esc(cN(src))}.`,`Keep <code>${A}</code> in ${esc(cN(src))}`]]
+        : [['call',`Switch the callers to HTTP. They call ${T} for <code>${A}</code>.`,`${U} call ${T} over HTTP for <code>${A}</code>`],
+           ['with',`Move <b>${U}</b> to ${T} too.`,`Move ${U} to ${T}`],
+           ['keep',`Leave <code>${A}</code> in ${esc(cN(src))}. ${T} calls it there.`,`${T} calls ${esc(cN(src))} for <code>${A}</code>`],
+           ['copy',`Both keep their own copy of ${sym(hit.it)}.`,`Copy ${sym(hit.it)} into ${T}`]];
+      keep.push(x); return; }
+    if(x.type==='pt'){ const it=x.it; const U=esc(names(x.stay));
+      if(/event/i.test(it.type)){ x.why=`${U} subscribe${x.stay.length===1?'s':''} to <code>${esc(it.label.split(' ')[0])}</code>. They keep working only if the event name and payload stay the same.`;
+        x.opts=[['stay',`Keep the event contract. Subscribers stay as they are.`,`Keep the <code>${esc(it.label.split(' ')[0])}</code> contract unchanged`],['event',`Publish a new version and update ${x.stay.length===1?'the subscriber':`the ${x.stay.length} subscribers`}.`,`Version <code>${esc(it.label.split(' ')[0])}</code> and update its subscribers`]]; keep.push(x); return; }
+      if(inproc(it.type)){ x.why=`${U} call${x.stay.length===1?'s':''} ${sym(it)} in ${esc(cN(it.from))} directly. If it moves to ${T}, those calls break.`;
+        x.opts=[['stay',`Keep it in ${esc(cN(it.from))}. ${T} calls it there.`,`${T} calls ${esc(cN(it.from))} for ${sym(it)}`],['move',`Move it to ${T} and point ${U} at it there.`,`Move ${sym(it)} to ${T} and update ${U}`],['event',`Turn it into an event both sides listen to.`,`Replace ${sym(it)} with an event`]]; keep.push(x); return; }
+      return; }   /* HTTP and outbound points stay reachable */
+    keep.push(x); });
+  issues.length=0; issues.push(...keep); };
+ACT.dbsavedec=function(){ const M=S.nc; if(!M) return; M.saved=M.saved||{}; Object.keys(M.res||{}).forEach(k=>{ if(M.res[k]) M.saved[k]=true; }); M.col={}; renderNC(); };
+{ const _r=ACT.dbres; ACT.dbres=function(a){ const k=a.slice(0,a.lastIndexOf('|')); if(S.nc&&S.nc.saved) delete S.nc.saved[k]; return _r(a); }; }
+try{ if(S.nc) renderNC(); }catch(e){}
+})();
+</script>
+<style>
+/* FB67 · new use case: input padding, Galaxy for dependencies, steps summary icon */
+.npx .pfs-new input,.npx .pfs-new textarea{padding:8px 12px!important;min-height:38px;line-height:20px;box-sizing:border-box}
+.npx .npai{padding:8px 12px!important;min-height:42px;gap:10px}
+.npx .npai input{padding:0 2px!important}
+.npx .npr{padding:12px 14px!important}
+.aisum small svg{flex:none}
+.npg{position:relative;min-width:0;overflow:hidden;background-color:var(--canvas);background-image:radial-gradient(circle at 1px 1px,var(--surface) 1px,transparent 1.2px);background-size:18px 18px}
+body.light .npg{background-image:radial-gradient(circle at 1px 1px,#c1bdda 1.1px,transparent 1.3px)}
+.npg svg.ig{position:absolute;inset:0;width:100%;height:100%}
+.npg .ileg{position:absolute;left:16px;bottom:16px;display:flex;flex-wrap:wrap;gap:14px;padding:8px 12px;border-radius:10px;background:var(--panel);border:1px solid var(--border);font:500 12px/16px var(--font);color:var(--text-2)}
+.npg .ileg span{display:flex;align-items:center;gap:6px} .npg .ileg i{width:20px;height:0;border-top:2px solid}
+.npg .ileg i.dep{border-color:var(--danger);border-top-style:dashed} .npg .ileg i.ok{border-color:var(--ok)} .npg .ileg i.http{border-color:var(--text-3)} .npg .ileg i.info{border-color:var(--text-3);border-top-style:dotted}
+.ig .lk.http{stroke:var(--text-3);opacity:.55}
+.ig .lk.okd{stroke:var(--ok)}
+.ig .bar.nw{stroke:var(--sel);stroke-width:5}
+.ig .ulb.nw{fill:var(--text);font-weight:600}
+.ig .arc.own{stroke:var(--text-2)}
+.ig .apl{font:500 10px var(--mono);fill:var(--text-2)}
+</style>
+<script>
+/* FB67 */
+(function(){
+const inproc=t=>/module call|workflow step|module link|grpc/i.test(t||'');
+const cN=c=>c==='unassigned'?'No context':CTB[c]?CTB[c].name:ctxName(c);
+/* a foreign API is only a problem when its handler writes and runs another context's code in-process */
+window.npBreaks=function(r,oc,tgt){ if(/^GET /.test(r)) return false; const its=opInts(r).map(i=>INB[i]).filter(Boolean).filter(it=>inproc(it.type));
+  if(!its.length) return false; const it=its[0];
+  return {why:`Writes in ${esc(cN(oc))} and runs <code>${esc(it.symbol&&it.symbol.length<40?it.symbol:it.label)}</code> in-process${its.length>1?` (+${its.length-1} more)`:''}. A use case in ${esc(cN(tgt))} would share that transaction across two contexts.`}; };
+const P=(a,r)=>[Math.cos(a)*r, Math.sin(a)*r];
+const arcPath=(a0,a1,r0,r1)=>{ const [x0,y0]=P(a0,r1),[x1,y1]=P(a1,r1),[x2,y2]=P(a1,r0),[x3,y3]=P(a0,r0); const lg=a1-a0>Math.PI?1:0; return `M${x0} ${y0}A${r1} ${r1} 0 ${lg} 1 ${x1} ${y1}L${x2} ${y2}A${r0} ${r0} 0 ${lg} 0 ${x3} ${y3}Z`; };
+const curve=(a,b,ra,rb)=>{ const [x0,y0]=P(a,ra),[x1,y1]=P(b,rb); let da=Math.abs(b-a)%(Math.PI*2); if(da>Math.PI) da=Math.PI*2-da; const f=Math.max(.12,.85-da/Math.PI*.75); const [c0x,c0y]=P(a,ra*f),[c1x,c1y]=P(b,rb*f); return `M${x0} ${y0}C${c0x} ${c0y} ${c1x} ${c1y} ${x1} ${y1}`; };
+const routeCtx=r=>window.routeCtx(r);
+window.npGalaxy=function(M,D){ const R=250; const tgt=D.tgt;
+  const ctxs=CTX.filter(c=>ucsOf(c.id).length||c.id===tgt);
+  const w=ctxs.map(c=>c.id===tgt?Math.max(6,ucsOf(c.id).length+3):Math.max(3,ucsOf(c.id).length)); const tot=w.reduce((a,b)=>a+b,0); const gap=.045, span=Math.PI*2-gap*ctxs.length; let a0=-Math.PI/2+gap/2;
+  const seg={}; ctxs.forEach((c,i)=>{ const da=span*w[i]/tot; seg[c.id]={a0,a1:a0+da,name:c.name}; a0+=da+gap; });
+  const owners=new Set(M.pick.map(routeCtx)); let s='';
+  Object.entries(seg).forEach(([id,g])=>{ const mid=(g.a0+g.a1)/2; const [lx,ly]=P(mid,R-30); const isT=id===tgt, isO=owners.has(id)&&!isT;
+    s+=`<path class="arc ${isT?'tg':isO?'own':''}" d="${arcPath(g.a0,g.a1,R-12,R)}"><title>${esc(g.name)}</title></path><text class="alb ${isT?'tg':''}" x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central">${esc(g.name.length>16?g.name.slice(0,15)+'…':g.name)}</text>`;
+    const us=ucsOf(id); us.forEach((u,j)=>{ const a=g.a0+(g.a1-g.a0)*(j+.5)/(us.length+(isT?1:0)); const [x0,y0]=P(a,R+4),[x1,y1]=P(a,R+14); s+=`<line class="bar" x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}"><title>${esc(u.name)}</title></line>`; }); });
+  /* the new use case sits in its context */
+  const T=seg[tgt]; const na=T?T.a1-(T.a1-T.a0)/(ucsOf(tgt).length+1)/2:-Math.PI/2; const [n0x,n0y]=P(na,R+4),[n1x,n1y]=P(na,R+30),[tx,ty]=P(na,R+40); const flip=Math.cos(na)<0, deg=na*180/Math.PI;
+  s+=`<line class="bar nw" x1="${n0x}" y1="${n0y}" x2="${n1x}" y2="${n1y}"/><text class="ulb nw" transform="translate(${tx} ${ty}) rotate(${flip?deg+180:deg})" text-anchor="${flip?'end':'start'}" dominant-baseline="central">${esc(M.name.trim()||'New use case')} · new</text>`;
+  /* one line per API to the context that owns it */
+  const byOwner={}; M.pick.forEach(r=>{ const oc=routeCtx(r); (byOwner[oc]=byOwner[oc]||[]).push(r); });
+  let lk='';
+  Object.entries(byOwner).forEach(([oc,rs])=>{ const g=seg[oc]; if(!g||oc===tgt) return; rs.forEach((r,j)=>{ const a=g.a0+(g.a1-g.a0)*(j+.5)/rs.length; const iss=D.issues.find(x=>x.r===r); const res=iss&&M.dres[iss.key];
+      lk+=`<path class="lk ${iss?(res?'okd':'dep'):'http'}" d="${curve(na,a,R-14,R-14)}"><title>${esc(r)} · ${iss?(res?'Resolved':'Needs a decision'):'Called over HTTP, nothing breaks'}</title></path>`;
+      const [px,py]=P(a,R-22); if(iss){ s+=`<circle class="dot dep" cx="${px}" cy="${py}" r="4"><title>${esc(r)}</title></circle>`; } }); });
+  /* integration points the APIs reach */
+  const seen=new Set(); D.reach.forEach(({it,r})=>{ if(seen.has(it.id)) return; seen.add(it.id); const g=seg[it.to]||seg[it.from]; if(!g) return; const a=(g.a0+g.a1)/2+((seen.size%5)-2)*.04;
+    lk+=`<path class="lk info" d="${curve(na,a,R-14,R-60)}"><title>${esc(it.label)} · ${esc(cN(it.from))} → ${esc(ctxName(it.to))}</title></path>`; const [px,py]=P(a,R-62); s+=`<circle class="dot ${/event/i.test(it.type)?'ev':''}" cx="${px}" cy="${py}" r="4.5"><title>${esc(it.label)}</title></circle>`; });
+  const nI=D.issues.length, nR=D.issues.filter(x=>M.dres[x.key]).length;
+  const ctr=`<text class="ctr" x="0" y="-8" text-anchor="middle">${M.pick.length} API${M.pick.length===1?'':'s'} · ${owners.size} context${owners.size===1?'':'s'}</text><text class="ctr2" x="0" y="12" text-anchor="middle">${nI?`${nI-nR} to decide`:'Nothing breaks'}</text>`;
+  return `<div class="npg"><svg class="ig" viewBox="-430 -430 860 860" preserveAspectRatio="xMidYMid meet" aria-label="Where this use case’s APIs live">${lk}${s}${ctr}</svg>
+    <div class="ileg"><span><i class="dep"></i>Needs a decision</span><span><i class="ok"></i>Resolved</span><span><i class="http"></i>Called over HTTP</span><span><i class="info"></i>Reaches</span></div></div>`; };
+try{ if(window.renderNP) renderNP(); }catch(e){}
+})();
+</script>
+<style>
+/* FB68 · room header: members next to the name, members popover with invite */
+.room-h .t{align-items:center;gap:10px}
+.room-who.rw2{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 6px 0 4px;border-radius:999px;color:var(--text-2)}
+.room-who.rw2:hover{background:var(--surface);color:var(--text)}
+.room-who.rw2 .more{font:600 12px/18px var(--font);color:var(--text)}
+#memPop{position:fixed;z-index:80;width:280px;padding:8px;border-radius:12px;background:var(--panel);border:1px solid var(--border-strong);box-shadow:var(--shadow)}
+#memPop[hidden]{display:none}
+#memPop .mh{display:flex;align-items:center;gap:8px;padding:4px 6px 8px;font:600 13px/18px var(--font);color:var(--text)}
+#memPop .mh .sp{flex:1}
+#memPop .ml{max-height:260px;overflow:auto;display:flex;flex-direction:column}
+#memPop .mr{display:flex;align-items:center;gap:10px;padding:6px;border-radius:8px;font:500 13px/18px var(--font);color:var(--text)}
+#memPop .mr small{display:block;font:400 12px/16px var(--font);color:var(--text-3)}
+#memPop .mf{display:flex;padding:8px 6px 2px;border-top:1px solid var(--border);margin-top:6px}
+#memPop .mf .btn{width:100%;justify-content:center}
+.ipback{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 8px;margin:-2px 0 6px -4px;border-radius:6px;font:500 12px/18px var(--font);color:var(--text-2)}
+.ipback:hover{background:var(--surface);color:var(--text)}
+</style>
+
+<style>
+.ip .ip-f{display:flex;align-items:center;gap:8px;padding:10px 4px 2px;border-top:1px solid var(--border);margin-top:6px}
+.ip .ip-f .sp{flex:1}
+.ip .ipck{gap:10px}
+.ip .ipck.on{background:var(--selected)}
+</style>
 </body>
 </html>

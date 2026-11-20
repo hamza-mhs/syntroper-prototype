@@ -11669,12 +11669,13 @@ D.forEach(([k])=>{ L.pal[k]='sem'; L.mode[k]='dark'; });
 document.body.insertAdjacentHTML('beforeend','<div id="labBar"></div><div id="labNote"></div>');
 const bar=document.getElementById('labBar'), note=document.getElementById('labNote');
 function paint(){ const d=L.d; const p=L.pal[d], m=L.mode[d];
-  document.body.className=document.body.className.replace(/\bpal-\w+/g,'').replace(/\blight\b/,'').trim()+' pal-'+p+(m==='light'?' light':'');
+  document.body.className=document.body.className.replace(/\bpal-\w+/g,'').replace(/\blight\b/,'').trim()+' pal-'+p+(m==='light'?' light':''); document.body.classList.toggle('nodots',(L.bg||'dots')==='plain');
   bar.innerHTML=`<b class="ttl">Diagram colours</b>
     <div class="grp">${D.map(([k,l])=>`<button class="${d===k?'on':''}" data-lab="d" data-v="${k}">${l}</button>`).join('')}</div>
     <span class="sp"></span>
     <div class="grp"><span>Colours</span>${PAL.map(([k,l,c])=>`<button class="${p===k?'on':''}" data-lab="pal" data-v="${k}">${c?`<i class="sw" style="background:${c}"></i>`:''}${l}</button>`).join('')}</div>
     <div class="grp"><span>Mode</span>${[['dark','Dark'],['light','Light']].map(([k,l])=>`<button class="${m===k?'on':''}" data-lab="mode" data-v="${k}">${l}</button>`).join('')}</div>
+    <div class="grp"><span>Background</span>${[['dots','Dotted'],['plain','Plain']].map(([k,l])=>`<button class="${(L.bg||'dots')===k?'on':''}" data-lab="bg" data-v="${k}">${l}</button>`).join('')}</div>
     ${d==='seq'?`<div class="grp"><span>Level</span>${[['sys','1 System'],['ctx','2 Contexts'],['code','3 Code']].map(([k,l])=>`<button class="${L.lv===k?'on':''}" data-lab="lv" data-v="${k}">${l}</button>`).join('')}</div>`:''}`;
   if(d==='dev'&&window.LAB_DEVNOTE){ note.innerHTML=LAB_DEVNOTE; return; }
   note.innerHTML = `<b>Each diagram keeps its own colours and mode.</b> Hover, click and selection work as in the prototype: hover is a lighter solid outline, selected is strong and thick, connected items stay full, the rest dims. ${m==='light'?'Light mode uses solid pastel fills with coloured borders.':'Dark mode uses the same hues as transparent tints.'}`; }
@@ -11685,7 +11686,7 @@ function show(){ const d=L.d; if(window.labDev) labDev(d==='dev'); if(d==='dev')
   else { S.side={v:'item',sel:{t:'uc',id:'cancel-order'}}; S.ucx.fv = d==='seq'?'seq':'cards'; S.ucx.sl=L.lv; S.ucx.flow='cancel-order'; render(); }
   }catch(e){ console.error(e); } paint(); }
 document.addEventListener('click', e=>{ const b=e.target.closest('[data-lab]'); if(!b) return; const k=b.dataset.lab, v=b.dataset.v;
-  if(k==='d'){ L.d=v; show(); return; } if(k==='pal') L.pal[L.d]=v; if(k==='mode') Object.keys(L.mode).forEach(x=>L.mode[x]=v); if(k==='lv'){ L.lv=v; show(); return; }
+  if(k==='d'){ L.d=v; show(); return; } if(k==='pal') L.pal[L.d]=v; if(k==='mode') Object.keys(L.mode).forEach(x=>L.mode[x]=v); if(k==='bg'){ L.bg=v; document.body.classList.toggle('nodots',v==='plain'); } if(k==='lv'){ L.lv=v; show(); return; }
   paint(); if(window.renderFlowCanvas&&S.ucx.flow) renderFlowCanvas(); }, true);
 try{ S.nav.open=false; S.tab='codona'; S.wn.guide=false; wnApplyGuide&&wnApplyGuide(); }catch(e){}
 window.LAB=L; window.labShow=show; window.labPaint=paint;
@@ -11962,6 +11963,12 @@ body.lab.light .sq-ok,body.lab.light .sq-end{background:rgba(52,199,89,.14);colo
 /* lab chrome */
 body.lab.light #labBar{background:#ffffff;border-color:#e4e7f0}
 body.lab.light #labBar button.on{background:#e4e7f0}
+</style>
+<style>body.lab.nodots .stage,body.lab.nodots #ucFlow,body.lab.nodots .wstage,body.lab.nodots #devGx,body.lab.nodots #dbd{background-image:none!important}</style>
+<style>
+body.lab:not(.light):not(.nodots) .stage,body.lab:not(.light):not(.nodots) #ucFlow,body.lab:not(.light):not(.nodots) #dbd,body.lab:not(.light):not(.nodots) #devGx,body.lab:not(.light):not(.nodots) .wstage{background-image:radial-gradient(circle at 1px 1px,#2f3341 1.1px,transparent 1.3px)!important;background-size:18px 18px!important}
+body.lab.light:not(.nodots) .stage,body.lab.light:not(.nodots) #ucFlow,body.lab.light:not(.nodots) #dbd,body.lab.light:not(.nodots) #devGx,body.lab.light:not(.nodots) .wstage{background-image:radial-gradient(circle at 1px 1px,#c1bdda 1.1px,transparent 1.3px)!important;background-size:18px 18px!important}
+body.lab.nodots .stage,body.lab.nodots #ucFlow,body.lab.nodots #dbd,body.lab.nodots #devGx,body.lab.nodots .wstage{background-image:none!important}
 </style>
 </body>
 </html>

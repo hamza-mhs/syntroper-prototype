@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Codona · Diagram states</title>
+<title>Codona Prototype (Copy)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script>/* d3 v7.9.0 inlined */
@@ -8155,7 +8155,7 @@ function ucReviewHTML(id){ const R=UCR[id], a=ASSIGN['uc:'+id], rv=R.rv, F=FLOW[
   else if(rv==='rejected') call=`<div class="ucr-c bad">${I('ban',16)}<div><b>Rejected · ${esc(rejTxt(R))}</b><span>${R.note?'“'+esc(R.note)+'” ':''}${esc(R.by)} · ${esc(R.when)}. It’s off the Galaxy, and the next scan won’t suggest it again.</span></div><button class="btn sm ghost" data-act="ucrestore" data-arg="${id}">Restore</button></div>`;
   else if(rv==='changes') call=`<div class="ucr-c warn">${I('edit',16)}<div><b>Changes requested</b><span>“${esc(R.note)}” · ${esc(R.by)}, ${esc(R.when)}</span></div></div>`;
   const hint = R.hint && ucOpenRv(id) && UCB[R.hint.ref] ? `<div class="ucr-c ai">${sIc(16)}<div><span>${esc(R.hint.t)}</span><button class="btn sm" data-act="ucrej" data-arg="${id}|${R.hint.why||'part'}|${R.hint.ref}">${R.hint.why==='notgoal'?'Reject as not a user goal':'Reject as part of '+esc(UCB[R.hint.ref].name)}</button></div></div>` : '';
-  const acts = ucOpenRv(id) ? `<div class="ucr-a"><button class="btn primary sm" data-act="ucaccept" data-arg="${id}">${I('check',14)}Accept</button><button class="btn sm" data-act="ucchg" data-arg="${id}">Request changes</button><button class="btn sm rj" data-act="ucrej" data-arg="${id}">Reject</button></div>` : '';
+  const acts = ucOpenRv(id) ? `<div class="ucr-a"><button class="btn primary sm" data-act="ucaccept" data-arg="${id}">${I('check',14)}Accept</button><button class="btn sm ucpc" data-act="ucchg" data-arg="${id}">${sIc(14)}Propose changes</button><button class="btn sm rj" data-act="ucrej" data-arg="${id}">Reject</button></div>` : '';
   return `<div class="ucr"><div class="ucr-f"><span>Review</span><div>${rvChip(id)}</div><span>Source</span><div>${src}</div><span>Assigned to</span><div>${who}</div></div>${call}${hint}${acts}</div>`; }
 window.ucReviewHTML=ucReviewHTML;
 
@@ -9432,7 +9432,7 @@ const pre = (b, all) => { const n=b.lines.length, h0=b.hl.length?b.hl[0]:0; cons
 const blockKindIc = k => k==='Screen'?'browser':k==='Server action'?'zap':k==='API route'?'socket':k==='Workflow'?'dataflow4':k==='Workflow step'?'footprints':k==='Subscriber'?'zap':k==='Module link'?'link2':'filecode';
 function blockHTML(id, b, k){ const key=id+'|'+b.file+'|'+b.name; const all=!!S.uct.code[key]; const n=b.lines.length;
   return `<div class="cbk"><div class="cbk-h"><span class="cbk-i">${fbI(blockKindIc(b.kind),14)}</span><b title="${esc(b.name)}">${esc(b.name)}</b><span class="sp"></span><span class="ityp">${esc(b.kind)}</span></div>
-    <div class="cbk-f"><code title="${esc(b.file)}">${esc(b.file.split('/').slice(-3).join('/'))}</code><span>L${b.start}–${b.start+n-1}</span>${b.it?`<button class="lnk2" data-act="fbev" data-arg="${esc(b.file)}">Open</button>`:''}</div>
+    <div class="cbk-f"><code title="${esc(b.file)}">${esc(b.file.split('/').slice(-3).join('/'))}</code><span>L${b.start}–${b.start+n-1}</span><button class="lnk2" data-act="fbev" data-arg="${esc(b.file)}" title="Open ${esc(b.file)}">${fbI('filecode',12)}Open entire file</button></div>
     ${pre(b, all)}${n>12?`<button class="cbk-more" data-act="cbkmore" data-arg="${esc(key)}">${I(all?'chevron-up':'chevron-down',14)}${all?'Show less':`Show all ${n} lines`}</button>`:''}</div>`; }
 
 function stepOfApi(F,a){ const k=F.steps.findIndex(s=>s.apis.includes(a)); return k>=0?k+1:null; }
@@ -9454,20 +9454,32 @@ function tabBody(id, tab){ const F=ucFlowOf(id), u=UCB[id]; const hl=S.ucx.hl&&S
           ${open?dep.map(x=>`<button data-act="gsel" data-arg="uc:${x.id}" style="padding-left:28px"><span>${esc(x.name)}</span><span class="m">${esc(CTB[x.ctx].name)}</span></button>`).join(''):''}</div></div>`; }).join('') || '<div class="uci-s">No integration points.</div>'; }
   const I0=impactOf([id]); const xs=I0.others.filter(x=>!st||x.apis.some(a=>st.apis.includes(a))||x.ints.some(i=>apis.some(a=>opInts(a).includes(i))));
   return byCtx(xs).map(([c,ys])=>`<div class="ucg">${esc(c.id==='unassigned'?'No context':c.name)} · ${ys.length}</div><div class="uci"><div class="uci-l">${ys.map(x=>`<button data-act="gsel" data-arg="uc:${x.u.id}">${kindIc('usecase',14)}<span>${esc(x.u.name)}</span><span class="m">${esc(why(x))}</span></button>`).join('')}</div></div>`).join('') || '<div class="uci-s">No other use case shares its APIs or integration points.</div>'; }
-function summaryText(id){ const F=ucFlowOf(id), u=UCB[id]; const alts=F.alts.filter(a=>!a._del);
-  const apis=new Set(F.steps.flatMap(s=>s.apis)).size, files=new Set(codeOf(id).map(b=>b.file)).size; const pl=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
-  return `${esc(u.goal)} <b>${pl(F.steps.length,'step')}</b>, ${pl(apis,'API call')} and ${pl(files,'file')}.${alts.length?` Other paths: ${alts.slice(0,3).map(a=>esc(a.t.charAt(0).toLowerCase()+a.t.slice(1))).join(', ')}${alts.length>3?` and ${alts.length-3} more`:''}.`:''}`; }
+function summaryText(id){ const F=ucFlowOf(id), u=UCB[id]; const alts=F.alts.filter(a=>!a._del); const steps=F.steps.filter(x=>!x._del);
+  const P=(u.personas||[]).map(p=>(window.PERSONAS||[]).find(x=>x.id===p)).filter(Boolean); const who=P.length?P[0].name.toLowerCase():'user';
+  const bs=codeOf(id); const lf=t=>t?t.charAt(0).toLowerCase()+t.slice(1):'';
+  const vb=t=>{ const [w,...r]=t.split(' '); const lw=w.toLowerCase(); const v=/(s|sh|ch|x|z)$/.test(lw)?lw+'es':/[^aeiou]y$/.test(lw)?lw.slice(0,-1)+'ies':lw+'s'; return [v,...r].join(' '); };
+  const fchip=(f,i)=>`<button class="sxc f" data-act="sxopen" data-arg="${id}|${i}|f|${esc(f)}" title="${esc(f)}">${fbI('filecode',12)}${esc(f.split('/').pop())}</button>`;
+  const achip=(a,i)=>{ const [m,...q]=a.split(' '); return `<button class="sxc a" data-act="sxopen" data-arg="${id}|${i}|a|${esc(a)}" title="${esc(a)}"><b class="meth ${m.toLowerCase()}">${m}</b>${esc(q.join(' '))}</button>`; };
+  const pchip=(it,i,a)=>`<button class="sxc p" data-act="fxpt0" data-arg="${id}|${i}|${it.id}|${esc(a)}" title="${esc(ctxName(it.to))}">${kindIc('point',12)}${esc(it.label)}</button>`;
+  const W=['First','Then','Next','After that'];
+  const seen=new Set();
+  const L=steps.map((x,k)=>{ const i=F.steps.indexOf(x)+1; const files=[...new Set(bs.filter(b=>b.step===i&&b.kind!=='API route'&&b.kind!=='Config').map(b=>b.file))].filter(f=>!seen.has(f)).slice(0,2); files.forEach(f=>seen.add(f));
+    const w=k===steps.length-1&&k>0?'Finally':W[Math.min(k,3)];
+    const pts=[]; x.apis.forEach(a=>opInts(a).forEach(t=>{ if(INB[t]&&!pts.some(z=>z[0].id===t)) pts.push([INB[t],a]); }));
+    return `${w}, the ${esc(who)} ${esc(vb(x.t))}${files.length?` ${/ in /.test(x.t)?'via':'in'} ${files.map(f=>fchip(f,i)).join(' and ')}`:''}, and the system ${esc(lf(respOf(x)))}${x.apis.length?` through ${x.apis.map(a=>achip(a,i)).join(' and ')}`:''}${pts.length?`, which reaches ${pts.map(([t,a])=>pchip(t,i,a)).join(', ')}`:''}.`; });
+  const A=alts.slice(0,2).map(a=>`If ${esc(lf(a.t))}${a.at?` at step ${a.at}`:''}, ${esc(lf(a.steps[0]||''))}${a.end?`. Result: ${esc(lf(a.end))}`:''}.`);
+  const AP=[], PT=[]; steps.forEach(x=>{ const i=F.steps.indexOf(x)+1; x.apis.forEach(a=>{ if(!AP.some(z=>z[0]===a)) AP.push([a,i]); opInts(a).forEach(t=>{ if(INB[t]&&!PT.some(z=>z[0].id===t)) PT.push([INB[t],i,a]); }); }); });
+  const more=(n,k)=>n>k?` and ${n-k} more`:'';
+  const first=steps[0], last=steps[steps.length-1];
+  return `${esc(u.goal)} ${steps.length} step${steps.length===1?'':'s'}, from “${esc(first?first.t:'')}” to “${esc(last?last.t:'')}”.${AP.length?` Calls ${AP.slice(0,2).map(([a,i])=>achip(a,i)).join(' ')}${more(AP.length,2)}`:''}${PT.length?`${AP.length?', which reaches':' Reaches'} ${PT.slice(0,2).map(([t,i,a])=>pchip(t,i,a)).join(' ')}${more(PT.length,2)}`:''}${AP.length||PT.length?'.':''}${alts.length?` <span class="sxalt">${alts.length===1?'One other path':alts.length+' other paths'}: ${alts.slice(0,2).map(a=>esc(lf(a.t))).join(', ')}${more(alts.length,2)}.</span>`:''}`; }
 function ucf2HTML(id){ const F=ucFlowOf(id); const pv=S.ai.pend[id]; const tab=S.uct.tab[id]||'code'; const on=S.ucx.flow===id; const hl=S.ucx.hl&&S.ucx.hl.id===id?S.ucx.hl.i:null;
   const dec=new Set(F.alts.filter(a=>!a._del&&a.at).map(a=>a.at)).size, nAlt=F.alts.filter(a=>!a._del).length; const pl=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
   const apis=new Set(F.steps.flatMap(s=>s.apis)).size, pts=UCB[id].i.filter(i=>INB[i]).length, aff=impactOf([id]).others.length, blocks=codeOf(id).length;
   const T=[['code','Code blocks',blocks],['apis','APIs',apis],['pts','Integration points',pts],['aff','Affected use cases',aff]];
   return `<div class="ucf2">${pv?`<div class="ucpv">${sIc(16)}<span>Previewing Syntroper’s change in the flowchart</span><button class="btn sm" data-act="aidiscard" data-arg="${id}">Discard</button><button class="btn primary sm" data-act="aiapply" data-arg="${id}">Apply</button></div>`:''}
-    <div class="ucf2-h"><b>Diagram</b><span class="sp"></span><button class="btn sm ${on?'':'primary'}" data-act="ucview" data-arg="${id}|${on?'text':'flow'}">${I(on?'x':'flow',14)}${on?'Close diagram':'Open diagram'}</button></div>
+    <div class="ucf2-h"><b>Diagram</b><span class="sp"></span><button class="btn sm ${on?'':'primary'}" data-act="ucview" data-arg="${id}|${on?'text':'flow'}">${I(on?'x':'flow',14)}${on?'Close diagram':'Open sequence steps'}</button></div>
     <div class="aisum"><div><small>Summary by Syntroper</small><p>${summaryText(id)}</p></div></div>
     <div class="stats"><span>${I('fc-proc',14)}${pl(F.steps.length,'step')}</span><span>${I('fc-dec',14)}${pl(dec,'decision')}</span><span>${I('fc-alt',14)}${pl(nAlt,'other path')}</span></div>
-    <div class="uct uct5" role="tablist" aria-label="What to show">${T.map(([k,l,n])=>`<button role="tab" aria-selected="${tab===k}" class="${tab===k?'on':''}" data-act="ucttab" data-arg="${id}|${k}">${({apis:'APIs',code:'Code',pts:'Integration points',aff:'Affected'})[k]}<span class="count">${n}</span></button>`).join('')}</div>
-    ${hl?`<div class="ucfilt">${I('fc-proc',14)}<span>Step ${hl} · ${esc(F.steps[hl-1]?F.steps[hl-1].t:'')}</span><button class="lnk" data-act="ucstep" data-arg="${id}|${hl}">Show all steps</button></div>`:''}
-    <div class="ucl">${tabBody(id, tab)}</div>
     <button class="ucask" data-act="aiopen" data-arg="${id}">${sIc(20)}<span>Ask Syntroper to change this</span>${I('arrow-right',14)}</button></div>`; }
 { const _ih=itemHTML; itemHTML=function(sel,o={}){ let h=_ih(sel,o); if((o&&o.lib)||sel.t!=='uc'||!UCR[sel.id]) return h; const id=sel.id;
     const a=h.indexOf('<div class="ucf">'); if(a>=0){ let b=h.indexOf('<div class="cx-entryw">',a); if(b<0) b=h.indexOf('<div class="conn">',a); if(b>a) h=h.slice(0,a)+ucf2HTML(id)+h.slice(b); }
@@ -9514,7 +9526,7 @@ function nodeHTML(id, n, L){ const hl=S.ucx.hl&&S.ucx.hl.id===id?S.ucx.hl.i:null
     if(n.k==='dec') return `<div class="fn f2-dec" style="${pos}"><svg width="${n.w}" height="${n.h}"><polygon points="${n.w/2},1 ${n.w-1},${n.h/2} ${n.w/2},${n.h-1} 1,${n.h/2}"/></svg><span>${esc(n.t)}</span></div>`;
     return `<div class="fn f2-alt ${n.a.kind} ${n.a._new?'nw':''} ${n.a._del?'dl':''}" role="button" tabindex="0" data-act="ucstep" data-arg="${id}|${n.a.at||1}" style="${pos}"><span class="t"><span class="ki">${altIc(n.a.kind)}</span>${esc(n.a.t)}</span>${n.a.steps.length?`<small>${esc(n.a.steps[0])}${n.a.steps.length>1?' …':''}</small>`:''}</div>`; }
   if(n.k==='term') return `<div class="fn fx-c term" style="${pos}"><div class="hd">${n.end?I('check-circle',16):kindIc('channel',14)}<span class="t">${esc(n.t)}</span><span class="sp"></span>${symIc('fc-term',n.end?'End':'Start')}</div>${n.sub?`<small>Starts when ${esc(n.sub.charAt(0).toLowerCase()+n.sub.slice(1))}</small>`:''}</div>`;
-  if(n.k==='proc'){ const s=n.s; const O=fxO(id,n.i); return `<div class="fn fx-c ${hl===n.i?'on':''} ${O?'open':''} ${s._new?'nw':''} ${s._del?'dl':''}" role="button" tabindex="0" data-act="ucstep" data-arg="${id}|${n.i}" data-ni="${n.i}" style="${pos}"><div class="hd"><span class="n">${n.i}</span><span class="sp"></span>${symIc('fc-proc','Step')}</div><span class="t">${esc(s.t)}</span><span class="rs"><b>System</b> ${esc(respOf(s))}</span>${fxChips(id,n.i,s)}${O?fxPanel(id,n.i,O):''}</div>`; }
+  if(n.k==='proc'){ const s=n.s; const O=fxO(id,n.i); return `<div class="fn fx-c ${hl===n.i?'on':''} ${O?'open':''} ${s._new?'nw':''} ${s._del?'dl':''}" role="button" tabindex="0" data-act="ucstep" data-arg="${id}|${n.i}" data-ni="${n.i}" style="${pos}"><div class="hd"><span class="n">${n.i}</span><span class="sp"></span>${symIc('fc-proc','Step')}</div><span class="t">${esc(s.t)}</span><span class="rs"><b>System</b> ${esc(respOf(s))}</span>${(S.fx.exp[id+'|'+n.i]||O)?fxChips(id,n.i,s)+`<button class="fxtg on" data-act="fxexp" data-arg="${id}|${n.i}" aria-expanded="true">${I('chevron-up',14)}Hide details</button>`:fxSum(id,n.i,s)}${O?fxPanel(id,n.i,O):''}</div>`; }
   if(n.k==='dec') return `<div class="fn fx-c dec" style="${pos}"><div class="hd"><span class="t">${esc(n.t)}</span><span class="sp"></span>${symIc('fc-dec','Decision')}</div><div class="br"><span><b>Yes</b>Continue to the next step</span>${n.al.map(({a})=>`<span><b>${esc(edgeLbl(a))}</b>${esc(a.t)}</span>`).join('')}</div></div>`;
   return `<div class="fn fx-c alt ${n.a.kind} ${n.a._new?'nw':''} ${n.a._del?'dl':''}" role="button" tabindex="0" data-act="ucstep" data-arg="${id}|${n.a.at||1}" style="${pos}"><div class="hd"><span class="ki">${altIc(n.a.kind)}</span><span class="t">${esc(n.a.t)}</span><span class="sp"></span>${symIc('fc-alt','Other path')}</div><small>${n.a.steps.map(esc).join(' · ')}</small><small style="color:var(--text)">${n.a.back?'↩ Back to step '+n.a.back:'Ends · '+esc(n.a.end||'')}</small></div>`; }
 function build(id, MH){ if(S.ucx.fv==='seq') return buildSeq(id); const L=layout(id, S.ucx.fv, MH); const mid=L.cx; let p='', lb='';
@@ -9542,7 +9554,10 @@ window.renderFlowCanvas=function(focus){ const id=S.ucx.flow; const on=!!id && S
 { const _rc=renderChrome; renderChrome=function(){ _rc(); if(!S.ucx.flow) return; const v=S.ucx.fv;
     $('#cTop').insertAdjacentHTML('beforeend', `${v==='seq'?`<div class="fvt float sql" role="tablist" aria-label="Level">${[['sys','System'],['ctx','Bounded contexts'],['code','Code']].map(([k,l],i)=>`<button role="tab" aria-selected="${S.ucx.sl===k}" class="${S.ucx.sl===k?'on':''}" data-act="ucsl" data-arg="${k}"><span class="lvn">${i+1}</span>${l}</button>`).join('')}</div>`:''}<div class="fvt float" role="tablist" aria-label="Diagram">${[['seq','Sequence diagram'],['cards','Flowchart']].map(([k,l])=>`<button role="tab" aria-selected="${v===k||(k==='cards'&&v==='symbols')}" class="${v===k||(k==='cards'&&v==='symbols')?'on':''}" data-act="ucfv" data-arg="${k}">${l}</button>`).join('')}</div>`); }; }
 /* FB33 · code inside the flowchart: click a file, an API or "Show all code" on a step and the code opens in the card */
-S.fx = {open:{}, int:{}};
+S.fx = {open:{}, int:{}, exp:{}};
+function fxSum(id,i,s){ const bs=codeOf(id).filter(b=>b.step===i); const nf=new Set(bs.map(b=>b.file)).size; const np=new Set(s.apis.flatMap(opInts).filter(x=>INB[x])).size; const pl=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
+  const parts=[nf?pl(nf,'file'):'', s.apis.length?pl(s.apis.length,'API'):'', np?pl(np,'integration point'):''].filter(Boolean);
+  return parts.length?`<button class="fxtg" data-act="fxexp" data-arg="${id}|${i}" aria-expanded="false">${I('chevron-down',14)}<span>${parts.join(' · ')}</span></button>`:''; }
 let lastL=null;
 const fxO = (id,i) => S.fx.open[id+'|'+i];
 function fxChips(id,i,s){ const O=fxO(id,i); const bs=codeOf(id).filter(b=>b.step===i); const files=[...new Set(bs.map(b=>b.file))];
@@ -9551,7 +9566,11 @@ function fxChips(id,i,s){ const O=fxO(id,i); const bs=codeOf(id).filter(b=>b.ste
   const ac=s.apis.map(a=>{ const [m,...p]=a.split(' '); const on=O&&O.k==='a'&&O.v===a; const ni=opInts(a).length;
     return `<button class="apc fxa ${on?'on':''}" data-act="fxopen" data-arg="${id}|${i}|a|${esc(a)}" title="${esc(a)}"><span class="meth ${m.toLowerCase()}">${m}</span><code>${esc(p.join(' '))}</code>${ni?`<em class="hpt" data-hp="i|${esc(a)}">${kindIc('point',12)}${ni}</em>`:''}</button>`; }).join('');
   const all=O&&O.k==='all';
-  return `${fc?`<span class="fxfs">${fc}</span>`:''}${ac?`<span class="ap">${ac}</span>`:''}${bs.length?`<button class="fxall ${all?'on':''}" data-act="fxopen" data-arg="${id}|${i}|all|">${fbI('code',12)}${all?'Hide code':`Show all ${bs.length} code block${bs.length===1?'':'s'}`}</button>`:''}`; }
+  const pts=[]; s.apis.forEach(a=>opInts(a).forEach(t=>{ if(INB[t]&&!pts.some(z=>z[0].id===t)) pts.push([INB[t],a]); }));
+  const pc=pts.map(([it,a])=>{ const on=O&&O.k==='a'&&O.v===a&&S.fx.int[id+'|'+i]===it.id; return `<button class="fxp ${on?'on':''}" data-act="fxpt" data-arg="${id}|${i}|${it.id}|${esc(a)}" title="${esc(intKind(it)[1])} · ${esc(CTB[it.from]?CTB[it.from].name:'')} → ${esc(ctxName(it.to))}">${kindIc('point',12)}<span>${esc(it.label)}</span><em>${esc(ctxName(it.to))}</em></button>`; }).join('');
+  const us=[...new Set(s.apis.flatMap(a=>(OPS[a]||{users:[]}).users))].filter(x=>x!==id&&UCB[x]&&rvOf(x)!=='rejected');
+  const sh=us.length?`<span class="fxsh" title="${esc(us.map(x=>UCB[x].name).join(', '))}">${kindIc('usecase',12)}Its APIs are shared with ${us.length} other use case${us.length===1?'':'s'}: ${esc(us.slice(0,2).map(x=>UCB[x].name).join(', '))}${us.length>2?` +${us.length-2}`:''}</span>`:'';
+  return `${fc?`<span class="fxfs">${fc}</span>`:''}${ac?`<span class="ap">${ac}</span>`:''}${pc?`<span class="fxps">${pc}</span>`:''}${sh}${bs.length?`<button class="fxall ${all?'on':''}" data-act="fxopen" data-arg="${id}|${i}|all|">${fbI('code',12)}${all?'Hide code':`Show all ${bs.length} code block${bs.length===1?'':'s'}`}</button>`:''}`; }
 function fxPanel(id,i,O){ const bs=codeOf(id).filter(b=>b.step===i); let body='', title='', sub='';
   if(O.k==='f'){ const L=bs.filter(b=>b.file===O.v); title=esc(O.v.split('/').slice(-3).join('/')); sub=`${L.length} block${L.length===1?'':'s'} in this file`; body=L.map(b=>blockHTML(id,b)).join(''); }
   else if(O.k==='a'){ const r=O.v; const b=codeOf(id).find(x=>x.route===r); const ints=opInts(r).map(x=>INB[x]).filter(Boolean); const us=(OPS[r]||{users:[]}).users.filter(x=>x!==id&&UCB[x]&&rvOf(x)!=='rejected');
@@ -9566,6 +9585,11 @@ function fxPanel(id,i,O){ const bs=codeOf(id).filter(b=>b.step===i); let body=''
 function keepPos(before,i){ renderFlowCanvas(); const after=lastL&&lastL.N.find(n=>n.k==='proc'&&n.i===i);
   if(before&&after&&(before.x!==after.x||before.y!==after.y)){ d3.select(box).call(zoom.transform, d3.zoomIdentity.translate(T.x-(after.x-before.x)*T.k, T.y-(after.y-before.y)*T.k).scale(T.k)); } }
 Object.assign(ACT,{
+  fxexp(a){ const [id,si]=a.split('|'); const i=+si; const before=lastL&&lastL.N.find(n=>n.k==='proc'&&n.i===i);
+    if(S.fx.exp[a]||S.fx.open[a]){ delete S.fx.exp[a]; delete S.fx.open[a]; S.fx.int[a]=null; } else S.fx.exp[a]=true; keepPos(before,i); },
+  fxpt(a){ const [id,si,itid,...r]=a.split('|'); const i=+si, api=r.join('|'); const key=id+'|'+i; const before=lastL&&lastL.N.find(n=>n.k==='proc'&&n.i===i); const cur=S.fx.open[key];
+    if(cur&&cur.k==='a'&&cur.v===api&&S.fx.int[key]===itid){ delete S.fx.open[key]; S.fx.int[key]=null; } else { S.fx.open[key]={k:'a',v:api}; S.fx.int[key]=itid; }
+    S.ucx.hl={id,i}; renderSide(); keepPos(before,i); },
   fxopen(a){ const p=a.split('|'); const id=p[0], i=+p[1], k=p[2], v=p.slice(3).join('|'); const key=id+'|'+i; const cur=S.fx.open[key];
     const before=lastL&&lastL.N.find(n=>n.k==='proc'&&n.i===i);
     if(k==='x') delete S.fx.open[key];
@@ -9579,7 +9603,7 @@ Object.assign(ACT,{
 { const _c=ACT.cbkmore; ACT.cbkmore=function(k){ _c(k); if(S.ucx.flow) renderFlowCanvas(); }; }
 
 /* FB38 · sequence diagram, three levels of the same story: System · Bounded contexts · Code */
-S.ucx.sl = S.ucx.sl || 'sys'; S.sq = {open:null};
+S.ucx.sl = S.ucx.sl || 'sys'; S.sq = {open:null, dec:{}, dmenu:null};
 const rCtx = r => { if(window.API_OWNER&&API_OWNER[r]) return API_OWNER[r]; const o=OPS[r]; return o&&UCB[o.users[0]] ? UCB[o.users[0]].ctx : 'unassigned'; };
 const cLabel = c => c==='unassigned' ? 'No context' : (CTB[c]?CTB[c].name:c);
 function seqModel(id){ const F=ucFlowOf(id), u=UCB[id]; const lv=S.ucx.sl; const B=codeOf(id);
@@ -9587,14 +9611,16 @@ function seqModel(id){ const F=ucFlowOf(id), u=UCB[id]; const lv=S.ucx.sl; const
   const app = u.ch==='both'?'Storefront · Admin':u.ch==='none'?'Jobs and webhooks':CHANNELS[u.ch].name;
   const L=[]; const lane=(k,label,sub,kind)=>{ let x=L.find(l=>l.k===k); if(!x){ x={k,label,sub,kind}; L.push(x); } return x; };
   lane('p', per||'User', 'Persona', 'person');
-  lane('app', lv==='code'?'Screens':app, lv==='code'?app:(u.ch==='none'?'Trigger':'App'), 'channel');
   const sysName=(S.bs&&S.bs.name)||'Commerce platform'; const M=[];
-  F.steps.forEach((s,i)=>{ const st=i+1; const fl={nw:!!s._new, dl:!!s._del};
+  if(lv==='sys') lane('sys', sysName, 'Business system', 'system'); else lane('app', lv==='code'?'Screens':app, lv==='code'?app:(u.ch==='none'?'Trigger':'App'), 'channel');
+  const UI = lv==='sys' ? 'sys' : 'app'; let stop=false;
+  F.steps.forEach((s,i)=>{ if(stop) return; const st=i+1; const fl={nw:!!s._new, dl:!!s._del};
     M.push({row:'step', step:st, t:s.t, ...fl});
     const scr=B.find(b=>b.step===st&&(b.kind==='Screen'||b.kind==='Server action'));
-    M.push({f:'p', to:'app', label:s.t, kind:'act', step:st, code:scr, O:scr?{k:'f',v:scr.file}:null, ...fl});
+    /* system level: one arrow per user action; the APIs behind it are sidebar detail */
+    M.push({f:'p', to:UI, label:s.t, kind:'act', step:st, code:scr, apis:s.apis, O: lv==='sys'&&s.apis.length?{k:'a',v:s.apis[0]}:(scr?{k:'f',v:scr.file}:null), ...fl});
     s.apis.forEach(a=>{ const rb=B.find(b=>b.route===a);
-      if(lv==='sys'){ lane('sys', sysName, 'Business system', 'system'); M.push({f:'app', to:'sys', label:a, kind:'call', mono:1, step:st, code:rb, O:{k:'a',v:a}, ...fl}); }
+      if(lv==='sys'){ return; }
       else if(lv==='ctx'){ const oc=rCtx(a); const ol=lane('c:'+oc, cLabel(oc), 'Bounded context', 'context'); M.push({f:'app', to:ol.k, label:a, kind:'call', mono:1, step:st, code:rb, O:{k:'a',v:a}, ...fl});
         opInts(a).forEach(iid=>{ const it=INB[iid]; if(!it) return; const tk=CTB[it.to]?'c:'+it.to:'x:'+it.to; const fk=CTB[it.from]?'c:'+it.from:ol.k;
           if(!L.find(l=>l.k===fk)) lane(fk, cLabel(it.from), 'Bounded context', 'context');
@@ -9609,33 +9635,33 @@ function seqModel(id){ const F=ucFlowOf(id), u=UCB[id]; const lv=S.ucx.sl; const
           M.push({f:rl.k, to:fk, label:it.symbol.length>34?it.symbol.slice(0,32)+'…':it.symbol, kind:/event/i.test(it.type)?'event':'call', mono:1, step:st, code:ib, O:ib?{k:'f',v:ib.file}:null, ...fl}); });
         M.push({f:rl.k, to:'app', label:'', kind:'ret', step:st, ...fl}); }
     });
-    if(lv==='sys' && s.apis.length) M.push({f:'sys', to:'app', label:'', kind:'ret', step:st, ...fl});
-    M.push({f:'app', to:'p', label:respOf(s), kind:'ret', step:st, sys:1, ...fl});
-    const al=F.alts.map((a,k)=>({a,k})).filter(x=>x.a.at===st); if(al.length) M.push({row:'alt', step:st, al});
+    M.push({f:UI, to:'p', label:respOf(s), kind:'ret', step:st, sys:1, ...fl});
+    const al=F.alts.map((a,k)=>({a,k})).filter(x=>x.a.at===st&&!x.a._del);
+    if(al.length){ const cur=S.sq.dec[id+'|'+st]||'ok'; M.push({row:'dec', step:st, al, cur, lane:UI, next:F.steps[st]?F.steps[st].t:F.result});
+      if(cur!=='ok' && F.alts[+cur]){ const a=F.alts[+cur]; (a.steps||[]).forEach(t=>M.push({f:UI, to:'p', label:t, kind:'ret', step:st, sys:1, altk:a.kind}));
+        M.push({row:'end', t:a.back?`Back to step ${a.back}`:(a.end||a.t), alt:a.kind, back:a.back}); stop=true; } }
   });
-  const any=F.alts.map((a,k)=>({a,k})).filter(x=>!x.a.at); if(any.length) M.push({row:'alt', step:0, al:any});
-  M.push({row:'end', t:F.result});
+  if(!stop) M.push({row:'end', t:F.result});
   return {L, M, F, lv}; }
 const LANE_IC = {person:()=>I('user',14), channel:()=>kindIc('channel',14), system:()=>fbI('cube4',14), context:()=>kindIc('context',14), external:()=>kindIc('external',14), api:()=>kindIc('api',14), code:()=>fbI('filecode',14)};
-function buildSeq(id){ const X=seqModel(id); const LW=X.L.length<=4?320:250, G=56, TOP=86; const n=X.L.length; const cx=i=>G+i*LW+LW/2; const li=k=>X.L.findIndex(l=>l.k===k);
+function buildSeq(id){ const X=seqModel(id); const F2=X.F; const LW=X.L.length<=4?320:250, G=56, TOP=86; const n=X.L.length; const cx=i=>G+i*LW+LW/2; const li=k=>X.L.findIndex(l=>l.k===k);
   const hl=S.ucx.hl&&S.ucx.hl.id===id?S.ucx.hl.i:null; let y=TOP; let svg='', html=''; const W=G+n*LW;
   const arrow=(x,yy,dir,open)=>dir>0?`M${x-7} ${yy-4}L${x} ${yy}L${x-7} ${yy+4}${open?'':'Z'}`:`M${x+7} ${yy-4}L${x} ${yy}L${x+7} ${yy+4}${open?'':'Z'}`;
   X.L.forEach((l,i)=>{ html+=`<div class="sq-lh k-${l.kind}" style="left:${cx(i)-LW/2+12}px;top:0;width:${LW-24}px">${(LANE_IC[l.kind]||LANE_IC.code)()}<span><b title="${esc(l.label)}">${esc(l.label)}</b><small>${esc(l.sub||'')}</small></span></div>`; });
   const rows=[];
-  X.M.forEach((m,k)=>{ const on = hl!=null && m.step===hl;
-    if(m.row==='step'){ y+=10; html+=`<button class="sq-step ${on?'on':''} ${m.nw?'nw':''} ${m.dl?'dl':''}" data-act="ucstep" data-arg="${id}|${m.step}" style="left:6px;top:${y}px" title="Step ${m.step}">${m.step}</button>`; svg+=`<line class="sq-sep" x1="${G-8}" y1="${y+12}" x2="${W-8}" y2="${y+12}"/>`; y+=24; return; }
-    if(m.row==='alt'){ const x0=G+6, x1=W-6, y0=y+6, SH=64; const ax0=cx(li('app')), ax1=cx(li('p'));
-      m.al.forEach(({a},j)=>{ const t=y0+j*SH; if(j) svg+=`<line class="sq-altsep" x1="${x0}" y1="${t}" x2="${x1}" y2="${t}"/>`;
-        html+=`<span class="sq-cond" style="left:${x0+(j?10:58)}px;top:${t+3}px">[${esc(a.t)}]</span>`;
-        html+=`<span class="sq-lbl alt ${a.kind}" style="left:${Math.min(ax0,ax1)+10}px;top:${t+22}px;width:${Math.abs(ax0-ax1)-20}px" title="${esc(a.steps.join(' · '))}"><span>${esc(a.steps[0]||a.t)}</span></span>`;
-        svg+=`<line class="sq-m ret alt ${a.kind}" x1="${ax0}" y1="${t+46}" x2="${ax1+2}" y2="${t+46}"/><path class="sq-ah ret alt ${a.kind}" d="${arrow(ax1,t+46,-1,true)}"/>`;
-        html+=`<span class="sq-note ${a.kind}" style="left:${ax0+16}px;top:${t+36}px">${a.back?'↩ back to step '+a.back:'■ ends · '+esc(a.end||'')}</span>`; });
-      const h=m.al.length*SH+4; svg+=`<rect class="sq-frame" x="${x0}" y="${y0}" width="${x1-x0}" height="${h}" rx="6"/><path class="sq-ftag" d="M${x0+6} ${y0}H${x0+46}V${y0+12}l-8 8H${x0}V${y0+6}A6 6 0 0 1 ${x0+6} ${y0}Z"/>`;
-      html+=`<span class="sq-ftxt" style="left:${x0+8}px;top:${y0+1}px">${m.al.length>1?'alt':'opt'}</span>`;
-      y=y0+h+14; return; }
-    if(m.row==='end'){ y+=12; const a=cx(0), b=cx(1); html+=`<div class="sq-end" style="left:${a-20}px;top:${y}px;width:${b-a+40}px">${I('check-circle',14)}<span>${esc(m.t)}</span></div>`; y+=48; return; }
+  const SEL=S.sq.open, selStep=SEL!=null&&X.M[SEL]?X.M[SEL].step:null;
+  X.M.forEach((m,k)=>{ const on = SEL===k; const rel = !on && (SEL!=null ? m.step===selStep : hl!=null && m.step===hl); const dim = (SEL!=null||hl!=null) && !on && !rel;
+    if(m.row==='step'){ y+=10; html+=`<button class="sq-step ${(SEL!=null?m.step===selStep:hl===m.step)?'on':''} ${m.nw?'nw':''} ${m.dl?'dl':''}" data-act="ucstep" data-arg="${id}|${m.step}" style="left:6px;top:${y}px" title="Step ${m.step}">${m.step}</button>`; svg+=`<line class="sq-sep" x1="${G-8}" y1="${y+12}" x2="${W-8}" y2="${y+12}"/>`; y+=24; return; }
+    if(m.row==='dec'){ const xi=cx(li(m.lane)); const yy=y+18; const cur=m.cur==='ok'?null:F2.alts[+m.cur]; const open=S.sq.dmenu===m.step;
+      html+=`<button class="sq-dia ${cur?'alt':''}" data-act="sqdec" data-arg="${id}|${m.step}" style="left:${xi-9}px;top:${yy-9}px" aria-haspopup="menu" aria-expanded="${open}" title="Decision · pick a value"></button>`;
+      html+=`<button class="sq-dv ${cur?'alt '+cur.kind:''}" data-act="sqdec" data-arg="${id}|${m.step}" style="left:${xi+16}px;top:${yy-12}px" aria-haspopup="menu" aria-expanded="${open}"><span>${cur?esc(cur.t):'Works as expected'}</span>${I(open?'chevron-up':'chevron-down',12)}</button>`;
+      if(open) html+=`<div class="sq-dm menu" style="left:${xi+16}px;top:${yy+14}px" role="menu"><div class="cx-ph">Step ${m.step} · what happens next</div>
+        <button class="${!cur?'on':''}" role="menuitemradio" aria-checked="${!cur}" data-act="sqdecset" data-arg="${id}|${m.step}|ok"><span class="dk ok"></span><span><b>Works as expected</b><small>${esc(m.next||'')}</small></span></button>
+        ${m.al.map(({a,k})=>`<button class="${cur===a?'on':''}" role="menuitemradio" aria-checked="${cur===a}" data-act="sqdecset" data-arg="${id}|${m.step}|${k}"><span class="dk ${a.kind}"></span><span><b>${esc(a.t)}</b><small>${a.back?'Goes back to step '+a.back:'Ends · '+esc(a.end||'')}</small></span></button>`).join('')}</div>`;
+      y=yy+22; return; }
+    if(m.row==='end'){ y+=12; const a=cx(0), b=cx(1); html+=`<div class="sq-end ${m.alt?'alt '+m.alt:''}" style="left:${a-20}px;top:${y}px;width:${b-a+40}px">${I(m.alt?(m.back?'corner-up-left':'alert'):'check-circle',14)}<span>${esc(m.t)}</span></div>`; y+=48; return; }
     const i0=li(m.f), i1=li(m.to); if(i0<0||i1<0) return; const x0=cx(i0), x1=cx(i1); const dir=x1>x0?1:-1; const hasL=!!m.label; const yy=y+(hasL?22:10);
-    const cls=`${m.kind} ${on?'on':''} ${m.nw?'nw':''} ${m.dl?'dl':''}`;
+    const cls=`${m.kind} ${on?'on':''} ${rel?'rel':''} ${dim?'dim':''} ${m.altk?'altk '+m.altk:''} ${m.nw?'nw':''} ${m.dl?'dl':''}`;
     if(i0===i1){ svg+=`<path class="sq-m ${cls}" d="M${x0} ${yy-6}h36v14h-34"/><path class="sq-ah ${cls}" d="${arrow(x0+2,yy+8,-1,m.kind!=='call'&&m.kind!=='act')}"/>`; }
     else { svg+=`<line class="sq-m ${cls}" x1="${x0}" y1="${yy}" x2="${x1-dir*2}" y2="${yy}"/><path class="sq-ah ${cls}" d="${arrow(x1,yy,dir,m.kind==='ret'||m.kind==='event')}"/>`; }
     if(hasL){ const L0=Math.min(x0,x1)+10, Wl=Math.max(120,Math.abs(x1-x0)-20); const tag = m.kind==='event'?'<em>event</em>':m.kind==='act'?'<em>user</em>':m.sys?'<em>system</em>':'';
@@ -9656,7 +9682,9 @@ Object.assign(ACT,{
   ucsl(v){ S.ucx.sl=v; S.sq.open=null; render(); },
   sqmsg(a){ const p=a.split('|'); const k=+p[1]; S.sq.open = S.sq.open===k ? null : k; const m=S.sq.open!=null?seqModel(p[0]).M[k]:null; if(m) S.ucx.hl={id:p[0], i:m.step}; renderSide(); renderFlowCanvas();
     if(S.sq.open!=null && lastL){ const ar=area(); const kz=Math.max(T.k,.85); d3.select(box).transition().duration(300).call(zoom.transform, d3.zoomIdentity.translate(ar.x+ar.w-640*kz-16-(lastL.popX)*kz, ar.y+16-(lastL.popY-20)*kz).scale(kz)); } },
-  sqclose(){ S.sq.open=null; renderFlowCanvas(); }
+  sqclose(){ S.sq.open=null; renderFlowCanvas(); },
+  sqdec(a){ const [id,st]=a.split('|'); S.sq.dmenu = S.sq.dmenu===+st ? null : +st; renderFlowCanvas(); },
+  sqdecset(a){ const [id,st,v]=a.split('|'); S.sq.dec[id+'|'+st]=v; S.sq.dmenu=null; S.sq.open=null; renderFlowCanvas(); }
 });
 
 ACT.ucfv = v => { S.ucx.fv=v; S.sq.open=null; render(); };
@@ -10771,6 +10799,7 @@ function planOf(D){ const R=D.M.res, tn=D.tName, L=[];
     if(x.type==='pt') L.push(r==='stay'?`${esc(tn)} calls ${esc(cName(x.src))} for “${esc(x.it.label)}”`:r==='move'?`Move “${esc(x.it.label)}” to ${esc(tn)}`:`Publish “${esc(x.it.label)}” as an event`); });
   return L; }
 
+window.dbH={cName,nm,OPTS,planOf,chip,mp,model,get el(){return el;}};
 /* ---------- left: use cases with every API ---------- */
 function leftHTML(D){ const M=D.M; const q=(M.q||'').trim().toLowerCase();
   const groups=CTX.filter(c=>!(D.add&&c.id===M.to)).map(c=>({c, us:ucsOf(c.id).filter(u=>u.apis.length&&(!q||u.name.toLowerCase().includes(q)||u.apis.some(a=>a.toLowerCase().includes(q))))})).filter(g=>g.us.length);
@@ -10790,7 +10819,7 @@ function leftHTML(D){ const M=D.M; const q=(M.q||'').trim().toLowerCase();
 function rightHTML(D){ const M=D.M; const open=D.issues.filter(x=>!x.done).length; const nameErr=!D.add && (!M.name.trim() || CTX.some(c=>c.name.toLowerCase()===M.name.trim().toLowerCase()));
   const ok = D.sel.size && !nameErr; const plan=planOf(D); const tab=M.dtab||'open'; const shown=D.issues.filter(x=>tab==='open'?!x.done:x.done);
   const ap = r => { const [m,...p]=r.split(' '); return `<span class="dbap"><span class="meth ${m.toLowerCase()}">${m}</span><code>${esc(p.join(' '))}</code></span>`; };
-  const head = x => x.type==='part' ? `<b>${esc(nm(x.id))}</b><span class="dbk">Only ${x.moved.length} of ${x.moved.length+x.kept.length} APIs move</span>${x.moved.map(ap).join('')}`
+  const head = x => x.type==='part' ? `<b>${esc(nm(x.id))}</b>${x.moved.map(ap).join('')}`
     : x.type==='api' ? `<b>${esc(x.st.length===1?nm(x.st[0]):x.st.length+' use cases')}</b><span class="dbk">Also uses an API you’re moving</span>${ap(x.api)}`
     : `<b>${esc(x.it.label)}</b><span class="dbk">Integration point · ${esc(cName(x.src))} → ${esc(ctxName(x.it.to))}</span>${x.stay.slice(0,2).map(id=>`<span class="dbk2">Still used by ${esc(nm(id))}</span>`).join('')}`;
   const card = x => { const r=M.res[x.key]; M.col=M.col||{}; const op = M.col[x.key]!=null ? !M.col[x.key] : !r; const pick=r?(OPTS(x,D).find(o=>o[0]===r)||[])[1]:'';
@@ -10852,12 +10881,12 @@ let D0=null, wasOpen=false;
 function renderBoard(){ if(!S.nc){ el.hidden=true; el.innerHTML=''; wasOpen=false; return; } const D=model(); D0=D;
   const ae=document.activeElement; const keepF = ae&&ae.id&&el.contains(ae) ? {id:ae.id, pos:ae.selectionStart} : null;
   const sc=[...el.querySelectorAll('.db-sc')].map(x=>x.scrollTop), li=el.querySelector('.db-list'), lt=li?li.scrollTop:0;
-  el.hidden=false; el.innerHTML=leftHTML(D)+canvasHTML(D)+rightHTML(D);
+  el.hidden=false; const IMP=!!window.impactHTML; el.innerHTML=leftHTML(D)+(IMP?impactHTML(D):canvasHTML(D))+(IMP&&window.impactRight?impactRight(D,rightHTML(D)):rightHTML(D));
   el.querySelectorAll('.db-sc').forEach((x,i)=>x.scrollTop=sc[i]||0); const li2=el.querySelector('.db-list'); if(li2) li2.scrollTop=lt;
-  bindZoom(D, !wasOpen); wasOpen=true; requestAnimationFrame(()=>drawLines(D));
+  if(IMP){ impactBind(D, !wasOpen); } else { bindZoom(D, !wasOpen); requestAnimationFrame(()=>drawLines(D)); } wasOpen=true;
   if(keepF){ const f=el.querySelector('#'+keepF.id); if(f){ f.focus(); if(keepF.pos!=null) try{ f.setSelectionRange(keepF.pos,keepF.pos); }catch(e){} } } }
 window.renderNC = function(){ renderBoard(); };
-addEventListener('resize', ()=>{ if(S.nc&&D0) drawLines(D0); });
+addEventListener('resize', ()=>{ if(S.nc&&D0&&!window.impactHTML) drawLines(D0); });
 
 /* ---------- actions ---------- */
 const toggle = (arr, v, on) => { const i=arr.indexOf(v); if(on===undefined) on=i<0; if(on&&i<0) arr.push(v); if(!on&&i>=0) arr.splice(i,1); };
@@ -11525,6 +11554,427 @@ try{ WZ.key=null; gC.draw(); render(); }catch(e){ console.error(e); }
 .npx .npr .ib{width:26px;height:26px}
 </style>
 <style>
+/* FB55 · detailed summary with chips, no tabs in the use case sidebar, no coverage pill, integration points on flowchart steps */
+#cStatus{display:none!important}
+.aisum p{line-height:24px}
+.aisum .sxalt{display:block;margin-top:8px;color:var(--text-2)}
+.sxc{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 6px;margin:0 1px;border-radius:6px;background:var(--surface-strong);font:500 12px/18px var(--mono);color:var(--text);vertical-align:-1px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.sxc:hover{background:var(--surface-strong-h)}
+.sxc svg{flex:none;color:var(--text-2)}
+.sxc.p{font-family:var(--font)}
+.sxc .meth{font:600 10px/16px var(--mono)}
+.fx-c .fxps{display:flex;flex-wrap:wrap;gap:4px}
+.fx-c .fxp{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 7px;border-radius:6px;background:var(--surface);border:1px solid var(--border-strong);font:500 12px/18px var(--font);color:var(--text);max-width:100%}
+.fx-c .fxp svg{color:var(--k-integration-point,#fb923c);flex:none}
+.fx-c .fxp>span:not(.kic2){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fx-c .fxp em{font-style:normal;color:var(--text-3);white-space:nowrap}
+.fx-c .fxp:hover{border-color:var(--sel-hov)}
+.fx-c .fxp.on{border-color:var(--sel);box-shadow:0 0 0 1px var(--sel)}
+.fx-c .fxsh{display:flex;align-items:center;gap:6px;font:400 12px/18px var(--font);color:var(--text-3)}
+.fx-c .fxsh svg{flex:none}
+</style>
+<script>
+/* FB55 */
+(function(){
+const openFlow=(id,go)=>{ if(S.ucx.flow!==id||S.ucx.fv!=='cards'){ S.ucx.fv='cards'; if(S.ucx.flow!==id) ACT.ucview(id+'|flow'); else render(); } setTimeout(go,80); };
+Object.assign(ACT,{
+  sxopen(a){ const id=a.split('|')[0]; openFlow(id,()=>{ const k=a.split('|').slice(0,2).join('|'); const p=a.split('|'); const cur=S.fx.open[k]; if(cur&&cur.k===p[2]&&cur.v===p.slice(3).join('|')) return; ACT.fxopen(a); }); },
+  fxpt0(a){ const id=a.split('|')[0]; openFlow(id,()=>ACT.fxpt(a)); }
+});
+const drop=['Tabs: Code, APIs, Integration points, Affected','Code blocks','APIs and what they lead to','Integration points: dependants and evidence','Affected use cases'];
+const keep=WN.filter(f=>!drop.includes(f.n));
+const sm=keep.find(f=>f.n==='Summary by Syntroper'); if(sm) sm.how='How the use case runs, step by step. Files, APIs and integration points show as chips; click one to open it in the flowchart.';
+const fc=keep.find(f=>f.n==='Code inside the flowchart'); const k=fc?keep.indexOf(fc)+1:keep.length;
+keep.splice(k,0,{a:fc?fc.a:'Use case diagram', r:1, red:false, n:'Integration points on each step', how:'Each flowchart step lists the integration points its APIs reach, and which other use cases share those APIs. Click a point to see its code.', go(){ S.tab='codona'; WN_HOME(); render(); ACT.layer(2); ACT.gsel('uc:cancel-order'); S.ucx.fv='cards'; ACT.ucview('cancel-order|flow'); }, sel:['#ucFlow .fxps']});
+WN.length=0; WN.push(...keep); WN.forEach((f,i)=>f.i=i+1);
+['#wnPanel','#wnBtn','#wnLayer'].forEach(q=>{ const e=document.querySelector(q); if(e) e.remove(); });
+try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); }catch(e){} }); }catch(e){}
+})();
+</script>
+<style>
+/* FB56 · flowchart steps start collapsed */
+.fx-c .fxtg{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;height:24px;padding:0 8px 0 6px;margin-left:-2px;border-radius:6px;font:500 12px/18px var(--font);color:var(--text-2)}
+.fx-c .fxtg:hover{background:var(--surface);color:var(--text)}
+.fx-c .fxtg.on{color:var(--text-3)}
+</style>
+<script>
+/* FB56 · the diagram never stays open by itself; switching use case closes it and collapses every step and code block */
+(function(){
+let last=null;
+const reset=()=>{ S.fx.open={}; S.fx.int={}; S.fx.exp={}; S.ucx.hl=null; S.ucx.pop=null; if(S.uct&&S.uct.code) S.uct.code={}; };
+const _r=render; render=function(){ const sd=S.side; const cur=sd&&sd.v==='item'&&sd.sel&&sd.sel.t==='uc'?sd.sel.id:null;
+  if(S.ucx.flow && S.ucx.flow!==cur && S.tab==='codona' && !S.level){ S.ucx.flow=null; }
+  const key=S.ucx.flow||null; if(key!==last){ reset(); last=key; }
+  _r(); };
+const _v=ACT.ucview; ACT.ucview=function(a){ const [id,v]=a.split('|'); if(v==='flow'&&S.ucx.flow!==id) reset(); return _v.call(this,a); };
+})();
+</script>
+<script>
+/* FB57 · open on the Commerce platform Galaxy. Business systems stay one click away in the breadcrumb and the navigation. */
+(function(){
+let h0=''; try{ const n=performance.getEntriesByType('navigation')[0]; h0=n?(new URL(n.name).hash):location.hash; }catch(e){ h0=location.hash; }
+const plain = ['','codona','codona/'].includes(h0.replace(/^#\/?/,''));
+if(!plain) return;
+const go=()=>{ try{ S.tab='codona'; S.ucx.flow=null; S.side={v:'home'}; S.stack=[]; S.level=0; goHome(); render(); requestAnimationFrame(()=>{ window.dispatchEvent(new Event('resize')); try{ gC.fit(false); }catch(e){} }); }catch(e){ console.error(e); } };
+go(); setTimeout(go,60);
+})();
+try{ S.wn.open=true; setTimeout(()=>{ try{ S.wn.open=true; wnSync(); }catch(e){} },80); }catch(e){}
+</script>
+<style>
+/* FB59 · context board: Galaxy impact view in the middle, Summary / Connected tabs on the right */
+#dbd .imp{position:absolute;inset:0;overflow:hidden}
+#dbd .imp svg.ig{position:absolute;top:0;bottom:0;left:364px;width:calc(100% - 768px);height:100%;cursor:grab}
+#dbd .imp svg.ig:active{cursor:grabbing}
+.ig .arc{fill:var(--surface);stroke:var(--border-strong);stroke-width:1}
+.ig .arc.tg{fill:var(--sel-soft,rgba(98,78,213,.18));stroke:var(--sel);stroke-width:1.5;stroke-dasharray:5 4}
+.ig .arc.src{stroke:var(--text-3)}
+.ig .alb{font:600 12px var(--font);fill:var(--text-2);letter-spacing:.02em}
+.ig .alb.tg{fill:var(--on-accent-sub,#d3bdff)}
+.ig .bar{stroke:var(--surface-strong);stroke-width:3;stroke-linecap:round}
+.ig .bar.mv{stroke:var(--sel)} .ig .bar.gh{stroke:var(--sel);stroke-dasharray:2 3;opacity:.6}
+.ig .bar.dep{stroke:var(--danger)}
+.ig .ulb{font:500 11px var(--font);fill:var(--text-2)}
+.ig .ulb.mv{fill:var(--text)} .ig .ulb.dep{fill:var(--danger-text);font-weight:600}
+.ig .dot{fill:var(--canvas);stroke:var(--text-3);stroke-width:1.5}
+.ig .dot.ev{fill:var(--danger);stroke:var(--danger)} .ig .dot.dep{stroke:var(--danger)} .ig .dot.mv{stroke:var(--sel);fill:var(--sel)}
+.ig .lk{fill:none;stroke-width:1.6;transition:opacity .15s}
+.ig .lk.mv{stroke:var(--sel)}
+.ig .lk.dep{stroke:var(--danger);stroke-dasharray:4 4}
+.ig .lk.ev{stroke:var(--danger);stroke-width:2}
+.ig .lk.info{stroke:var(--text-3);stroke-dasharray:2 4}
+.ig .lk.ok{stroke:var(--text-3);stroke-dasharray:4 4;opacity:.7}
+.ig .nd{cursor:pointer}
+.ig .ptl{font:500 10px var(--mono);fill:var(--text-2)} .ig .ptl.ev,.ig .ptl.dep{fill:var(--danger-text)}
+.ig.hv .lk:not(.on),.ig.hv .nd:not(.on){opacity:.15}
+.ig .nd.sel .bar,.ig .nd.sel .dot{stroke-width:5}
+.ig .ctr{font:600 13px var(--font);fill:var(--text)} .ig .ctr2{font:400 11px var(--font);fill:var(--text-3)}
+.imp .ileg{position:absolute;left:376px;bottom:16px;display:flex;flex-wrap:wrap;gap:14px;padding:8px 12px;border-radius:10px;background:var(--panel);border:1px solid var(--border);font:500 12px/16px var(--font);color:var(--text-2);max-width:calc(100% - 900px);min-width:260px}
+.imp .ileg span{display:flex;align-items:center;gap:6px}
+.imp .ileg i{width:20px;height:0;border-top:2px solid}
+.imp .ileg i.mv{border-color:var(--sel)} .imp .ileg i.dep{border-color:var(--danger);border-top-style:dashed} .imp .ileg i.ev{border-color:var(--danger)} .imp .ileg i.info{border-color:var(--text-3);border-top-style:dotted}
+.imp .izm{position:absolute;right:416px;bottom:16px;display:flex;gap:2px;padding:4px;border-radius:10px;background:var(--panel);border:1px solid var(--border)}
+.imp .izm button{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;color:var(--text-2)} .imp .izm button:hover{background:var(--surface);color:var(--text)}
+.imp .iempty{position:absolute;top:0;bottom:0;left:364px;right:404px;display:grid;place-items:center;text-align:center;color:var(--text-3);font:400 13px/20px var(--font);pointer-events:none}
+.imp .iempty b{display:block;color:var(--text);font:600 14px/20px var(--font);margin-bottom:4px}
+.imp .itip{position:absolute;z-index:3;pointer-events:none;padding:8px 10px;border-radius:8px;background:var(--surface-strong);font:500 12px/18px var(--font);color:var(--text);max-width:260px;box-shadow:var(--shadow)}
+.imp .itip small{display:block;color:var(--text-2);font-weight:400}
+.db-r .itabs{display:flex;gap:20px;padding:0 16px;border-bottom:1px solid var(--border)}
+.db-r .itabs button{height:38px;font:500 12px/18px var(--font);color:var(--text-2);border-bottom:2px solid transparent;margin-bottom:-1px;display:flex;align-items:center;gap:6px}
+.db-r .itabs button.on{color:var(--text);font-weight:600;border-color:var(--text)}
+.isum{font:400 13px/20px var(--font);color:var(--text-2)} .isum b{color:var(--text);font-weight:600} .isum .r{color:var(--danger-text)}
+.icg{display:flex;flex-direction:column;gap:2px}
+.icg .h{display:flex;align-items:center;gap:8px;font:600 12px/18px var(--font);color:var(--text-2);margin-bottom:4px}
+.icg .h .count{margin-left:auto}
+.icg button{display:flex;align-items:center;gap:8px;min-height:32px;padding:4px 8px;margin:0 -8px;border-radius:6px;text-align:left;font:400 13px/18px var(--font);color:var(--text)}
+.icg button:hover,.icg button.on{background:var(--surface)}
+.icg button .m{margin-left:auto;font-size:12px;color:var(--text-3);white-space:nowrap}
+.icg button.r .l{color:var(--danger-text)}
+.icg .l{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icg .tagr{font:600 11px/16px var(--font);padding:0 6px;border-radius:999px;background:var(--danger-sub);color:var(--danger-text);white-space:nowrap}
+.icg .tagm{font:600 11px/16px var(--font);padding:0 6px;border-radius:999px;background:var(--selected);color:var(--on-accent-sub,#d3bdff);white-space:nowrap}
+</style>
+<script>
+/* FB59 */
+(function(){
+const H=window.dbH; if(!H) return;
+const NS='http://www.w3.org/2000/svg';
+let VT=null, hov=null;
+function graph(D){ const M=D.M; const tgt=D.add?M.to:'__new';
+  const ctxs=CTX.filter(c=>ucsOf(c.id).length&&c.id!==tgt);
+  const moved=new Set(D.mov); const dep=new Map(); const pts=new Map(); const links=[];
+  D.issues.forEach(x=>{ if(x.type==='part') dep.set(x.id,{key:x.key, why:`Uses APIs that move`});
+    if(x.type==='api') x.st.forEach(u=>dep.set(u,{key:x.key, why:`Uses ${x.api}`}));
+    if(x.type==='pt'){ pts.set(x.it.id,{it:x.it, k:'dep', key:x.key}); x.stay.forEach(u=>{ if(!dep.has(u)) dep.set(u,{key:x.key, why:`Still uses “${x.it.label}”`}); }); } });
+  D.infos.forEach(x=>{ if(!pts.has(x.iid)) pts.set(x.iid,{it:INB[x.iid], k:'info'}); });
+  D.routes.forEach(a=>opInts(a).forEach(iid=>{ const it=INB[iid]; if(it&&/event/i.test(it.type)) pts.set(iid,{it, k:'ev', key:(pts.get(iid)||{}).key}); }));
+  return {tgt, ctxs, moved, dep, pts}; }
+function layout(G,D){ const R=250, segs=[]; const tName=D.tName; const all=[...G.ctxs.map(c=>({id:c.id,name:c.name,us:ucsOf(c.id).filter(u=>!G.moved.has(u.id)||true)})), {id:G.tgt, name:tName.replace(/^the new context$/,'New context'), us:[...G.moved].map(id=>UCB[id]), tg:true}];
+  const w=all.map(c=>c.tg?Math.max(6,c.us.length*2):Math.max(3,c.us.length)); const tot=w.reduce((a,b)=>a+b,0); const gap=.045; const span=Math.PI*2-gap*all.length; let a0=-Math.PI/2+gap/2;
+  all.forEach((c,i)=>{ const da=span*w[i]/tot; segs.push(Object.assign(c,{a0,a1:a0+da})); a0+=da+gap; });
+  const U={}, C={}; segs.forEach(sg=>{ C[sg.id]=sg; const n=sg.us.length; sg.us.forEach((u,j)=>{ const a=sg.a0+(sg.a1-sg.a0)*(j+.5)/Math.max(n,1); (U[u.id]=U[u.id]||{})[sg.tg?'t':'s']={a,sg}; }); });
+  return {R, segs, U, C}; }
+const P=(a,r)=>[Math.cos(a)*r, Math.sin(a)*r];
+const arcPath=(a0,a1,r0,r1)=>{ const [x0,y0]=P(a0,r1),[x1,y1]=P(a1,r1),[x2,y2]=P(a1,r0),[x3,y3]=P(a0,r0); const lg=a1-a0>Math.PI?1:0; return `M${x0} ${y0}A${r1} ${r1} 0 ${lg} 1 ${x1} ${y1}L${x2} ${y2}A${r0} ${r0} 0 ${lg} 0 ${x3} ${y3}Z`; };
+const curve=(a,b,ra,rb,bend=.25)=>{ const [x0,y0]=P(a,ra),[x1,y1]=P(b,rb); let da=Math.abs(b-a)%(Math.PI*2); if(da>Math.PI) da=Math.PI*2-da; const f=Math.max(.12,.85-da/Math.PI*.75); const [c0x,c0y]=P(a,ra*f),[c1x,c1y]=P(b,rb*f); return `M${x0} ${y0}C${c0x} ${c0y} ${c1x} ${c1y} ${x1} ${y1}`; };
+function svgHTML(D){ const G=graph(D), L=layout(G,D); const R=L.R; let s='';
+  const nodes=[], lk=[];
+  /* arcs */
+  L.segs.forEach(sg=>{ const mid=(sg.a0+sg.a1)/2; const [lx,ly]=P(mid,R-30); const src=[...G.moved].some(id=>UCB[id].ctx===sg.id); const dp=[...G.dep.keys()].some(id=>UCB[id]&&UCB[id].ctx===sg.id);
+    s+=`<g class="nd" data-n="c:${sg.id}"><path class="arc ${sg.tg?'tg':''} ${src?'src':''}" d="${arcPath(sg.a0,sg.a1,R-12,R)}"><title>${esc(sg.name)}</title></path>
+      <text class="alb ${sg.tg?'tg':''}" x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central">${esc(sg.name.length>16?sg.name.slice(0,15)+'…':sg.name)}${dp?' ●':''}</text></g>`; });
+  /* use case bars */
+  L.segs.forEach(sg=>sg.us.forEach(u=>{ const pos=L.U[u.id][sg.tg?'t':'s']; const a=pos.a; const mv=G.moved.has(u.id); const dp=G.dep.has(u.id);
+    const cls=sg.tg?'mv':mv?'gh':dp?'dep':''; const len=cls?24:12; const [x0,y0]=P(a,R+4),[x1,y1]=P(a,R+4+len);
+    const lab=cls&&cls!=='gh'; const [tx,ty]=P(a,R+34); const deg=a*180/Math.PI; const flip=Math.cos(a)<0;
+    s+=`<g class="nd" data-n="u:${u.id}:${sg.tg?'t':'s'}"><line class="bar ${cls}" x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}"/><line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="transparent" stroke-width="10"/>
+      ${lab?`<text class="ulb ${cls}" transform="translate(${tx} ${ty}) rotate(${flip?deg+180:deg})" text-anchor="${flip?'end':'start'}" dominant-baseline="central">${esc(u.name)}</text>`:''}</g>`; }));
+  /* moved links: ghost in source → bar in target */
+  G.moved.forEach(id=>{ const p=L.U[id]; if(p&&p.s&&p.t) lk.push({c:'mv', d:curve(p.s.a,p.t.a,R+2,R+2,.55), n:[`u:${id}:s`,`u:${id}:t`]}); });
+  /* integration points on the inner ring, at their source context */
+  const byCtx={}; G.pts.forEach((v,iid)=>{ const c=v.it.from; (byCtx[c]=byCtx[c]||[]).push(iid); });
+  const PT={}; Object.entries(byCtx).forEach(([c,ids])=>{ let sg=L.C[c]; if(!sg) sg=L.C[G.tgt]; ids.forEach((iid,j)=>{ const a=sg.a0+(sg.a1-sg.a0)*(j+.5)/ids.length; PT[iid]=a; }); });
+  G.pts.forEach((v,iid)=>{ const a=PT[iid]; const [x,y]=P(a,R-62); const [tx,ty]=P(a,R-78); const flip=Math.cos(a)<0; const deg=a*180/Math.PI;
+    s+=`<g class="nd" data-n="p:${iid}"><circle class="dot ${v.k==='ev'?'ev':v.k==='dep'?'dep':''}" cx="${x}" cy="${y}" r="5"><title>${esc(v.it.label)}</title></circle>
+      ${v.k==='ev'?`<text class="ptl ${v.k}" transform="translate(${tx} ${ty}) rotate(${flip?deg+180:deg})" text-anchor="${flip?'start':'end'}" dominant-baseline="central">${esc(v.it.label.length>24?v.it.label.slice(0,23)+'…':v.it.label)}</text>`:''}</g>`;
+    const ta=L.U[[...G.moved].find(id=>UCB[id].apis.some(r=>opInts(r).includes(iid)))||'']; const fromA = ta&&ta.t ? ta.t.a : (L.C[G.tgt].a0+L.C[G.tgt].a1)/2;
+    lk.push({c:v.k==='ev'?'ev':v.k==='dep'?'dep':'info', d:curve(fromA,a,R-14,R-56,.2), n:[`c:${G.tgt}`,`p:${iid}`]});
+    if(v.k==='ev'){ const to=L.C[v.it.to]; if(to){ const b=(to.a0+to.a1)/2; lk.push({c:'ev', d:curve(a,b,R-56,R-14,.2), n:[`p:${iid}`,`c:${v.it.to}`]}); } } });
+  /* dependents: red dotted from the dependent use case to the new context (or to the integration point it still uses) */
+  G.dep.forEach((v,id)=>{ const p=L.U[id]; if(!p||!p.s) return; const x=D.issues.find(z=>z.key===v.key); const tg=L.C[G.tgt]; const ta=(tg.a0+tg.a1)/2;
+    if(x&&x.type==='pt'&&PT[x.it.id]!=null) lk.push({c:D.M.res[v.key]?'ok':'dep', d:curve(p.s.a,PT[x.it.id],R-14,R-56,.3), n:[`u:${id}:s`,`p:${x.it.id}`], key:v.key});
+    else lk.push({c:D.M.res[v.key]?'ok':'dep', d:curve(p.s.a,ta,R-14,R-14,.15), n:[`u:${id}:s`,`c:${G.tgt}`], key:v.key}); });
+  const links=`<defs><marker id="imA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--sel)" stroke-width="1.6" stroke-linecap="round"/></marker><marker id="imR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--danger)" stroke-width="1.6" stroke-linecap="round"/></marker></defs>`+lk.map((l,i)=>`<path class="lk ${l.c}" data-l="${i}" data-a="${l.n[0]}" data-b="${l.n[1]}" d="${l.d}" ${l.c==='mv'?'marker-end="url(#imA)"':l.c==='ev'?'marker-end="url(#imR)"':''}/>`).join('');
+  const nMv=G.moved.size, nRt=D.routes.length;
+  const ctr=`<text class="ctr" x="0" y="-8" text-anchor="middle">${nMv?`${nMv} use case${nMv===1?'':'s'} move`:nRt?`${nRt} API${nRt===1?'':'s'} move`:''}</text><text class="ctr2" x="0" y="12" text-anchor="middle">${nMv||nRt?`to ${esc(D.tName)}`:''}</text>`;
+  return {html:`<g class="vp">${links}${s}${ctr}</g>`, G, L}; }
+window.impactHTML=function(D){ const r=svgHTML(D); const any=D.sel.size;
+  return `<div class="imp db-cv"><svg class="ig" viewBox="-420 -420 840 840" preserveAspectRatio="xMidYMid meet" aria-label="Impact on the Galaxy">${r.html}</svg>
+    ${any?'':'<div class="iempty"><span><b>Nothing picked yet</b>Pick use cases or APIs on the left to see what they affect.</span></div>'}
+    <div class="ileg"><span><i class="mv"></i>Moves</span><span><i class="dep"></i>Depends on it, to decide</span><span><i class="ev"></i>Event it fires</span><span><i class="info"></i>Moves with it</span></div>
+    <div class="izm"><button data-act="imz" data-arg="out" aria-label="Zoom out">${I('zoom-out')}</button><button data-act="imz" data-arg="in" aria-label="Zoom in">${I('zoom-in')}</button><button data-act="imz" data-arg="fit" aria-label="Fit">${I('fit')}</button></div></div>`; };
+window.impactBind=function(D, first){ const root=H.el.querySelector('.imp'); if(!root) return; const svg=root.querySelector('svg.ig'), vp=svg.querySelector('g.vp');
+  if(window.d3){ const z=d3.zoom().scaleExtent([.5,4]).on('zoom',e=>{ VT=e.transform; vp.setAttribute('transform',e.transform.toString()); }); d3.select(svg).call(z).on('dblclick.zoom',null); root.__z=z; d3.select(svg).call(z.transform, (!first&&VT)||d3.zoomIdentity); }
+  const tip=document.createElement('div'); tip.className='itip'; tip.hidden=true; root.appendChild(tip);
+  const L=[...svg.querySelectorAll('.lk')];
+  const focus=n=>{ svg.classList.toggle('hv',!!n); svg.querySelectorAll('.on').forEach(x=>x.classList.remove('on')); if(!n) return; const g=svg.querySelector(`[data-n="${n}"]`); if(g) g.classList.add('on');
+    L.filter(l=>l.dataset.a===n||l.dataset.b===n).forEach(l=>{ l.classList.add('on'); [l.dataset.a,l.dataset.b].forEach(m=>{ const q=svg.querySelector(`[data-n="${m}"]`); if(q) q.classList.add('on'); }); }); };
+  const label=n=>window.impTip(n,D,graph(D));
+  svg.addEventListener('mousemove',e=>{ const g=e.target.closest('.nd'); const n=g&&g.dataset.n; if(n!==hov){ hov=n; focus(n||S.nc.isel||null); }
+    if(n){ const r=root.getBoundingClientRect(); tip.hidden=false; tip.innerHTML=label(n); tip.style.left=(e.clientX-r.left+14)+'px'; tip.style.top=(e.clientY-r.top+14)+'px'; } else tip.hidden=true; });
+  svg.addEventListener('mouseleave',()=>{ hov=null; tip.hidden=true; focus(S.nc&&S.nc.isel||null); });
+  svg.addEventListener('click',e=>{ const g=e.target.closest('.nd'); const n=g&&g.dataset.n||null; ACT.imsel(n); });
+  if(S.nc.isel){ focus(S.nc.isel); const g=svg.querySelector(`[data-n="${S.nc.isel}"]`); if(g) g.classList.add('sel'); } };
+/* right panel: Summary / Connected */
+window.impactRight=function(D, html){ const M=D.M; const tab=M.itab||'sum'; const G=graph(D);
+  html=html.replace('<b>Dependencies</b>','<b>Impact</b>');
+  const a=html.indexOf('<div class="db-sc">'), b=html.indexOf('<div class="db-f">'); if(a<0||b<0) return html;
+  const inner=html.slice(a+19, html.lastIndexOf('</div>',b));
+  const ev=[...G.pts.values()].filter(v=>v.k==='ev'); const open=D.issues.filter(x=>!x.done).length;
+  const sum=D.sel.size?`<div class="isum">${G.moved.size?`<b>${G.moved.size} use case${G.moved.size===1?'':'s'}</b> and `:''}<b>${D.routes.length} API${D.routes.length===1?'':'s'}</b> move to <b>${esc(D.tName)}</b>. ${G.dep.size?`<span class="r"><b>${G.dep.size}</b> use case${G.dep.size===1?'':'s'} depend on them</span>`:'Nothing else depends on them'}${ev.length?`, and <span class="r"><b>${ev.length}</b> event${ev.length===1?'':'s'}</span> they fire ${ev.length===1?'is':'are'} affected`:''}. ${open?`${open} to decide.`:''}</div>`:'';
+  const tabs='';
+  const con=`<button role="tab" aria-selected="${tab==='con'}" class="${tab==='con'?'on':''}" data-act="imtab" data-arg="con">Connected <span class="count">${G.moved.size+G.dep.size+G.pts.size}</span></button>`;
+  const m=inner.match(/<div class="tabs dbt" role="tablist">([\s\S]*?)<\/div>/);
+  let body;
+  if(tab!=='con'){ body = m ? inner.replace(m[0], `<div class="tabs dbt" role="tablist">${m[1]}${con}</div>`) : `<div class="tabs dbt" role="tablist">${con}</div>`+inner; }
+  else { const row = m ? `<div class="tabs dbt" role="tablist">${m[1].replace(/class="on"/g,'class=""').replace(/aria-selected="true"/g,'aria-selected="false"')}${con}</div>` : `<div class="tabs dbt" role="tablist">${con}</div>`;
+    body = row + window.impCon(D,G,M.isel); }
+  return html.slice(0,a)+tabs+'<div class="db-sc">'+body+'</div>'+html.slice(b); };
+Object.assign(ACT,{
+  imtab(t){ S.nc.itab=t; renderNC(); },
+  imsel(n){ const M=S.nc; M.isel = !n||M.isel===n ? null : n; if(M.isel&&M.isel.startsWith('u:')){ const id=M.isel.split(':')[1]; const D=H.model(); const x=D.issues.find(z=>z.type==='part'&&z.id===id||z.type==='api'&&z.st.includes(id)||z.type==='pt'&&z.stay.includes(id)); if(x){ M.focus=x.key; M.col=M.col||{}; M.col[x.key]=false; } } renderNC(); },
+  imz(a){ const root=H.el.querySelector('.imp'); if(!root||!root.__z) return; const svg=d3.select(root.querySelector('svg.ig')); if(a==='fit') svg.transition().duration(250).call(root.__z.transform,d3.zoomIdentity); else svg.transition().duration(200).call(root.__z.scaleBy,a==='in'?1.25:.8); }
+});
+})();
+</script>
+<style>
+/* FB60 · sequence: single-arrow selection, decisions on the lifeline */
+#ucFlow svg.fe.sq .sq-m.on,#ucFlow svg.fe.sq .sq-ah.on{stroke:var(--sel)!important;stroke-width:2.5}
+#ucFlow svg.fe.sq .sq-ah.on{fill:var(--sel)}
+#ucFlow svg.fe.sq .sq-m.rel,#ucFlow svg.fe.sq .sq-ah.rel{stroke:var(--rel)}
+#ucFlow svg.fe.sq .sq-m.dim,#ucFlow svg.fe.sq .sq-ah.dim{opacity:.22}
+.sq-lbl.on{color:#fff!important;background:var(--sel);border-radius:6px}
+.sq-lbl.rel{color:var(--text)} .sq-lbl.dim{opacity:.3}
+.sq-lbl.altk{color:var(--warn-text)}
+#ucFlow svg.fe.sq .sq-m.altk{stroke:var(--warn);stroke-dasharray:4 3}
+.sq-dia{position:absolute;width:18px;height:18px;transform:rotate(45deg);border-radius:3px;background:var(--warn);box-shadow:0 0 0 3px var(--canvas);z-index:2}
+.sq-dia:hover{box-shadow:0 0 0 3px var(--canvas),0 0 0 5px var(--sel-hov)}
+.sq-dv{position:absolute;display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:6px;background:var(--panel);border:1px solid var(--border-strong);font:500 12px/18px var(--font);color:var(--text);white-space:nowrap;z-index:2}
+.sq-dv:hover{border-style:dashed;border-color:var(--sel-hov)}
+.sq-dv.alt{color:var(--warn-text);border-color:var(--warn)}
+.sq-dm{position:absolute;z-index:5;width:300px;padding:4px}
+.sq-dm button{display:flex;gap:10px;align-items:flex-start;width:100%;padding:8px 10px;border-radius:6px;text-align:left}
+.sq-dm button:hover,.sq-dm button.on{background:var(--surface)}
+.sq-dm b{display:block;font:500 13px/18px var(--font)} .sq-dm small{font:400 12px/18px var(--font);color:var(--text-2)}
+.sq-dm .dk{width:10px;height:10px;border-radius:2px;transform:rotate(45deg);margin-top:5px;flex:none;background:var(--ok)}
+.sq-dm .dk.error{background:var(--danger)} .sq-dm .dk.validation{background:var(--warn)} .sq-dm .dk.cancel{background:var(--text-3)}
+.sq-end.alt{background:var(--warn-sub);color:var(--warn-text)}
+</style>
+<style>
+/* FB61 · sidebar: sticky header, actions at the bottom, steps list. One set of interaction rules for every diagram. */
+.ucst{display:flex;flex-direction:column;gap:4px}
+.ucst-h{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;height:26px;padding:0 6px;margin-left:-6px;border-radius:6px;font:500 12px/18px var(--font);color:var(--text-2)}
+.ucst-h:hover{color:var(--text);background:var(--surface)}
+.ucst ol{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:2px}
+.ucst li button{display:flex;gap:10px;align-items:flex-start;width:100%;padding:6px 8px;border-radius:8px;text-align:left}
+.ucst li button:hover{background:var(--surface)} .ucst li button.on{background:var(--selected)}
+.ucst .n{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--surface-strong);font:600 11px/1 var(--font)}
+.ucst li button.on .n{background:var(--sel);color:#fff}
+.ucst b{display:block;font:500 13px/18px var(--font)} .ucst small{display:block;font:400 12px/18px var(--font);color:var(--text-2)}
+.aisum p{display:-webkit-box;-webkit-box-orient:vertical}
+#cxItem .hasfoot{display:flex;flex-direction:column;min-height:0}
+#cxItem .hasfoot>.scroll{flex:1 1 auto;min-height:0}
+#cxItem .ucfoot{flex:none;display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-top:1px solid var(--border);background:var(--panel)}
+#cxItem .ucfoot .ucask{margin-top:0}
+#cxItem>.ch{flex:none;position:relative;z-index:2;background:var(--panel)}
+.sq-pop{width:720px!important;max-height:72vh;overflow:auto}
+.cbk-f .lnk2{display:inline-flex;align-items:center;gap:4px}
+
+/* ---- interaction rules (all diagrams) ----
+   rest: solid borders and lines, no dashes (dashes only for suggested / unresolved)
+   hover: dashed outline in --sel-hov, nothing else changes
+   selected: solid --sel, thicker
+   related to the selection: --rel
+   everything else: dimmed */
+.fx-c.alt{border-style:solid!important}
+.fx-c.alt.error{box-shadow:inset 3px 0 0 var(--danger)} .fx-c.alt.validation{box-shadow:inset 3px 0 0 var(--warn)} .fx-c.alt.cancel{box-shadow:inset 3px 0 0 var(--text-3)}
+.fx-c.term{border-color:color-mix(in srgb,var(--ok) 55%,var(--border-strong))}
+.fx-c.dec{border-color:color-mix(in srgb,var(--warn) 60%,var(--border-strong))}
+.fx-c:not(.on):hover,.fn.fx-c:not(.on):hover{outline:none!important;box-shadow:none!important;border-style:dashed!important;border-color:var(--sel-hov)!important}
+.fn.on.fx-c{border-style:solid!important;border-color:var(--sel)!important;box-shadow:0 0 0 1px var(--sel)!important}
+#cWorld .dcard:not(.sel):hover{outline:none!important;box-shadow:none!important;border-style:dashed!important;border-color:var(--sel-hov)!important}
+#cWorld .dcard.sel,#cWorld .dcard.sel:hover{border-style:solid!important}
+.eg:hover:not(.on) .edge,.seg-eg:hover:not(.on) .sedge{stroke:var(--sel-hov)!important;stroke-dasharray:5 4!important}
+.el[data-k=ctx].hov:not(.tgt):not(.pri) .arc,.el[data-k=ext].hov:not(.tgt):not(.pri) .box,.el.hov .chip{stroke:var(--sel-hov)!important;stroke-dasharray:5 4!important;stroke-width:1.5!important}
+.el[data-k=int].hov:not(.tgt):not(.pri) .curve,.el[data-k=uc].hov:not(.tgt):not(.pri) .bar{stroke:var(--sel-hov)!important;stroke-dasharray:5 4!important}
+.el[data-k=pt].hov:not(.tgt) .dot{stroke:var(--sel-hov)!important;stroke-dasharray:3 2!important}
+.sq-lbl:not(.on):hover{outline:1px dashed var(--sel-hov);outline-offset:1px;border-radius:6px}
+#fxKey{position:absolute;left:50%;bottom:76px;transform:translateX(-50%);z-index:20;display:flex;gap:14px;align-items:center;padding:8px 12px;border-radius:10px;background:var(--panel);border:1px solid var(--border);box-shadow:var(--shadow);font:500 12px/16px var(--font);color:var(--text-2);pointer-events:none}
+#fxKey[hidden]{display:none}
+#fxKey span{display:flex;align-items:center;gap:6px}
+#fxKey i{width:14px;height:10px;border-radius:3px;border:1.5px solid var(--border-strong);background:var(--panel)}
+#fxKey i.t{border-radius:999px;border-color:var(--ok)} #fxKey i.d{width:10px;height:10px;transform:rotate(45deg);border-color:var(--warn)} #fxKey i.a{box-shadow:inset 3px 0 0 var(--danger)}
+#fxKey i.s{background:var(--sel);border-color:var(--sel)} #fxKey i.r{border-color:var(--rel)} #fxKey i.h{border-style:dashed;border-color:var(--sel-hov)}
+</style>
+<script>
+/* FB61 */
+(function(){
+S.ucst=S.ucst||{};
+ACT.ucstt=id=>{ S.ucst[id]=!S.ucst[id]; renderSide(); };
+const side=document.getElementById('cxItem');
+const tidy=()=>{ const side=document.getElementById('cxItem'); if(!side) return; const sc=side.querySelector('.scroll'); if(!sc) return; const a=sc.querySelector('.ucr-a'), k=sc.querySelector('.ucask'); if(!a&&!k) return;
+  const host=sc.parentNode; let f=host.querySelector(':scope>.ucfoot'); if(!f){ f=document.createElement('div'); f.className='ucfoot'; host.appendChild(f); } f.innerHTML=''; if(a) f.appendChild(a); if(k) f.appendChild(k); host.classList.add('hasfoot'); };
+{ const _r=render; render=function(){ _r(); tidy(); }; }
+if(window.renderSide){ const _s=renderSide; renderSide=function(){ _s.apply(this,arguments); tidy(); }; }
+/* legend on the canvas for the flowchart and the sequence diagram */
+document.getElementById('vCodona').insertAdjacentHTML('beforeend','<div id="fxKey" hidden aria-hidden="true"></div>');
+const key=document.getElementById('fxKey');
+const put=()=>{ const on=!!S.ucx.flow&&S.tab==='codona'; key.hidden=!on; if(!on) return; const seq=S.ucx.fv==='seq';
+  key.innerHTML=(seq?'':'<span><i class="t"></i>Start, end</span><span><i></i>Step</span><span><i class="d"></i>Decision</span><span><i class="a"></i>Other path</span>')+'<span><i class="h"></i>Hover</span><span><i class="s"></i>Selected</span><span><i class="r"></i>Related</span>'; };
+{ const _r=render; render=function(){ _r(); put(); }; }
+{ const _f=window.renderFlowCanvas; if(_f) window.renderFlowCanvas=function(x){ _f(x); put(); }; }
+try{ render(); }catch(e){}
+})();
+</script>
+<style>
+/* FB62 · impact: clearer change list, tooltips and lines */
+.ig .lk{stroke-linecap:round;opacity:.75}
+.ig .lk.dep,.ig .lk.ok{opacity:.6}
+.ig.hv .lk.on{opacity:1;stroke-width:2.4}
+.imp .itip{padding:10px 12px;min-width:220px;max-width:300px;background:var(--panel);border:1px solid var(--border-strong);border-radius:10px;display:flex;flex-direction:column;gap:6px}
+.itip .k{font:600 11px/16px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-3)}
+.itip .k.r{color:var(--danger-text)} .itip .k.m{color:var(--on-accent-sub,#d3bdff)}
+.itip b{font:600 13px/18px var(--font);color:var(--text)}
+.itip .ft{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font:400 12px/18px var(--font);color:var(--text-2)}
+.cxp{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:6px;background:var(--surface);font:500 12px/18px var(--font);color:var(--text)}
+.cxp.new{background:var(--selected);color:var(--on-accent-sub,#d3bdff)}
+.iap{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 6px;border-radius:5px;background:var(--surface);font:500 11px/16px var(--mono);color:var(--text);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.iap .meth{font:600 10px/16px var(--mono)}
+.itip .aps,.ich .aps{display:flex;flex-wrap:wrap;gap:4px}
+.itip .st{font:500 12px/18px var(--font);color:var(--text-2)} .itip .st.r{color:var(--danger-text)}
+.ich{display:flex;flex-direction:column;gap:14px}
+.ich .sec{display:flex;flex-direction:column;gap:6px}
+.ich .sh{display:flex;align-items:center;gap:8px;font:600 12px/18px var(--font);color:var(--text)}
+.ich .sh .count{margin-left:auto}
+.ich .sub{font:500 11px/16px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-3);margin-top:4px}
+.ich .it{display:flex;flex-direction:column;gap:6px;padding:8px 10px;border-radius:8px;background:var(--canvas);border:1px solid var(--border);text-align:left;width:100%}
+.ich .it:hover{border-color:var(--sel-hov);border-style:dashed} .ich .it.on{border-color:var(--sel);border-style:solid}
+.ich .it .r1{display:flex;align-items:center;gap:8px;min-width:0}
+.ich .it .r1 b{font:500 13px/18px var(--font);color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ich .it .r1 .sp{flex:1}
+.ich .it small{font:400 12px/18px var(--font);color:var(--text-2)}
+.ich .tg2{font:600 11px/16px var(--font);padding:0 7px;border-radius:999px;white-space:nowrap;flex:none}
+.ich .tg2.m{background:var(--selected);color:var(--on-accent-sub,#d3bdff)} .ich .tg2.r{background:var(--danger-sub);color:var(--danger-text)} .ich .tg2.ok{background:var(--ok-sub);color:var(--ok-text)} .ich .tg2.n{background:var(--surface);color:var(--text-2)}
+.ich .ctxsum{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font:400 12px/18px var(--font);color:var(--text-2)}
+</style>
+<script>
+/* FB62 */
+(function(){
+const H=window.dbH; if(!H) return;
+const pl=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
+const api=r=>{ const [m,...p]=r.split(' '); return `<span class="iap" title="${esc(r)}"><b class="meth ${m.toLowerCase()}">${m}</b>${esc(p.join(' '))}</span>`; };
+const strip=h=>String(h||'').replace(/<[^>]+>/g,'');
+const decided=(D,key)=>{ const r=D.M.res[key]; if(!r) return null; const x=D.issues.find(z=>z.key===key); const o=x&&H.OPTS(x,D).find(q=>q[0]===r); return o?strip(o[1]):'Decided'; };
+const cx=(c,nw)=>`<span class="cxp ${nw?'new':''}">${esc(nw?c:H.cName(c))}</span>`;
+const movedApis=(D,id)=>UCB[id].apis.filter(a=>D.routes.includes(a));
+function depInfo(D,id){ const out=[]; D.issues.forEach(x=>{ if(x.type==='part'&&x.id===id) out.push({x, apis:x.moved, t:`Uses ${x.moved.length===1?'an API':'APIs'} that move to ${D.tName}`});
+  if(x.type==='api'&&x.st.includes(id)) out.push({x, apis:[x.api], t:`Uses an API that moves to ${D.tName}`});
+  if(x.type==='pt'&&x.stay.includes(id)) out.push({x, apis:[], t:`Still uses “${x.it.label}”`}); }); return out; }
+function ptInfo(D,G,iid){ const v=G.pts.get(iid); const it=v.it; const inf=D.infos.find(x=>x.iid===iid); const iss=D.issues.find(x=>x.type==='pt'&&x.it.id===iid);
+  const st = v.k==='ev' ? ['r','Event it fires'] : iss ? (D.M.res[iss.key]?['ok',decided(D,iss.key)]:['r','Shared · to decide']) : inf&&inf.st==='internal' ? ['m','Becomes internal'] : ['m','Moves with it'];
+  return {it, st, apis:D.routes.filter(a=>opInts(a).includes(iid))}; }
+window.impTip=function(n,D,G){ const [k,id,side]=n.split(':');
+  if(k==='u'){ const u=UCB[id]; if(G.moved.has(id)){ const A=movedApis(D,id);
+      return `<span class="k m">Use case · moves</span><b>${esc(u.name)}</b><span class="ft">${cx(u.ctx)}→${cx(D.tName,1)}</span>${A.length?`<span class="aps">${A.slice(0,4).map(api).join('')}${A.length>4?`<span class="st">+${A.length-4}</span>`:''}</span>`:''}`; }
+    const L=depInfo(D,id); if(L.length){ const d=L[0]; const dc=decided(D,d.x.key);
+      return `<span class="k r">Use case · affected</span><b>${esc(u.name)}</b><span class="ft">Stays in ${cx(u.ctx)}</span><span class="st">${esc(d.t)}</span>${d.apis.length?`<span class="aps">${d.apis.slice(0,3).map(api).join('')}</span>`:''}<span class="st ${dc?'':'r'}">${dc?esc(dc):'To decide'}</span>`; }
+    return `<span class="k">Use case</span><b>${esc(u.name)}</b><span class="ft">In ${cx(u.ctx)} · not affected</span>`; }
+  if(k==='p'){ if(!G.pts.has(id)){ const it=INB[id]; return `<span class="k">Integration point</span><b>${esc(it.label)}</b>`; } const P=ptInfo(D,G,id);
+    return `<span class="k ${P.st[0]==='r'?'r':'m'}">${/event/i.test(P.it.type)?'Event':'Integration point'}</span><b>${esc(P.it.label)}</b><span class="ft">${cx(P.it.from)}→<span class="cxp">${esc(ctxName(P.it.to))}</span></span>${P.apis.length?`<span class="aps">${P.apis.slice(0,3).map(api).join('')}</span>`:''}<span class="st ${P.st[0]==='r'?'r':''}">${esc(P.st[1])}</span>`; }
+  if(k==='c'){ if(id===G.tgt){ return `<span class="k m">${D.add?'Target context':'New context'}</span><b>${esc(D.tName)}</b><span class="st">Gets ${pl(G.moved.size,'use case')} and ${pl(D.routes.length,'API')}</span>`; }
+    const out=[...G.moved].filter(x=>UCB[x].ctx===id).length, aff=[...G.dep.keys()].filter(x=>UCB[x]&&UCB[x].ctx===id).length;
+    return `<span class="k">Bounded context</span><b>${esc(H.cName(id))}</b><span class="st">${out?`${pl(out,'use case')} move out`:'Nothing moves out'}${aff?` · <span style="color:var(--danger-text)">${aff} affected</span>`:''}</span>`; }
+  return ''; };
+window.impCon=function(D,G,sel){ if(!D.sel.size) return '<div class="db-info">Pick use cases or APIs on the left. Everything they change shows here.</div>';
+  const it=(n,inner)=>`<button class="it ${sel===n?'on':''}" data-act="imsel" data-arg="${n}">${inner}</button>`;
+  const sec=(t,n,inner)=>n?`<div class="sec"><div class="sh">${t}<span class="count">${n}</span></div>${inner}</div>`:'';
+  /* 1 · what moves, grouped by where it comes from */
+  const bySrc={}; [...G.moved].forEach(id=>(bySrc[UCB[id].ctx]=bySrc[UCB[id].ctx]||[]).push(id));
+  const alone=D.routes.filter(a=>![...G.moved].some(id=>UCB[id].apis.includes(a)));
+  const mv=Object.entries(bySrc).map(([c,ids])=>`<div class="sub">From ${esc(H.cName(c))}</div>`+ids.map(id=>{ const A=movedApis(D,id); return it('u:'+id+':t',`<span class="r1"><b>${esc(UCB[id].name)}</b><span class="sp"></span><span class="tg2 m">Moves</span></span>${A.length?`<span class="aps">${A.map(api).join('')}</span>`:''}`); }).join('')).join('')
+    + (alone.length?`<div class="sub">APIs on their own</div>`+alone.map(a=>{ const c=H.cName(window.API_OWNER&&API_OWNER[a]||(OPS[a]&&UCB[OPS[a].users[0]]?UCB[OPS[a].users[0]].ctx:'unassigned')); return it('c:'+G.tgt,`<span class="r1">${api(a)}<span class="sp"></span><small>from ${esc(c)}</small></span>`); }).join(''):'');
+  /* 2 · what stays behind and is affected */
+  const dep=[...G.dep.keys()].map(id=>{ const L=depInfo(D,id); const d=L[0]; const dc=d&&decided(D,d.x.key);
+    return it('u:'+id+':s',`<span class="r1"><b>${esc(UCB[id].name)}</b><span class="sp"></span>${dc?'<span class="tg2 ok">Decided</span>':'<span class="tg2 r">To decide</span>'}</span><small>Stays in ${esc(H.cName(UCB[id].ctx))} · ${esc(d?d.t:'')}</small>${d&&d.apis.length?`<span class="aps">${d.apis.map(api).join('')}</span>`:''}${dc?`<small>${esc(dc)}</small>`:''}`); }).join('');
+  /* 3 · integration points and events */
+  const pts=[...G.pts.keys()].map(iid=>{ const P=ptInfo(D,G,iid); return it('p:'+iid,`<span class="r1"><b>${esc(P.it.label)}</b><span class="sp"></span><span class="tg2 ${P.st[0]}">${esc(P.st[1])}</span></span><small>${esc(H.cName(P.it.from))} → ${esc(ctxName(P.it.to))} · ${esc(P.it.type)}</small>`); }).join('');
+  /* 4 · contexts before and after */
+  const srcs=[...new Set([...G.moved].map(id=>UCB[id].ctx))];
+  const ctxs=srcs.map(c=>{ const n=[...G.moved].filter(x=>UCB[x].ctx===c).length; const a=[...G.moved].filter(x=>UCB[x].ctx===c).reduce((s,id)=>s+movedApis(D,id).length,0); return it('c:'+c,`<span class="r1"><b>${esc(H.cName(c))}</b><span class="sp"></span><small>−${pl(n,'use case')} · −${pl(a,'API')}</small></span>`); }).join('')
+    + it('c:'+G.tgt,`<span class="r1"><b>${esc(D.tName)}</b><span class="sp"></span><small style="color:var(--on-accent-sub,#d3bdff)">+${pl(G.moved.size,'use case')} · +${pl(D.routes.length,'API')}</small></span>`);
+  return `<div class="ich">${sec(`Moves to ${esc(D.tName)}`,G.moved.size+alone.length,mv)}${sec('Affected, stays where it is',G.dep.size,dep)}${sec('Integration points and events',G.pts.size,pts)}${sec('Contexts',srcs.length+1,ctxs)}</div>`; };
+try{ if(S.nc) renderNC(); }catch(e){}
+})();
+</script>
+<style>
+/* FB63 · sidebar: sticky title and chat room, no "Use cases" label, Propose changes. Flowchart symbols in the four reference colours. */
+#cxItem .card:has(.ucr) .ch.flat .rp-h .k{visibility:hidden}
+#cxItem .ucfoot .ucask{display:none!important}
+.ucpc svg{flex:none}
+.ucstk{position:sticky;top:0;z-index:4;margin:0 -22px;padding:12px 22px;background:var(--panel);border-bottom:1px solid var(--border);display:none;flex-direction:column;gap:8px;box-shadow:0 8px 12px -10px rgba(0,0,0,.6)}
+.ucstk.on{display:flex}
+.ucstk h3{margin:0;font:600 16px/22px var(--font);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ucstk .rme2{margin:0}
+:root{--fs-term:#7cc04f;--fs-step:#7b97f0;--fs-dec:#f0a36b;--fs-alt:#9a84f2}
+.fx-c.term .sym svg,.fx-c.term .hd>svg,.fx-c.term .hd>.kic2{color:var(--fs-term)!important}
+.fx-c:not(.term):not(.dec):not(.alt) .sym svg{color:var(--fs-step)!important}
+.fx-c.dec .sym svg{color:var(--fs-dec)!important}
+.fx-c.alt .sym svg{color:var(--fs-alt)!important}
+.fx-c.term{border-color:color-mix(in srgb,var(--fs-term) 55%,var(--border-strong))!important}
+.fx-c.dec{border-color:color-mix(in srgb,var(--fs-dec) 60%,var(--border-strong))!important}
+.fx-c.alt{box-shadow:inset 3px 0 0 var(--fs-alt)!important}
+.fx-c:not(.term):not(.dec):not(.alt):not(.on){border-left:3px solid color-mix(in srgb,var(--fs-step) 70%,transparent)}
+.fn.on.fx-c{border-left-width:1px}
+.f2-term{border-color:var(--fs-term)!important} .f2-dec polygon{stroke:var(--fs-dec)!important}
+.ucf2 .stats span:nth-child(1) svg{color:var(--fs-step)} .ucf2 .stats span:nth-child(2) svg{color:var(--fs-dec)} .ucf2 .stats span:nth-child(3) svg{color:var(--fs-alt)}
+#fxKey i.t{border-color:var(--fs-term)} #fxKey i:not([class]){border-color:var(--fs-step)} #fxKey i.d{border-color:var(--fs-dec)} #fxKey i.a{box-shadow:inset 3px 0 0 var(--fs-alt)}
+</style>
+<script>
+/* FB63 */
+(function(){
+{ const _t=ACT.dbtab; ACT.dbtab=function(t){ if(S.nc) S.nc.itab='sum'; return _t(t); }; }
+const stick=()=>{ const side=document.getElementById('cxItem'); if(!side) return; const sc=side.querySelector('.scroll'); if(!sc) return; const det=sc.querySelector('.det'); const room=sc.querySelector('.rme2');
+  if(room&&typeof room.cloneNode!=='function') return; let bar=sc.querySelector(':scope>.ucstk'); if(!det||!room||!det.querySelector('.ucr')){ if(bar) bar.remove(); return; }
+  const title=(det.querySelector('h2 span')||det.querySelector('h2')).textContent;
+  if(!bar){ bar=document.createElement('div'); bar.className='ucstk'; sc.insertBefore(bar,sc.firstChild); }
+  bar.innerHTML=`<h3>${esc(title)}</h3>`; bar.appendChild(room.cloneNode(true));
+  const upd=()=>{ const r=room.getBoundingClientRect(), t=sc.getBoundingClientRect().top; const past=r.bottom < t+4; bar.classList.toggle('on',past); };
+  if(!sc.__stk){ sc.__stk=1; sc.addEventListener('scroll',upd,{passive:true}); } upd(); };
+{ const _r=render; render=function(){ _r(); stick(); }; }
+if(window.renderSide){ const _s=renderSide; renderSide=function(){ _s.apply(this,arguments); stick(); }; }
+try{ render(); }catch(e){}
+})();
+</script>
+<style>
 /* ===== Diagram colour lab · palettes from the "AI Agent" reference (green · orange · blue · purple) ===== */
 :root{
   --g-b:#7cc04f; --g-f:#eef7e6; --g-t:#3d7a1f; --g-s:#6cb340;
@@ -11663,21 +12113,22 @@ body.lab.light .sq-end{background:var(--zf-g)}
 (function(){
 document.body.classList.add('lab');
 const D=[['galaxy','Galaxy'],['l1','Level 1 · contexts'],['l2','Level 2 · solution'],['l3','Level 3 · components'],['seq','Sequence'],['flow','Flowchart'],['dev','Dev Galaxy']];
-const PAL=[['sem','States','linear-gradient(90deg,#7b97f0 25%,#7457ee 25% 50%,#7cc04f 50% 75%,#f0a36b 75%)'],['cur','Current',''],['multi','Multi colour','linear-gradient(90deg,#7cc04f 25%,#f0a36b 25% 50%,#7b97f0 50% 75%,#9a84f2 75%)'],['p','Purple','#9a84f2'],['b','Blue','#7b97f0'],['g','Green','#7cc04f'],['o','Orange','#f0a36b']];
+const PAL=[['cur','Current','']];
 const L={d:'galaxy', pal:{}, mode:{}, lv:'sys'};
-D.forEach(([k])=>{ L.pal[k]='sem'; L.mode[k]='dark'; });
+D.forEach(([k])=>{ L.pal[k]='cur'; L.mode[k]='dark'; });
 document.body.insertAdjacentHTML('beforeend','<div id="labBar"></div><div id="labNote"></div>');
 const bar=document.getElementById('labBar'), note=document.getElementById('labNote');
 function paint(){ const d=L.d; const p=L.pal[d], m=L.mode[d];
-  document.body.className=document.body.className.replace(/\bpal-\w+/g,'').replace(/\blight\b/,'').trim()+' pal-'+p+(m==='light'?' light':'');
+  document.body.className=document.body.className.replace(/\bpal-\w+/g,'').replace(/\blight\b/,'').trim()+' pal-'+p+(m==='light'?' light':''); document.body.classList.toggle('nodots',(L.bg||'dots')==='plain');
   bar.innerHTML=`<b class="ttl">Diagram states</b>
     <div class="grp">${D.map(([k,l])=>`<button class="${d===k?'on':''}" data-lab="d" data-v="${k}">${l}</button>`).join('')}</div>
     <span class="sp"></span>
     
     <div class="grp"><span>Mode</span>${[['dark','Dark'],['light','Light']].map(([k,l])=>`<button class="${m===k?'on':''}" data-lab="mode" data-v="${k}">${l}</button>`).join('')}</div>
+    <div class="grp"><span>Background</span>${[['dots','Dotted'],['plain','Plain']].map(([k,l])=>`<button class="${(L.bg||'dots')===k?'on':''}" data-lab="bg" data-v="${k}">${l}</button>`).join('')}</div>
     ${d==='seq'?`<div class="grp"><span>Level</span>${[['sys','1 System'],['ctx','2 Contexts'],['code','3 Code']].map(([k,l])=>`<button class="${L.lv===k?'on':''}" data-lab="lv" data-v="${k}">${l}</button>`).join('')}</div>`:''}`;
   if(d==='dev'&&window.LAB_DEVNOTE){ note.innerHTML=LAB_DEVNOTE; return; }
-  note.innerHTML = `<b>Each diagram keeps its own colours and mode.</b> Hover, click and selection work as in the prototype: hover is a lighter solid outline, selected is strong and thick, connected items stay full, the rest dims. ${m==='light'?'Light mode uses solid pastel fills with coloured borders.':'Dark mode uses the same hues as transparent tints.'}`; }
+  note.innerHTML = `<b>Prototype colours.</b> Hover is a dashed outline, selected is solid purple, related stays full, the rest dims.`; }
 function show(){ const d=L.d; if(window.labDev) labDev(d==='dev'); if(d==='dev'){ paint(); return; } try{
   S.ucx.flow=null; S.side={v:'home'}; S.stack=[]; S.level=0;
   if(d==='galaxy'){ render(); requestAnimationFrame(()=>gC.fit(false)); }
@@ -11685,7 +12136,7 @@ function show(){ const d=L.d; if(window.labDev) labDev(d==='dev'); if(d==='dev')
   else { S.side={v:'item',sel:{t:'uc',id:'cancel-order'}}; S.ucx.fv = d==='seq'?'seq':'cards'; S.ucx.sl=L.lv; S.ucx.flow='cancel-order'; render(); }
   }catch(e){ console.error(e); } paint(); }
 document.addEventListener('click', e=>{ const b=e.target.closest('[data-lab]'); if(!b) return; const k=b.dataset.lab, v=b.dataset.v;
-  if(k==='d'){ L.d=v; show(); return; } if(k==='pal') L.pal[L.d]=v; if(k==='mode') Object.keys(L.mode).forEach(x=>L.mode[x]=v); if(k==='lv'){ L.lv=v; show(); return; }
+  if(k==='d'){ L.d=v; show(); return; } if(k==='pal') L.pal[L.d]=v; if(k==='mode') Object.keys(L.mode).forEach(x=>L.mode[x]=v); if(k==='bg'){ L.bg=v; document.body.classList.toggle('nodots',v==='plain'); } if(k==='lv'){ L.lv=v; show(); return; }
   paint(); if(window.renderFlowCanvas&&S.ucx.flow) renderFlowCanvas(); }, true);
 try{ S.nav.open=false; S.tab='codona'; S.wn.guide=false; wnApplyGuide&&wnApplyGuide(); }catch(e){}
 window.LAB=L; window.labShow=show; window.labPaint=paint;
@@ -11810,102 +12261,8 @@ window.labDev=function(on){ host.hidden=!on; leg.hidden=!on; if(!on){ info.hidde
 window.LAB_DEVNOTE='<b>Live dev Galaxy.</b> The links from the dev environment page, coloured by integration type. The saved dev page only kept the links, not the node rings.';
 })();
 </script>
-<style>
-/* ===== Lab v3 · "States" palette: current base, the four hues carry meaning =====
-   Base   current neutral cards, borders and lines
-   Blue   hover (light) and connected to the selection (strong)
-   Purple selected
-   Green  confirmed: reviewed, code evidence, events (asynchronous), start and end
-   Orange needs attention: suggested, unresolved, outside system, conditions */
-body.lab.pal-sem{--hv:#7b97f0;--cn:#5f80ec;--sl:#7457ee;--slf:color-mix(in srgb,#7457ee 22%,var(--panel));--ok:#7cc04f;--at:#f0a36b;--at-t:#ffc79f;--ok-t:#b9e39b;--cn-t:#c6d3ff}
-body.lab.pal-sem.light{--hv:#7b97f0;--cn:#4d70e6;--sl:#7457ee;--slf:#f0ebfd;--ok:#6cb340;--at:#ec8648;--at-t:#b4561c;--ok-t:#3d7a1f;--cn-t:#2f56c9}
 
-/* ---------- Galaxy ---------- */
-body.lab.pal-sem .el.hov:not(.tgt):not(.pri) .arc,body.lab.pal-sem .el.hov:not(.tgt):not(.pri) .box,body.lab.pal-sem .el.hov .chip{stroke:var(--hv)!important;stroke-width:2!important;stroke-dasharray:none!important}
-body.lab.pal-sem .el[data-k=int].hov:not(.tgt):not(.pri) .curve,body.lab.pal-sem .el[data-k=uc].hov:not(.tgt):not(.pri) .bar{stroke:var(--hv)!important;opacity:1;stroke-dasharray:none!important}
-body.lab.pal-sem .el[data-k=pt].hov .dot{stroke:var(--hv)!important;stroke-width:2!important}
-body.lab.pal-sem .el[data-k=int]:is(.hi,.dn,.up):not(.tgt):not(.pri) .curve{stroke:var(--cn)!important;opacity:1}
-body.lab.pal-sem .el:is(.hi,.dn,.up):not(.tgt):not(.pri) .arc{stroke:var(--cn)!important}
-body.lab.pal-sem .el:is(.tgt,.pri) .arc{fill:var(--slf)!important;stroke:var(--sl)!important;stroke-width:2.5!important}
-body.lab.pal-sem .el:is(.tgt,.pri) .curve,body.lab.pal-sem .el:is(.tgt,.pri) .bar{stroke:var(--sl)!important;opacity:1}
-body.lab.pal-sem .el:is(.tgt,.pri) .dot{fill:var(--sl)!important}
-body.lab.pal-sem .el:is(.tgt,.pri) .box,body.lab.pal-sem .el:is(.tgt,.pri) .chip{stroke:var(--sl)!important;stroke-width:2!important}
-body.lab.pal-sem .el[data-k=int].t-suggested .curve,body.lab.pal-sem .el[data-k=int][class*=clar] .curve{stroke:var(--at)}
-body.lab.pal-sem .el[data-k=ext] .box{stroke:var(--at);stroke-dasharray:4 3}
-body.lab.pal-sem .el[data-k=ext] .t1{fill:var(--at-t)!important}
-body.lab.pal-sem .el.dim{opacity:.14}
 
-/* ---------- Level 1–3 cards and their lines ---------- */
-body.lab.pal-sem #cWorld .dcard:not(.sel):hover{border-color:var(--hv)!important;box-shadow:0 0 0 1px var(--hv)!important}
-body.lab.pal-sem #cWorld .dcard:is(.rel,.up,.dn,.end):not(.sel){border-color:var(--cn)!important;box-shadow:none!important}
-body.lab.pal-sem #cWorld .dcard.sel,body.lab.pal-sem #cWorld .dcard.sel:hover{border-color:var(--sl)!important;box-shadow:0 0 0 2px var(--sl)!important;background:color-mix(in srgb,var(--sl) 8%,var(--panel))!important}
-body.lab.pal-sem #cWorld .dcard.ghost,body.lab.pal-sem #cWorld .dcard.sug{border-color:var(--at)!important;border-style:dashed!important}
-body.lab.pal-sem .eg:hover:not(.on) .edge{stroke:var(--hv)!important;stroke-width:2!important;stroke-dasharray:none!important}
-body.lab.pal-sem .eg:hover:not(.on) .e-label rect{stroke:var(--hv)!important}
-body.lab.pal-sem .eg:is(.hot,.dn,.up):not(.on):not(.ghost) .edge{stroke:var(--cn)!important;stroke-dasharray:none!important}
-body.lab.pal-sem .eg:is(.hot,.dn,.up):not(.on) .e-label rect{stroke:var(--cn)!important;fill:var(--panel)!important}
-body.lab.pal-sem .eg:is(.hot,.dn,.up):not(.on) .e-label text{fill:var(--cn-t)!important}
-body.lab.pal-sem .eg.on .edge{stroke:var(--sl)!important;stroke-width:3.5!important}
-body.lab.pal-sem .eg.on .e-label rect{fill:var(--sl)!important;stroke:var(--sl)!important}
-body.lab.pal-sem .eg.on .e-label text{fill:#fff!important}
-body.lab.pal-sem .eg .edge.event{stroke:var(--ok)}
-body.lab.pal-sem .eg.ghost .edge,body.lab.pal-sem .eg.ghost:is(.hot,.dn,.up) .edge{stroke:var(--at)!important}
-body.lab.pal-sem .eg.ghost .e-label rect{stroke:var(--at)!important} body.lab.pal-sem .eg.ghost .e-label text{fill:var(--at-t)!important}
-body.lab.pal-sem .seg-eg:hover:not(.on) .sedge{stroke:var(--hv)!important;stroke-width:2!important;stroke-dasharray:none!important}
-body.lab.pal-sem .seg-eg.hot:not(.on) .sedge{stroke:var(--cn)!important}
-body.lab.pal-sem .seg-eg.on .sedge{stroke:var(--sl)!important}
-
-/* ---------- Flowchart ---------- */
-body.lab.pal-sem .fx-c.term{border-color:var(--ok)} body.lab.pal-sem .fx-c.term .t,body.lab.pal-sem .fx-c.term .sym{color:var(--ok-t)}
-body.lab.pal-sem .fx-c.dec{border-color:var(--at)} body.lab.pal-sem .fx-c.dec .t{color:var(--at-t)}
-body.lab.pal-sem .fx-c.alt{border-color:var(--at);border-style:dashed}
-body.lab.pal-sem #ucFlow .fe .ae{stroke:var(--at)!important}
-body.lab.pal-sem .fx-c:not(.on):hover{border-color:var(--hv)!important;box-shadow:0 0 0 1px var(--hv)!important}
-body.lab.pal-sem .fn.on.fx-c{border-color:var(--sl)!important;box-shadow:0 0 0 2px var(--sl)!important}
-
-/* ---------- Sequence ---------- */
-body.lab.pal-sem #ucFlow svg.fe.sq .sq-m.ret,body.lab.pal-sem #ucFlow svg.fe.sq .sq-ah.ret{stroke:var(--text-3)}
-body.lab.pal-sem #ucFlow svg.fe.sq .sq-m.event,body.lab.pal-sem #ucFlow svg.fe.sq .sq-ah.event{stroke:var(--ok);fill:var(--ok)}
-body.lab.pal-sem .sq-lbl.event{color:var(--ok-t)}
-body.lab.pal-sem #ucFlow svg.fe.sq .sq-frame{fill:color-mix(in srgb,var(--at) 7%,var(--canvas));stroke:var(--at)}
-body.lab.pal-sem #ucFlow svg.fe.sq .sq-ftag{fill:var(--at)} body.lab.pal-sem #ucFlow svg.fe.sq .sq-altsep{stroke:var(--at)}
-body.lab.pal-sem .sq-cond{background:color-mix(in srgb,var(--at) 16%,var(--panel));color:var(--at-t)!important} body.lab.pal-sem .sq-cond b{color:var(--at-t)!important}
-body.lab.pal-sem .sq-dec{background:var(--at)}
-body.lab.pal-sem .sq-lbl:not(.on):hover{color:var(--hv)!important}
-body.lab.pal-sem #ucFlow svg.fe.sq .sq-m.on,body.lab.pal-sem #ucFlow svg.fe.sq .sq-ah.on{stroke:var(--sl)!important;stroke-width:2.5}
-body.lab.pal-sem .sq-lbl.on{color:#fff;background:var(--sl);border-radius:6px}
-body.lab.pal-sem .sq-step.on{background:var(--sl)}
-body.lab.pal-sem .sq-end{border-color:var(--ok)}
-
-/* ---------- Dev Galaxy ---------- */
-body.lab.pal-sem #devGx path.link{stroke:#6b7180!important}
-body.lab.pal-sem.light #devGx path.link{stroke:#a3a9b6!important}
-body.lab.pal-sem #devGx path.link[data-ty=event]{stroke:var(--ok)!important}
-body.lab.pal-sem #devGx path.link[data-ty=outside]{stroke:var(--at)!important}
-body.lab.pal-sem #devGx path.link.hov:not(.sel){stroke:var(--hv)!important}
-body.lab.pal-sem #devGx path.link.con{stroke:var(--cn)!important}
-body.lab.pal-sem #devGx path.link.sel{stroke:var(--sl)!important}
-
-/* ---------- key ---------- */
-#semKey{position:fixed;right:16px;bottom:16px;z-index:200;display:none;flex-direction:column;gap:6px;padding:10px 12px;border-radius:10px;background:var(--panel);border:1px solid var(--border);box-shadow:var(--shadow);font:500 12px/16px var(--font);color:var(--text-2)}
-body.lab.pal-sem #semKey{display:flex}
-#semKey b{color:var(--text);font-weight:600}
-#semKey span{display:flex;align-items:center;gap:8px}
-#semKey i{width:12px;height:12px;border-radius:4px;flex:none;border:2px solid}
-#semKey i.base{border-color:var(--border-strong)} #semKey i.hv{border-color:var(--hv)} #semKey i.cn{border-color:var(--cn);background:var(--cn)}
-#semKey i.sl{border-color:var(--sl);background:var(--sl)} #semKey i.ok{border-color:var(--ok)} #semKey i.at{border-color:var(--at);border-style:dashed}
-</style>
-<script>
-document.body.insertAdjacentHTML('beforeend',`<div id="semKey"><b>What the colours mean</b>
-<span><i class="base"></i>Default · current base</span>
-<span><i class="hv"></i>Blue outline · hover</span>
-<span><i class="cn"></i>Blue · connected to the selection</span>
-<span><i class="sl"></i>Purple · selected</span>
-<span><i class="ok"></i>Green · confirmed, events, start and end</span>
-<span><i class="at"></i>Orange · suggested, unresolved, outside, conditions</span></div>`);
-</script>
-<style>body.lab.pal-sem .fbleg{display:none!important}</style>
-<script>(function(){ const n=document.getElementById('labNote'); new MutationObserver(()=>{ if(!document.body.classList.contains('pal-sem')||LAB.d==='dev'||n.dataset.sem===n.innerHTML) return; n.innerHTML='<b>States palette.</b> The base stays as it is today. Colour only appears when something happens or needs attention, so the diagram stays calm until you interact with it.'; n.dataset.sem=n.innerHTML; }).observe(n,{childList:true}); })();</script>
 <style>
 /* ===== Light mode · tokens from Figma "Mapped / Light" (Syntroper - Product) ===== */
 body.lab.light{
@@ -11962,6 +12319,29 @@ body.lab.light .sq-ok,body.lab.light .sq-end{background:rgba(52,199,89,.14);colo
 /* lab chrome */
 body.lab.light #labBar{background:#ffffff;border-color:#e4e7f0}
 body.lab.light #labBar button.on{background:#e4e7f0}
+</style>
+<style>body.lab.nodots .stage,body.lab.nodots #ucFlow,body.lab.nodots .wstage,body.lab.nodots #devGx,body.lab.nodots #dbd{background-image:none!important}</style>
+<style>
+body.lab:not(.light):not(.nodots) .stage,body.lab:not(.light):not(.nodots) #ucFlow,body.lab:not(.light):not(.nodots) #dbd,body.lab:not(.light):not(.nodots) #devGx,body.lab:not(.light):not(.nodots) .wstage{background-image:radial-gradient(circle at 1px 1px,#2f3341 1.1px,transparent 1.3px)!important;background-size:18px 18px!important}
+body.lab.light:not(.nodots) .stage,body.lab.light:not(.nodots) #ucFlow,body.lab.light:not(.nodots) #dbd,body.lab.light:not(.nodots) #devGx,body.lab.light:not(.nodots) .wstage{background-image:radial-gradient(circle at 1px 1px,#c1bdda 1.1px,transparent 1.3px)!important;background-size:18px 18px!important}
+body.lab.nodots .stage,body.lab.nodots #ucFlow,body.lab.nodots #dbd,body.lab.nodots #devGx,body.lab.nodots .wstage{background-image:none!important}
+</style>
+<style>
+/* Galaxy light: white nodes, same base and states as the other diagrams */
+body.lab.light #gxC .el[data-k=uc] .bar{stroke:#ffffff!important;filter:drop-shadow(0 0 .4px rgba(19,22,32,.45)) drop-shadow(0 1px 1.5px rgba(19,22,32,.10));opacity:1!important}
+body.lab.light #gxC .el[data-k=ctx] .arc{fill:#ffffff!important;stroke:#c1bdda!important;opacity:1!important}
+body.lab.light #gxC .el[data-k=ctx] .arclbl{fill:#3a3d46!important}
+body.lab.light #gxC .el .chip{fill:#ffffff!important;stroke:#e4e7f0!important}
+body.lab.light #gxC .el[data-k=pt] .dot{fill:#ffffff!important;stroke:#60636b!important}
+body.lab.light #gxC .el[data-k=ext] .box{fill:#ffffff!important}
+body.lab.light #gxC .el[data-k=int] .curve{stroke:#b8bcc8}
+body.lab.light #gxC .el[data-k=uc]:is(.tgt,.pri) .bar{stroke:var(--sel)!important;filter:none}
+body.lab.light #gxC .el[data-k=uc]:is(.hi,.dn,.up):not(.tgt):not(.pri) .bar{stroke:#b8bcc8!important}
+body.lab.light #gxC .el[data-k=ctx]:is(.tgt,.pri) .arc{fill:var(--sel)!important;stroke:var(--sel)!important}
+body.lab.light #gxC .el[data-k=ctx]:is(.tgt,.pri) .arclbl{fill:#ffffff!important}
+body.lab.light #gxC .el[data-k=int]:is(.tgt,.pri) .curve{stroke:var(--sel)!important}
+body.lab.light #gxC .el[data-k=uc].hov:not(.tgt):not(.pri) .bar{stroke:#ffffff!important;filter:drop-shadow(0 0 1px var(--sel-hov)) drop-shadow(0 0 1px var(--sel-hov))}
+body.lab.light #gxC .el[data-k=ctx].hov:not(.tgt):not(.pri) .arc{stroke:var(--sel-hov)!important;stroke-dasharray:5 4!important}
 </style>
 </body>
 </html>

@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Syntroper · Teams with structure</title>
+<style>
+/* Arcus · Mapped / Dark tokens (Syntroper - Product) */
+:root{
+  --canvas:#060b15; --panel:#131620; --surface:#1d212d; --surface-strong:#2f3341; --pressed:#2f3341;
+  --border:#1c202c; --border-strong:#2f3341; --line:#3e4352;
+  --text:#ffffff; --text-2:#a3a7b5; --text-3:#778196;
+  --accent:#624ed5; --accent-hover:#8673f2; --accent-text:#8673f2; --accent-sub:rgba(98,78,213,.32); --selected:rgba(98,78,213,.16); --on-accent-sub:#d3bdff;
+  --success:#34c759; --success-sub:rgba(52,199,89,.16); --success-text:#b3efbd;
+  --warning:#ffcc4d; --warning-sub:rgba(255,204,77,.16); --warning-text:#ffe299;
+  --danger:#ea4d44; --danger-sub:rgba(234,77,68,.16); --danger-text:#ffafa3;
+  --info-sub:#002743; --info-text:#a8daff; --violet-sub:#19004a; --violet-text:#d3bdff; --pink-sub:#3e004a; --pink-text:#ffa3e3; --teal-sub:rgba(20,184,166,.16); --teal-text:#99f6e4;
+  --overlay:rgba(0,0,0,.64); --shadow:8px 8px 16px rgba(0,0,0,.64);
+  --font:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--canvas);color:var(--text);font:400 14px/22px var(--font);-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent-hover);outline-offset:2px}
+svg.i{flex:none;display:block}
+/* shell */
+#rail{position:fixed;left:0;top:0;bottom:0;width:60px;border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:8px;background:var(--canvas)}
+.rb{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:var(--text-2)}
+.rb:hover{background:var(--surface);color:var(--text)} .rb.on{background:var(--surface);color:var(--text)}
+.rsp{flex:1}
+#top{position:fixed;left:60px;right:0;top:0;height:52px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 24px}
+.crumb{display:flex;align-items:center;gap:8px;font:500 14px/22px var(--font);color:var(--text-2)}
+.crumb button:hover{color:var(--text)}
+.crumb .cur{padding:0 6px;border-radius:6px;background:var(--surface);color:var(--text)}
+.search{display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border-radius:8px;background:var(--panel);border:1px solid var(--border);color:var(--text-3);min-width:0}
+.search input{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--text);font-size:14px}
+.search input::placeholder{color:var(--text-3)}
+.search:focus-within{border-color:var(--accent-hover)}
+#top .search{margin:0 auto;width:280px}
+#app{position:fixed;left:60px;top:52px;right:0;bottom:0;overflow:auto}
+.wrap{max-width:1200px;margin:0 auto;padding:28px 40px 60px}
+.org{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.org .lg{width:36px;height:36px;border-radius:8px;background:#fff;display:grid;place-items:center}
+.org b{display:block;font:600 16px/20px var(--font)}
+.org small{font:400 12px/18px var(--font);color:var(--text-2)}
+.cols{display:grid;grid-template-columns:180px 1fr;gap:32px;align-items:start}
+.cols>section{min-width:0}
+.chart{max-height:calc(100vh - 260px)}
+.snav{display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--border);min-height:520px;padding-right:0}
+.snav button{display:flex;align-items:center;gap:10px;height:32px;padding:0 10px;border-radius:6px 0 0 6px;font:500 12px/18px var(--font);color:var(--text-2);text-align:left}
+.snav button:hover{background:var(--surface);color:var(--text)}
+.snav button.on{background:var(--selected);color:var(--text);font-weight:600;box-shadow:inset -2px 0 0 var(--accent-hover)}
+/* common */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border-radius:8px;font:500 12px/18px var(--font);white-space:nowrap;border:1px solid var(--border-strong);color:var(--text)}
+.btn:hover{background:var(--surface)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn.ghost{border-color:transparent;color:var(--text-2)} .btn.ghost:hover{color:var(--text)}
+.btn.sm{height:28px;padding:0 10px}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.ib{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;color:var(--text-2);flex:none}
+.ib:hover{background:var(--surface);color:var(--text)}
+.ib.del{border:1px solid var(--border-strong);color:var(--danger-text)}
+.hd{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;min-height:36px}
+.hd h2{font:500 16px/24px var(--font);color:var(--text)}
+.hd .sp{flex:1}
+.seg{display:flex;gap:2px;padding:3px;border-radius:9px;background:var(--panel);border:1px solid var(--border)}
+.seg button{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:6px;font:500 12px/18px var(--font);color:var(--text-2)}
+.seg button:hover{color:var(--text)} .seg button.on{background:var(--surface-strong);color:var(--text)}
+.tag{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 7px;border-radius:999px;font:500 11px/16px var(--font);white-space:nowrap;flex:none}
+.tag.bu{background:var(--pink-sub);color:var(--pink-text)} .tag.dept{background:var(--info-sub);color:var(--info-text)} .tag.team{background:var(--violet-sub);color:var(--violet-text)}
+.tag.neutral{background:var(--surface-strong);color:var(--text-2)} .tag.ok{background:var(--success-sub);color:var(--success-text)} .tag.warn{background:var(--warning-sub);color:var(--warning-text)}
+.av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font:600 13px/1 var(--font);flex:none}
+.av.sm{width:24px;height:24px;font-size:11px}
+.av.t{border-radius:8px}
+.meta{display:flex;align-items:center;flex-wrap:wrap;gap:0;font:400 12px/18px var(--font);color:var(--text-2)}
+.meta>span+span::before{content:"";display:inline-block;width:1px;height:12px;background:var(--border-strong);margin:0 8px;vertical-align:-1px}
+.cb{width:16px;height:16px;border-radius:4px;border:1px solid var(--border-strong);flex:none;display:grid;place-items:center}
+.cb.on{background:var(--accent);border-color:var(--accent)}
+.empty{padding:40px;text-align:center;color:var(--text-3);font-size:13px}
+/* tree table */
+.tbl{border-top:1px solid var(--border)}
+.meta.tm{white-space:nowrap}
+.nm .tx small.meta,.nm .tx .meta{overflow:visible}
+.meta .cr{color:var(--text-3)}
+.th,.tr{display:grid;grid-template-columns:minmax(0,1fr) 72px;align-items:center;gap:12px;padding:0 8px;border-bottom:1px solid var(--border)}
+.th{height:40px;font:500 12px/18px var(--font);color:var(--text-2)}
+.tr{min-height:60px;cursor:pointer;position:relative}
+.tr:hover{background:var(--panel)}
+.tr.drop-in{background:var(--selected);box-shadow:inset 0 0 0 1px var(--accent-hover)}
+.tr.dragging{opacity:.4}
+.tr.bad{cursor:no-drop}
+.nm{display:flex;align-items:center;gap:10px;min-width:0}
+.ind{flex:none;display:flex;align-self:stretch;margin-right:-10px}
+.ind i{width:30px;flex:none;position:relative}
+.ind i.v::before,.ind i.t::before{content:"";position:absolute;left:10px;top:0;bottom:-1px;border-left:1px solid var(--line)}
+.ind i.t::after,.ind i.l::after{content:"";position:absolute;left:10px;top:0;height:50%;width:20px;border-left:1px solid var(--line);border-bottom:1px solid var(--line);border-bottom-left-radius:10px}
+.tgw{position:relative;align-self:stretch;display:flex;align-items:center;flex:none}
+.tgw.down::after{content:"";position:absolute;left:10px;top:calc(50% + 10px);bottom:-1px;border-left:1px solid var(--line)}
+.tgw.leaf::before{content:"";position:absolute;left:0;top:50%;width:calc(100% + 10px);border-top:1px solid var(--line)}
+.tr{align-items:stretch} .tr>.num,.tr>.lead,.tr>.acts,.tr>span{align-self:center} .tr .nm{align-self:stretch}
+.tr:hover .ind i::before,.tr:hover .ind i::after{border-color:var(--line)}
+.tg{width:20px;height:20px;border-radius:4px;display:grid;place-items:center;color:var(--text-2);flex:none}
+.tg:hover{background:var(--surface-strong);color:var(--text)}
+.tg.none{visibility:hidden}
+.grip{color:var(--text-3);opacity:0;cursor:grab;position:absolute;left:-18px;top:50%;transform:translateY(-50%)}
+.hd h2{white-space:nowrap}
+.tr:hover .grip{opacity:1}
+.nm .tx{min-width:0;display:flex;flex-direction:column}
+.nm .tx b{font:500 14px/20px var(--font);white-space:nowrap;display:flex;align-items:center;gap:8px;min-width:0}
+.nm .tx b .n{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.nm .tx{flex:1}
+.nm .tx small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:1100px){.wrap{padding:24px}.cols{grid-template-columns:150px 1fr;gap:20px}.guide{width:260px}}
+.nm .tx small{font:400 12px/18px var(--font);color:var(--text-3)}
+.num{font:400 13px/20px var(--font);color:var(--text)}
+.num small{display:block;font:400 11px/16px var(--font);color:var(--text-3)}
+.lead{display:flex;align-items:center;gap:8px;font:400 12px/18px var(--font);color:var(--text-2);min-width:0}
+.acts{display:flex;justify-content:flex-end;gap:4px}
+.hl{background:rgba(255,204,77,.28);color:var(--text);border-radius:3px}
+.tr .pathhint{font:400 11px/16px var(--font);color:var(--text-3)}
+.tip{position:fixed;z-index:60;padding:6px 10px;border-radius:8px;background:var(--surface-strong);font:500 12px/18px var(--font);pointer-events:none}
+/* chart */
+.chart{overflow:auto;padding:24px 8px 40px;border-top:1px solid var(--border)}
+.oc{display:flex;flex-direction:column;align-items:center;width:max-content;min-width:100%;margin:0 auto}
+.oc ul{display:flex;padding:20px 0 0;margin:0;list-style:none;position:relative;justify-content:center}
+.oc li{display:flex;flex-direction:column;align-items:center;position:relative;padding:20px 8px 0}
+.oc li::before,.oc li::after{content:"";position:absolute;top:0;width:50%;height:20px;border-top:1px solid var(--line)}
+.oc li::before{right:50%} .oc li::after{left:50%;border-left:1px solid var(--line)}
+.oc li:first-child::before,.oc li:last-child::after{border:0}
+.oc li:last-child::before{border-right:1px solid var(--line);border-radius:0 8px 0 0}
+.oc li:first-child::after{border-radius:8px 0 0 0}
+.oc li:only-child::before{display:none} .oc li:only-child::after{border-top:0;border-radius:0}
+.oc ul::before{content:"";position:absolute;top:0;left:50%;height:20px;border-left:1px solid var(--line)}
+.oc>ul{padding-top:0} .oc>ul::before{display:none} .oc>ul>li{padding-top:0} .oc>ul>li::before,.oc>ul>li::after{display:none}
+.ocard{width:184px;padding:12px;border-radius:12px;background:var(--panel);border:1px solid var(--border-strong);text-align:left;display:flex;flex-direction:column;gap:8px;cursor:pointer;position:relative}
+.ocard:hover{border-color:var(--accent-hover)}
+.ocard.drop-in{border-color:var(--accent-hover);box-shadow:0 0 0 2px var(--accent-sub)}
+.ocard .r{display:flex;align-items:center;gap:8px;min-width:0}
+.ocard b{font:500 14px/20px var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocard .ex{position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);height:20px;padding:0 8px;border-radius:999px;background:var(--surface-strong);border:1px solid var(--border-strong);font:500 11px/16px var(--font);color:var(--text-2);display:flex;align-items:center;gap:4px;z-index:1}
+.ocard .ex:hover{color:var(--text)}
+.oc li.root>.ocard{width:220px;background:var(--surface)}
+/* detail */
+.dh{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.dh .tx b{font:500 16px/24px var(--font);display:flex;align-items:center;gap:8px}
+.path{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font:500 12px/18px var(--font);color:var(--text-2);margin-bottom:16px}
+.path button:hover{color:var(--text)} .path .cur{color:var(--text);padding:0 6px;border-radius:6px;background:var(--surface)}
+.tabs{display:flex;gap:20px;border-bottom:1px solid var(--border);margin-bottom:20px}
+.tabs button{height:32px;font:500 12px/18px var(--font);color:var(--text-2);border-bottom:2px solid transparent;margin-bottom:-1px;display:flex;align-items:center;gap:6px}
+.tabs button:hover{color:var(--text)} .tabs button.on{color:var(--text);font-weight:600;border-color:var(--text)}
+.cnt{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--surface);font:500 11px/16px var(--font);color:var(--text)}
+.mr{display:grid;grid-template-columns:1fr 200px 120px 40px;gap:12px;align-items:center;min-height:56px;padding:0 8px;border-bottom:1px solid var(--border)}
+.mr.h{min-height:40px;font:500 12px/18px var(--font);color:var(--text-2)}
+.who{display:flex;align-items:center;gap:10px;min-width:0}
+.who b{display:flex;align-items:center;font:500 14px/20px var(--font)} .who small{display:block;font:400 12px/18px var(--font);color:var(--text-3)}
+.who>span{min-width:0} .who b,.who small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mr>*,.ur>*{min-width:0}
+.fine{display:flex;gap:8px;align-items:flex-start;margin-top:14px;font:400 12px/18px var(--font);color:var(--text-3)}
+.fine b{color:var(--text-2);font-weight:500}
+@media (max-width:1100px){.mr{grid-template-columns:1fr 130px 110px 32px}}
+.via{display:inline-flex;align-items:center;gap:4px;font:400 12px/18px var(--font);color:var(--text-3)}
+.via button{color:var(--text-2);text-decoration:underline;text-decoration-color:var(--border-strong);text-underline-offset:3px}
+.role{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 8px;border-radius:6px;font:500 12px/18px var(--font);color:var(--text)}
+.role:hover{background:var(--surface)}
+.role.ro{color:var(--text-2);pointer-events:none}
+.stl{display:flex;flex-direction:column;gap:20px;width:100%}
+.fld label{display:block;font:500 12px/18px var(--font);color:var(--text);margin-bottom:6px}
+.fld label em{font-style:normal;color:var(--danger)}
+.fld .hint{font:400 12px/18px var(--font);color:var(--text-3);margin-top:6px}
+.inp{display:flex;align-items:center;gap:8px;width:100%;height:36px;padding:0 10px;border-radius:8px;background:var(--canvas);border:1px solid var(--border-strong);color:var(--text);font-size:14px;text-align:left}
+.inp:focus,.inp:focus-within{outline:0;border-color:var(--accent-hover)}
+button.inp:hover{border-color:var(--line)}
+.inp .sp{flex:1}
+.sw{display:flex;align-items:flex-start;gap:12px;padding:12px;border-radius:10px;background:var(--panel);border:1px solid var(--border)}
+.sw .t b{display:block;font:500 13px/20px var(--font)} .sw .t small{font:400 12px/18px var(--font);color:var(--text-2)}
+.sw .t{flex:1}
+.tog{width:32px;height:18px;border-radius:999px;background:var(--surface-strong);position:relative;flex:none;margin-top:2px}
+.tog::after{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .15s}
+.tog.on{background:var(--accent)} .tog.on::after{left:16px}
+.segl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.segl button{padding:10px 12px;border-radius:10px;border:1px solid var(--border-strong);text-align:left;display:flex;flex-direction:column;gap:4px}
+.segl button:hover{border-color:var(--line)}
+.segl button.on{border-color:var(--accent-hover);background:var(--selected)}
+.segl small{font:400 12px/16px var(--font);color:var(--text-2)}
+/* modal + menus */
+.ov{position:fixed;inset:0;z-index:40;background:var(--overlay);display:grid;place-items:center}
+.md{width:640px;max-width:calc(100vw - 32px);max-height:calc(100vh - 64px);overflow:auto;padding:24px;border-radius:14px;background:var(--panel);border:1px solid var(--border-strong);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:20px}
+.md.sm{width:480px}
+.md .mh{display:flex;align-items:flex-start;gap:12px}
+.md .mh b{display:block;font:500 18px/26px var(--font)} .md .mh small{font:400 14px/20px var(--font);color:var(--text-2)}
+.md .mh .sp{flex:1}
+.md .mf{display:flex;justify-content:flex-end;gap:8px}
+.inv{border-top:1px solid var(--border)}
+.inv .r{display:grid;grid-template-columns:1fr 160px 28px;gap:12px;align-items:center;min-height:44px;border-bottom:1px solid var(--border);padding:0 8px;font:400 13px/20px var(--font)}
+.inv .r.h{min-height:36px;font:500 12px/18px var(--font);color:var(--text-2)}
+.inv input{background:none;border:0;outline:0;width:100%;color:var(--text)}
+.menu{position:fixed;z-index:50;min-width:220px;padding:4px;border-radius:10px;background:var(--surface);border:1px solid var(--border-strong);box-shadow:var(--shadow)}
+.menu button{display:flex;align-items:flex-start;gap:10px;width:100%;padding:8px 10px;border-radius:6px;text-align:left;font:500 13px/20px var(--font)}
+.menu button:hover,.menu button.on{background:var(--surface-strong)}
+.menu button small{display:block;font:400 12px/18px var(--font);color:var(--text-2)}
+.menu button.dz{color:var(--danger-text)}
+.menu hr{border:0;border-top:1px solid var(--border-strong);margin:4px 0}
+.pick{max-height:300px;overflow:auto;border:1px solid var(--border-strong);border-radius:10px;padding:4px;background:var(--canvas)}
+.pick button{display:flex;align-items:center;gap:8px;width:100%;height:36px;padding:0 8px;border-radius:6px;text-align:left;font:500 13px/20px var(--font)}
+.pick button:hover{background:var(--surface)}
+.pick button.on{background:var(--selected)}
+.pick button[disabled]{opacity:.35;pointer-events:none}
+.pick .ck{margin-left:auto;color:var(--accent-text)}
+.radio{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:10px;border:1px solid var(--border-strong);text-align:left;width:100%}
+.radio.on{border-color:var(--accent-hover);background:var(--selected)}
+.radio .dot{width:16px;height:16px;border-radius:50%;border:1px solid var(--line);flex:none;margin-top:2px;display:grid;place-items:center}
+.radio.on .dot{border-color:var(--accent-hover)} .radio.on .dot::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent-hover)}
+.radio b{display:block;font:500 13px/20px var(--font)} .radio small{font:400 12px/18px var(--font);color:var(--text-2)}
+.note{display:flex;gap:10px;padding:10px 12px;border-radius:10px;background:var(--warning-sub);color:var(--warning-text);font:400 12px/18px var(--font)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:70;display:flex;align-items:center;gap:12px;padding:10px 12px 10px 16px;border-radius:10px;background:var(--surface-strong);box-shadow:var(--shadow);font:500 13px/20px var(--font)}
+.toast button{color:var(--on-accent-sub);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.tchip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px 0 4px;border-radius:6px;background:var(--surface);font:500 12px/18px var(--font);color:var(--text)}
+.tchip .av{width:16px;height:16px;border-radius:4px;font-size:9px}
+.tchip em{font-style:normal;color:var(--text-3);font-weight:400}
+.ur{display:grid;grid-template-columns:1fr 120px 1.2fr 40px;gap:12px;align-items:center;min-height:56px;padding:0 8px;border-bottom:1px solid var(--border)}
+.ur.h{min-height:40px;font:500 12px/18px var(--font);color:var(--text-2)}
+.legend{display:flex;gap:16px;align-items:center;font:400 12px/18px var(--font);color:var(--text-3);margin:-4px 0 12px}
+.legend span{display:flex;align-items:center;gap:6px}
+.sumbar{display:flex;gap:8px;margin-bottom:16px}
+.sumbar .c{flex:1;padding:12px 14px;border-radius:10px;background:var(--panel);border:1px solid var(--border)}
+.sumbar .c b{display:block;font:600 18px/24px var(--font)} .sumbar .c small{font:400 12px/18px var(--font);color:var(--text-2)}
+.guide{position:fixed;right:16px;bottom:16px;z-index:30;width:300px;padding:12px 14px;border-radius:12px;background:var(--panel);border:1px solid #ff4fd8;box-shadow:var(--shadow);font:400 12px/18px var(--font);color:var(--text-2)}
+.guide b{color:#ff4fd8;font:600 13px/20px var(--font);display:flex;align-items:center}
+.guide b button{margin-left:auto;color:var(--text-2)}
+.guide ol{padding-left:16px;margin-top:6px;display:flex;flex-direction:column;gap:4px}
+.guide li b{display:inline;color:var(--text);font:500 12px/18px var(--font)}
+
+/* roles + invite */
+.md.wide{width:760px}
+.caps{width:100%;border-collapse:collapse;font:400 12px/18px var(--font)}
+.caps th{font:500 12px/18px var(--font);color:var(--text-2);text-align:center;padding:8px 6px;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+.caps th:first-child,.caps td:first-child{text-align:left;color:var(--text);padding-left:0}
+.caps td{padding:7px 6px;border-bottom:1px solid var(--border);text-align:center;color:var(--text-2)}
+.caps .yes{display:inline-grid;place-items:center;color:var(--success)} .caps .no{color:var(--text-3)}
+.caps .hl2{background:var(--selected);color:var(--text)}
+.mg{display:flex;align-items:baseline;gap:10px;padding:16px 8px 6px}
+.mg b{font:600 12px/18px var(--font);color:var(--text)} .mg small{font:400 12px/18px var(--font);color:var(--text-3)}
+.rc{display:grid;grid-template-columns:repeat(4,1fr);gap:8px} .rc.three{grid-template-columns:repeat(3,1fr)}
+.rc>div{padding:10px 12px;border-radius:10px;background:var(--canvas);border:1px solid var(--border-strong);display:flex;flex-direction:column;gap:4px}
+.rc span{display:flex;align-items:center;gap:6px} .rc b{font:500 13px/20px var(--font)} .rc small{font:400 12px/16px var(--font);color:var(--text-2)}
+.inv3 .r{grid-template-columns:1.2fr 1fr 150px 28px;align-items:center}
+.inv3 .r .gets{grid-column:1/-1;display:flex;gap:6px;align-items:flex-start;margin:-6px 0 10px;font:400 12px/18px var(--font);color:var(--text-3)}
+.inv3 .r .gets svg{margin-top:3px} .inv3 .r .gets b{color:var(--text-2);font-weight:500}
+.pickb{display:flex;align-items:center;gap:8px;height:32px;padding:0 8px;border-radius:6px;min-width:0;text-align:left;font:400 13px/20px var(--font);color:var(--text)}
+.pickb:hover{background:var(--surface)} .pickb[disabled]{pointer-events:none}
+.pickb .l{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .pickb em{font-style:normal;color:var(--text-3);margin-left:6px;font-size:12px}
+.menu .sbl{width:8px;height:12px;border-left:1px solid var(--line);border-bottom:1px solid var(--line);border-bottom-left-radius:6px;margin:-8px -2px 0 -6px;flex:none}
+.tag.own{background:var(--violet-sub);color:var(--violet-text)} .tag.oad{background:var(--info-sub);color:var(--info-text)}
+.ur{grid-template-columns:1fr 110px 110px 1.2fr 40px}
+.menu.tpk{width:360px;padding:0;display:flex;flex-direction:column;max-height:min(400px,calc(100vh - 24px));overflow:hidden}
+.menu .tps{margin:8px;flex:none;height:32px;background:var(--canvas)}
+.menu .tpl{overflow:auto;padding:0 4px 4px;flex:1;min-height:0;scrollbar-width:thin;scrollbar-color:var(--surface-strong) transparent}
+.menu .tpl button.ctx{opacity:.55}
+.caps tr.grp td{padding:14px 0 6px;font:600 11px/16px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-3);border-bottom:1px solid var(--border-strong)}
+.caps .pt{font:500 11px/16px var(--font);color:var(--warning-text,#ffe299)}
+.rc.six{grid-template-columns:repeat(3,1fr)}
+.md:has(.rc.six){width:860px}
+.menu .cx-ph{padding:8px 10px 4px;font:600 11px/16px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-3)}
+.menu button[disabled]{opacity:.4;pointer-events:none}
+.tpl .tpr{display:flex;align-items:stretch;gap:8px;min-height:44px;padding:0 10px 0 8px;border-radius:6px;cursor:pointer;position:relative}
+.tpl .tpr:hover{background:var(--surface-strong)} .tpl .tpr.on{background:var(--selected)} .tpl .tpr.ctx{opacity:.55}
+.tpl .tpr>.av,.tpl .tpr>.tx,.tpl .tpr>.rd{align-self:center}
+.tpl .tpr .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.tpl .tpr .tx b{font:500 13px/18px var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tpl .tpr .tx small{font:400 12px/16px var(--font);color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tpl .ind i{width:28px} .tpl .ind{margin-right:-8px}
+.tpl .ind i.t::after,.tpl .ind i.l::after{width:22px}
+.tpl .tgw.leaf::before{width:calc(100% + 8px)}
+.rd{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--line);flex:none;display:grid;place-items:center}
+.rd.on{border-color:var(--accent-hover)} .rd.on::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent-hover)}
+</style>
+</head>
+<body>
+<nav id="rail"></nav>
+<header id="top"></header>
+<main id="app"></main>
+<div id="layer"></div>
+<script>
+/* ---------- icons (lucide, 24 grid) ---------- */
+const P={
+ users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/>',
+ card:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
+ act:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+ home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+ box:'<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+ cam:'<rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="3"/>',
+ graph:'<circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><circle cx="18" cy="6" r="2"/><path d="M8.5 8.5l7 7M16 6H9"/>',
+ gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
+ help:'<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/>',
+ side:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M14 9l3 3-3 3"/>',
+ search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ x:'<path d="M18 6 6 18M6 6l12 12"/>',
+ cr:'<path d="m9 18 6-6-6-6"/>', cd:'<path d="m6 9 6 6 6-6"/>', cl:'<path d="m15 18-6-6 6-6"/>',
+ more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+ trash:'<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/>',
+ grip:'<circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/>',
+ tree:'<path d="M3 3h6v6H3zM15 15h6v6h-6zM15 3h6v6h-6z"/><path d="M6 9v9h9M9 6h6"/>',
+ chart:'<rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="17" width="6" height="5" rx="1"/><rect x="16" y="17" width="6" height="5" rx="1"/><path d="M12 7v5M5 17v-5h14v5"/>',
+ move:'<path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>',
+ edit:'<path d="M12 20h9M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4z"/>',
+ star:'<path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/>',
+ pen:'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/>',
+ send:'<path d="m3 3 7 18 2.5-7.5L20 11z"/>',
+ eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+ check:'<path d="M20 6 9 17l-5-5"/>',
+ shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>',
+ dataflow:'<rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><path d="M9 6h6M18 9v6M6 9v6a3 3 0 0 0 3 3h6"/>',
+ crown:'<path d="m2 7 5 5 5-8 5 8 5-5-2 12H4z"/><path d="M4 22h16"/>',
+ key:'<circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.7 12.3 9.3-9.3M17 6l3 3M15 8l2 2"/>',
+ up:'<path d="M12 19V5M5 12l7-7 7 7"/>',
+ layers:'<path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/>',
+ building:'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',
+ info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+ expand:'<path d="m7 15 5 5 5-5M7 9l5-5 5 5"/>', collapse:'<path d="m7 20 5-5 5 5M7 4l5 5 5-5"/>'
+};
+const I=(k,s=16,c='')=>`<svg class="i ${c}" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[k]||''}</svg>`;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- data ---------- */
+const TYPES={bu:['Business unit','Groups departments. Usually led by a VP.'],dept:['Department','Groups teams that share a function.'],team:['Team','People who work on workloads together.']};
+const ROLES=[['Admin','Full control over the team and its sub-teams.','star'],['Editor','Can create, edit and delete workloads.','pen'],['Contributor','Can create new workloads, but cannot edit.','send'],['Viewer','Read-only access, cannot make any changes.','eye']];
+const COLORS=[['#ffe299','#4a3500'],['#d3bdff','#19004a'],['#a8daff','#002743'],['#99f6e4','#042f2e'],['#ffa3e3','#3e004a'],['#b3efbd','#00400b'],['#ffafa3','#4d0a00']];
+const PEOPLE=[
+ ['hamza','Hamza Shahzad','hamza@syntroper.ai'],['priya','Priya Nair','priya@syntroper.ai'],['liam','Liam Carter','liam@acme.io'],['sarah','Sarah Reed','sarah@syntroper.ai'],
+ ['amy','Amy Nguyen','amy@syntroper.ai'],['oliver','Oliver Fox','oliver@syntroper.ai'],['zoe','Zoe Kim','zoe@syntroper.ai'],['john','John Smith','john@syntroper.ai'],
+ ['maya','Maya Patel','maya@syntroper.ai'],['noah','Noah Brooks','noah@syntroper.ai'],['ella','Ella Stone','ella@syntroper.ai'],['omar','Omar Haddad','omar@syntroper.ai']];
+const PB=Object.fromEntries(PEOPLE.map(([id,n,e],i)=>[id,{id,n,e,c:COLORS[i%COLORS.length]}]));
+let T=[
+ {id:'pe', name:'Product & Engineering', type:'bu', parent:null, lead:'sarah', wl:0, m:[['sarah','Admin']], inherit:true, created:'02 Jan, 2026'},
+ {id:'eng', name:'Engineering', type:'dept', parent:'pe', lead:'oliver', wl:3, m:[['oliver','Admin'],['hamza','Editor']], inherit:true, created:'02 Jan, 2026'},
+ {id:'plat', name:'Platform', type:'team', parent:'eng', lead:'zoe', wl:8, m:[['zoe','Admin'],['noah','Editor'],['omar','Editor']], inherit:true, created:'04 Jan, 2026'},
+ {id:'qa', name:'QA Team', type:'team', parent:'plat', lead:'john', wl:2, m:[['john','Editor'],['ella','Contributor']], inherit:true, created:'02 Jan, 2026'},
+ {id:'devops', name:'DevOps', type:'team', parent:'plat', lead:'noah', wl:5, m:[['noah','Admin'],['omar','Viewer']], inherit:true, created:'06 Jan, 2026'},
+ {id:'checkout', name:'Checkout team', type:'team', parent:'eng', lead:'amy', wl:6, m:[['amy','Admin'],['hamza','Editor'],['priya','Contributor']], inherit:true, created:'09 Jan, 2026'},
+ {id:'design', name:'Design', type:'dept', parent:'pe', lead:'priya', wl:1, m:[['priya','Admin']], inherit:true, created:'02 Jan, 2026'},
+ {id:'dteam', name:'Design Team', type:'team', parent:'design', lead:'maya', wl:2, m:[['maya','Admin'],['hamza','Viewer'],['ella','Editor']], inherit:false, created:'02 Jan, 2026'},
+ {id:'gtm', name:'Go-to-market', type:'bu', parent:null, lead:'liam', wl:0, m:[['liam','Admin']], inherit:true, created:'11 Jan, 2026'},
+ {id:'sales', name:'Sales', type:'dept', parent:'gtm', lead:'liam', wl:1, m:[['liam','Admin'],['maya','Viewer']], inherit:true, created:'11 Jan, 2026'},
+ {id:'support', name:'Customer support', type:'team', parent:'gtm', lead:'ella', wl:3, m:[['ella','Admin'],['john','Contributor']], inherit:true, created:'12 Jan, 2026'},
+ {id:'fin', name:'Finance', type:'dept', parent:null, lead:'omar', wl:1, m:[['omar','Admin']], inherit:true, created:'14 Jan, 2026'},
+ {id:'ops', name:'Ops guild', type:'team', parent:null, lead:null, wl:0, m:[], inherit:true, created:'15 Jan, 2026'}
+];
+const TB=()=>Object.fromEntries(T.map(t=>[t.id,t]));
+const kids=id=>T.filter(t=>t.parent===id);
+const desc=id=>{ const o=[]; const go=x=>kids(x).forEach(k=>{ o.push(k); go(k.id); }); go(id); return o; };
+const anc=id=>{ const B=TB(); const o=[]; let p=B[id]&&B[id].parent; while(p&&B[p]){ o.unshift(B[p]); p=B[p].parent; } return o; };
+const depth=id=>anc(id).length;
+const allMembers=id=>{ const set=new Map(); [TB()[id],...desc(id)].forEach(t=>t.m.forEach(([p,r])=>{ if(!set.has(p)) set.set(p,{p,r,from:t.id}); })); return [...set.values()]; };
+const wlTotal=id=>[TB()[id],...desc(id)].reduce((a,t)=>a+t.wl,0);
+const inits=n=>n.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+const tAv=(t,cls='')=>{ const c=COLORS[T.indexOf(t)%COLORS.length]; return `<span class="av t ${cls}" style="background:${c[0]};color:${c[1]}">${esc(t.name[0])}</span>`; };
+const pAv=(id,cls='')=>{ const p=PB[id]; return p?`<span class="av ${cls}" style="background:${p.c[0]};color:${p.c[1]}">${inits(p.n)}</span>`:''; };
+const tTag=t=>'';
+const pl=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
+
+/* ---------- state ---------- */
+const S={page:'teams', view:'tree', open:new Set(['pe','eng','plat','design','gtm']), q:'', team:null, tab:'members', mscope:'all', modal:null, menu:null, toast:null, drag:null, uq:'', guide:false};
+let undo=null;
+
+/* ---------- shell ---------- */
+function shell(){
+  document.getElementById('rail').innerHTML=`<button class="rb" aria-label="Expand navigation">${I('side',20)}</button>
+    <button class="rb on" aria-label="Home">${I('home',20)}</button><button class="rb" aria-label="Codona">${I('box',20)}</button><button class="rb" aria-label="Infra">${I('cam',20)}</button>
+    <button class="rb" aria-label="Integrations">${I('graph',20)}</button><button class="rb" aria-label="Settings">${I('gear',20)}</button><span class="rsp"></span>
+    <button class="rb" aria-label="Profile">${I('user',20)}</button><button class="rb" aria-label="Organization">${I('building',20)}</button><button class="rb" aria-label="Help">${I('help',20)}</button>`;
+  const B=TB(); const t=S.team&&B[S.team];
+  document.getElementById('top').innerHTML=`<nav class="crumb" aria-label="Breadcrumb"><button data-a="go" data-v="teams">Syntroper’s Org</button>${I('cr',14)}
+    ${S.page==='team'&&t?`<button data-a="go" data-v="teams">Teams</button>${I('cr',14)}<span class="cur">${esc(t.name)}</span>`:`<span class="cur">${S.page==='users'?'Users':'Teams'}</span>`}</nav>
+    <label class="search">${I('search',16)}<input placeholder="Search entire org" aria-label="Search entire org"></label>`;
+}
+function nav(){ const N=[['teams','Teams','users'],['users','Users','user'],['billing','Billing','card'],['activity','Activity','act']];
+  return `<nav class="snav" aria-label="Organization settings">${N.map(([k,l,i])=>`<button class="${(S.page===k||(k==='teams'&&S.page==='team'))?'on':''}" data-a="go" data-v="${k}">${I(i,16)}${l}</button>`).join('')}</nav>`; }
+
+/* ---------- Teams: tree ---------- */
+function visibleRows(){ const q=S.q.trim().toLowerCase();
+  if(q){ const hit=new Set(T.filter(t=>t.name.toLowerCase().includes(q)).map(t=>t.id)); const show=new Set(); hit.forEach(id=>{ show.add(id); anc(id).forEach(a=>show.add(a.id)); });
+    const out=[]; const walk=(p,pre)=>{ const ks=kids(p).filter(k=>show.has(k.id)); ks.forEach((k,i)=>{ const last=i===ks.length-1; out.push({t:k,pre,last,hit:hit.has(k.id)}); walk(k.id,[...pre,last?' ':'v']); }); };
+    walk(null,[]); return out; }
+  const out=[]; const walk=(p,pre)=>{ const ks=kids(p); ks.forEach((k,i)=>{ const last=i===ks.length-1; out.push({t:k,pre,last}); if(S.open.has(k.id)) walk(k.id,[...pre,last?' ':'v']); }); };
+  walk(null,[]); return out; }
+function mark(s){ const q=S.q.trim(); if(!q) return esc(s); const i=s.toLowerCase().indexOf(q.toLowerCase()); if(i<0) return esc(s); return esc(s.slice(0,i))+`<span class="hl">${esc(s.slice(i,i+q.length))}</span>`+esc(s.slice(i+q.length)); }
+function rowHTML({t,pre,last}){ const ks=kids(t.id); const open=S.open.has(t.id)||!!S.q.trim(); const d=pre.length; const all=allMembers(t.id).length; const lead=t.lead&&PB[t.lead];
+  const ind = d? `<span class="ind">${pre.slice(1).map(x=>`<i class="${x==='v'?'v':''}"></i>`).join('')}<i class="${last?'l':'t'}"></i></span>`:'';
+  return `<div class="tr" role="row" draggable="true" data-id="${t.id}" data-a="open" data-v="${t.id}" aria-level="${d+1}" ${ks.length?`aria-expanded="${open}"`:''}>
+    <div class="nm">${ind}<span class="grip" title="Drag onto another team to move it">${I('grip',14)}</span>
+      <span class="tgw ${ks.length&&open?'down':''} ${!ks.length&&d?'leaf':''}"><button class="tg ${ks.length?'':'none'}" data-a="tog" data-v="${t.id}" aria-label="${open?'Collapse':'Expand'} ${esc(t.name)}">${I(open?'cd':'cr',14)}</button></span>
+      ${tAv(t)}<span class="tx"><b><span class="n">${mark(t.name)}</span>${tTag(t)}</b><span class="meta tm"><span>${pl(all,'member')}</span>${ks.length?`<span>${pl(ks.length,'sub-team')}</span>`:''}${S._nd?'':`<span class="cr">Created ${esc(t.created)}</span>`}</span></span></div>
+    <div class="acts"><button class="ib" data-a="menu" data-v="${t.id}" aria-label="More actions for ${esc(t.name)}">${I('more',16)}</button></div></div>`; }
+function treeHTML(){ const R=visibleRows();
+  return `<div class="tbl" role="treegrid" aria-label="Teams">
+    <div class="th" role="row"><span>Team Name</span><span></span></div>
+    ${R.map(rowHTML).join('')||`<div class="empty">No team matches “${esc(S.q)}”.</div>`}
+    <div class="tr" data-id="__root" style="min-height:44px;cursor:default;color:var(--text-3);font-size:12px;display:${S.drag?'grid':'none'}"><span>${I('up',14)} Drop here to make it a top-level team</span></div></div>`; }
+/* ---------- Teams: org chart ---------- */
+function chartHTML(){ const node=t=>{ const ks=kids(t.id); const open=S.open.has(t.id); const lead=t.lead&&PB[t.lead];
+    return `<li><div class="ocard" draggable="true" data-id="${t.id}" data-a="open" data-v="${t.id}" role="button" tabindex="0">
+      <div class="r">${tAv(t,'sm')}<b>${esc(t.name)}</b></div><span class="meta"><span>${pl(allMembers(t.id).length,'member')}</span>${ks.length?`<span>${pl(ks.length,'sub-team')}</span>`:''}</span><span class="meta"><span class="cr">Created ${esc(t.created)}</span></span>
+      ${ks.length?`<button class="ex" data-a="tog" data-v="${t.id}">${open?I('cd',12)+' Hide':I('cr',12)+' '+ks.length}</button>`:''}</div>
+      ${ks.length&&open?`<ul>${ks.map(node).join('')}</ul>`:''}</li>`; };
+  return `<div class="chart"><div class="oc"><ul><li class="root"><div class="ocard" data-id="__root"><div class="r"><span class="av t sm" style="background:#fff">${logo(14)}</span><b>Syntroper’s Org</b></div><span class="meta"><span>${pl(T.filter(t=>!t.parent).length,'top-level team')}</span></span></div>
+    <ul>${kids(null).map(node).join('')}</ul></li></ul></div></div>`; }
+function teamsHTML(){ S._nd=false; const n=T.length, bu=T.filter(t=>t.type==='bu').length, dp=T.filter(t=>t.type==='dept').length, tm=T.filter(t=>t.type==='team').length, orphan=T.filter(t=>!t.parent&&t.type==='team').length;
+  return `<div class="hd"><h2>${pl(n,'Team')}</h2><span class="sp"></span>
+      <div class="seg" role="tablist" aria-label="View"><button role="tab" aria-selected="${S.view==='tree'}" class="${S.view==='tree'?'on':''}" data-a="view" data-v="tree">${I('tree',14)}Tree</button><button role="tab" aria-selected="${S.view==='chart'}" class="${S.view==='chart'?'on':''}" data-a="view" data-v="chart">${I('chart',14)}Org chart</button></div>
+      <button class="btn primary" data-a="create" data-v="">${I('plus',16)}Create Team</button></div>
+    <div class="hd" style="margin-top:-4px"><label class="search" style="width:280px">${I('search',16)}<input id="tq" value="${esc(S.q)}" placeholder="Search teams" aria-label="Search teams"></label>
+      ${S.view==='tree'?`<button class="btn ghost sm" data-a="expand">${I('expand',14)}Expand all</button><button class="btn ghost sm" data-a="collapse">${I('collapse',14)}Collapse all</button>`:''}<span class="sp"></span>
+</div>
+    ${S.view==='tree'?treeHTML():chartHTML()}`; }
+
+/* ---------- Team detail ---------- */
+function teamHTML(){ S._nd=false; const B=TB(); const t=B[S.team]; if(!t) return teamsHTML(); const ks=kids(t.id), A=anc(t.id); const all=allMembers(t.id); const sub=desc(t.id);
+  const tabs=[['members','Members',all.length],['sub','Sub-teams',ks.length],['settings','Settings',null]];
+  let body='';
+  if(S.tab==='members'){ const L=S.mscope==='direct'?t.m.map(([p,r])=>({p,r,from:t.id})):all;
+    const upRoles=A.flatMap(a=>a.m.filter(([p,r])=>r==='Admin').map(([p])=>({p,a}))).filter(x=>!t.m.some(([p])=>p===x.p));
+    body=`<div class="hd"><h2>${pl(L.length,'Member')}</h2>
+      <div class="seg" role="tablist" aria-label="Members to show"><button class="${S.mscope==='all'?'on':''}" data-a="mscope" data-v="all">Everyone · ${all.length}</button><button class="${S.mscope==='direct'?'on':''}" data-a="mscope" data-v="direct">Direct only · ${t.m.length}</button></div>
+      <span class="sp"></span><button class="btn primary" data-a="invite">${I('plus',16)}Invite Member</button></div>
+      <div class="mr h"><span>User</span><span>Member through</span><span>Role</span><span></span></div>
+      ${L.map(x=>{ const p=PB[x.p]; const own=x.from===t.id; const f=B[x.from];
+        return `<div class="mr"><span class="who">${pAv(p.id)}<span><b>${esc(p.n)}${t.lead===p.id?' <span class="tag neutral" style="margin-left:6px">Lead</span>':''}</b><small>${esc(p.e)}</small></span></span>
+          <span class="via">${own?'Direct member':`Via <button data-a="open" data-v="${f.id}">${esc(f.name)}</button>`}</span>
+          ${own?`<button class="role" data-a="role" data-v="${t.id}|${p.id}">${x.r}${I('cd',14)}</button>`:`<span class="role ro">${x.r}</span>`}
+          ${own?`<button class="ib del" data-a="rmm" data-v="${t.id}|${p.id}" aria-label="Remove ${esc(p.n)}">${I('trash',16)}</button>`:'<span></span>'}</div>`; }).join('')||'<div class="empty">No members yet.</div>'}
+      ${upRoles.length&&t.inherit?`<div class="fine">${I('info',14)}<span>${upRoles.map(x=>`<b>${esc(PB[x.p].n)}</b>`).join(', ')} can also manage this team as Admin${upRoles.length>1?'s':''} of a parent group (${[...new Set(upRoles.map(x=>esc(x.a.name)))].join(', ')}).</span></div>`:''}`; }
+  else if(S.tab==='sub'){ S._nd=true; body=`<div class="hd"><h2>${pl(ks.length,'Sub-team')}</h2><span class="sp"></span><button class="btn primary" data-a="create" data-v="${t.id}">${I('plus',16)}Add sub-team</button></div>
+      ${ks.length?`<div class="tbl"><div class="th"><span>Team Name</span><span></span></div>${(()=>{ const out=[]; const walk=(p,pre)=>{ const ks2=kids(p); ks2.forEach((k,i)=>{ const last=i===ks2.length-1; out.push({t:k,pre,last}); if(S.open.has(k.id)) walk(k.id,[...pre,last?' ':'v']); }); }; walk(t.id,[]); return out.map(rowHTML).join(''); })()}</div>`:`<div class="empty">${esc(t.name)} has no sub-teams.<br><br><button class="btn" data-a="create" data-v="${t.id}">${I('plus',16)}Add sub-team</button></div>`}`; }
+  else { const lead=t.lead&&PB[t.lead]; const par=t.parent&&B[t.parent];
+    body=`<div class="stl">
+      <div class="fld"><label for="sn">Team name <em>*</em></label><input id="sn" class="inp" value="${esc(t.name)}" data-a="rename" data-v="${t.id}"></div>
+      <div class="fld"><label>Parent</label><button class="inp" data-a="move" data-v="${t.id}">${par?tAv(par,'sm')+esc(par.name)+' '+tTag(par):`<span style="color:var(--text-2)">None · top level</span>`}<span class="sp"></span>${I('cd',16)}</button>
+</div>
+      <div class="fld"><label>Lead</label><button class="inp" data-a="lead" data-v="${t.id}">${lead?pAv(lead.id,'sm')+esc(lead.n):'<span style="color:var(--text-2)">Pick a lead</span>'}<span class="sp"></span>${I('cd',16)}</button></div>
+      <div class="sw"><div class="t"><b>Inherit roles from parent teams</b></div><button class="tog ${t.inherit?'on':''}" role="switch" aria-checked="${t.inherit}" data-a="inherit" data-v="${t.id}" aria-label="Parent admins can manage this team"></button></div>
+      <div style="display:flex;gap:8px;padding-top:8px;border-top:1px solid var(--border)"><span style="flex:1"></span><button class="btn" style="color:var(--danger-text)" data-a="del" data-v="${t.id}">${I('trash',16)}Delete team</button></div></div>`; }
+  return `<nav class="path" aria-label="Team path"><button data-a="go" data-v="teams">${pl(T.length,'Team')}</button>${A.map(a=>`${I('cr',12)}<button data-a="open" data-v="${a.id}">${esc(a.name)}</button>`).join('')}${I('cr',12)}<span class="cur">${esc(t.name)}</span></nav>
+    <div class="dh">${tAv(t)}<div class="tx"><b>${esc(t.name)}${tTag(t)}</b><span class="meta"><span>${pl(all.length,'member')}</span><span>${ks.length?pl(ks.length,'sub-team'):'No sub-teams'}</span><span>Created by you on ${esc(t.created)}</span></span></div><span style="flex:1"></span>
+      <button class="btn" data-a="move" data-v="${t.id}">${I('move',14)}Move</button><button class="ib" data-a="menu" data-v="${t.id}" aria-label="More actions">${I('more',16)}</button></div>
+    <div class="tabs" role="tablist">${tabs.map(([k,l,n])=>`<button role="tab" aria-selected="${S.tab===k}" class="${S.tab===k?'on':''}" data-a="tab" data-v="${k}">${l}${n!==null?`<span class="cnt">${n}</span>`:''}</button>`).join('')}</div>${body}`; }
+
+/* ---------- Users ---------- */
+function usersHTML(){ const q=S.uq.toLowerCase(); const L=PEOPLE.filter(([id,n,e])=>!q||n.toLowerCase().includes(q)||e.includes(q));
+  return `<div class="hd"><h2>${pl(PEOPLE.length,'Total User')}</h2><span class="sp"></span><button class="btn primary">${I('plus',16)}Invite Users</button><label class="search" style="width:240px">${I('search',16)}<input id="uq" value="${esc(S.uq)}" placeholder="Search users"></label></div>
+    <div class="ur h"><span>User</span><span>Joined at</span><span>Member of</span><span></span></div>
+    ${L.map(([id,n,e],i)=>{ const ts=T.filter(t=>t.m.some(([p])=>p===id));
+      return `<div class="ur"><span class="who">${pAv(id)}<span><b>${esc(n)}</b><small>${esc(e)}</small></span></span><span class="num" style="font-size:12px">${['02 Mar','11 Apr','28 May','03 Jun','17 Jun','01 Jul','22 Jul','05 Aug','19 Aug','02 Sep','16 Sep','30 Sep'][i]}, 2025</span>
+        <span class="chips">${ts.slice(0,2).map(t=>`<button class="tchip" data-a="open" data-v="${t.id}" title="${esc([...anc(t.id).map(a=>a.name),t.name].join(' › '))}">${tAv(t)}${esc(t.name)}${t.parent?`<em>in ${esc(TB()[t.parent].name)}</em>`:''}</button>`).join('')}${ts.length>2?`<span class="tchip" style="padding:0 8px">+${ts.length-2}</span>`:''}${ts.length?'':`<button class="btn sm" data-a="assign" data-v="${id}">Assign</button>`}</span>
+        <button class="ib" aria-label="More">${I('more',16)}</button></div>`; }).join('')}`; }
+
+/* ---------- modals ---------- */
+function pickerHTML(sel, disabled, cb){ const out=[]; const walk=(p,d)=>kids(p).forEach(k=>{ out.push([k,d]); walk(k.id,d+1); }); walk(null,0);
+  return `<div class="pick" role="listbox"><button class="${sel===null?'on':''}" data-a="${cb}" data-v="">${I('building',16)}<span>None · top level</span>${sel===null?`<span class="ck">${I('check',16)}</span>`:''}</button>
+    ${out.map(([k,d])=>`<button class="${sel===k.id?'on':''}" data-a="${cb}" data-v="${k.id}" ${disabled.has(k.id)?'disabled':''} style="padding-left:${8+d*20}px">${tAv(k,'sm')}<span>${esc(k.name)}</span>${tTag(k)}${disabled.has(k.id)&&k.id!==S.modal.id?'<small style="color:var(--text-3)">inside it</small>':''}${sel===k.id?`<span class="ck">${I('check',16)}</span>`:''}</button>`).join('')}</div>`; }
+function modalHTML(){ const M=S.modal; if(!M) return ''; const B=TB();
+  if(M.k==='create'){ const par=M.parent&&B[M.parent];
+    return `<div class="ov" data-a="close"><div class="md" role="dialog" aria-modal="true" aria-label="Create new team" data-a="noop">
+      <div class="mh"><span><b>${par?`Add a sub-team to ${esc(par.name)}`:'Create new team'}</b></span><span class="sp"></span><button class="ib" data-a="close" aria-label="Close">${I('x',18)}</button></div>
+      <div class="fld"><label for="cn">Team name <em>*</em></label><input id="cn" class="inp" value="${esc(M.name)}" placeholder="e.g. Product Team"></div>
+      <div class="fld"><label>Parent <span style="color:var(--text-3);font-weight:400">(optional)</span></label>
+        <button class="inp" data-a="cpar">${par?tAv(par,'sm')+esc(par.name)+' '+tTag(par):'<span style="color:var(--text-2)">None · top level</span>'}<span class="sp"></span>${I(M.pick?'cd':'cr',16)}</button>
+        ${M.pick?`<div style="margin-top:6px">${pickerHTML(M.parent,new Set(),'cpick')}</div>`:''}
+</div>
+      <div class="fld"><label>Invite members <span style="color:var(--text-3);font-weight:400">(optional)</span></label>
+        <div class="inv"><div class="r h"><span>Email</span><span>Role</span><span></span></div>
+        ${M.inv.map((x,i)=>`<div class="r"><input value="${esc(x.e)}" placeholder="Enter email" data-inv="${i}"><button class="role" data-a="crole" data-v="${i}">${x.r||'<span style="color:var(--text-2)">Select role</span>'}${I('cd',14)}</button><button class="ib" data-a="crm" data-v="${i}" aria-label="Remove row">${I('x',14)}</button></div>`).join('')}
+        </div><button class="btn ghost sm" style="margin-top:8px" data-a="cadd">${I('plus',14)}Add user</button></div>
+      <div class="mf"><button class="btn" data-a="close">Cancel</button><button class="btn primary" data-a="csave">${M.inv.filter(x=>x.e).length?`Create and invite ${M.inv.filter(x=>x.e).length}`:'Create team'}</button></div></div></div>`; }
+  if(M.k==='move'){ const t=B[M.id]; const dis=new Set([t.id,...desc(t.id).map(x=>x.id)]);
+    return `<div class="ov" data-a="close"><div class="md sm" role="dialog" aria-modal="true" aria-label="Move team" data-a="noop">
+      <div class="mh"><span><b>Move ${esc(t.name)}</b>${desc(t.id).length?`<small>Its ${pl(desc(t.id).length,'sub-team')} move with it.</small>`:''}</span><span class="sp"></span><button class="ib" data-a="close" aria-label="Close">${I('x',18)}</button></div>
+      ${pickerHTML(M.to,dis,'mpick')}
+      ${M.to!==t.parent&&B[M.to]&&B[M.to].inherit&&t.inherit?`<div class="note">${I('info',16)}<span>Admins of ${esc(B[M.to].name)} will be able to manage ${esc(t.name)}.</span></div>`:''}
+      <div class="mf"><button class="btn" data-a="close">Cancel</button><button class="btn primary" data-a="msave" ${M.to===t.parent?'disabled':''}>Move here</button></div></div></div>`; }
+  if(M.k==='del'){ const t=B[M.id]; const ks=kids(t.id); const par=t.parent&&B[t.parent];
+    return `<div class="ov" data-a="close"><div class="md sm" role="alertdialog" aria-modal="true" aria-label="Delete team" data-a="noop">
+      <div class="mh"><span><b>Delete ${esc(t.name)}?</b></span><span class="sp"></span><button class="ib" data-a="close" aria-label="Close">${I('x',18)}</button></div>
+      ${ks.length?`<div style="display:flex;flex-direction:column;gap:8px"><span style="font:500 12px/18px var(--font)">It has ${pl(ks.length,'sub-team')}. What should happen to ${ks.length===1?'it':'them'}?</span>
+        <button class="radio ${M.mode==='lift'?'on':''}" data-a="dmode" data-v="lift"><span class="dot"></span><span><b>Move ${ks.length===1?'it':'them'} up to ${par?esc(par.name):'the top level'}</b></span></button>
+        <button class="radio ${M.mode==='all'?'on':''}" data-a="dmode" data-v="all"><span class="dot"></span><span><b>Delete ${ks.length===1?'it':'them'} too</b><small>${pl(desc(t.id).length+1,'team')} in total will be deleted.</small></span></button></div>`:''}
+      <div class="mf"><button class="btn" data-a="close">Cancel</button><button class="btn danger" data-a="dsave">Delete</button></div></div></div>`; }
+  if(M.k==='assign'){ const p=PB[M.id]; const out=[]; const walk=(q,d)=>kids(q).forEach(k=>{ out.push([k,d]); walk(k.id,d+1); }); walk(null,0);
+    return `<div class="ov" data-a="close"><div class="md sm" role="dialog" aria-modal="true" aria-label="Assign teams" data-a="noop">
+      <div class="mh"><span><b>Assign ${esc(p.n)} to teams</b></span><span class="sp"></span><button class="ib" data-a="close" aria-label="Close">${I('x',18)}</button></div>
+      <div class="pick">${out.map(([k,d])=>`<button class="${M.sel.has(k.id)?'on':''}" data-a="apick" data-v="${k.id}" style="padding-left:${8+d*20}px"><span class="cb ${M.sel.has(k.id)?'on':''}">${M.sel.has(k.id)?I('check',12):''}</span>${tAv(k,'sm')}<span>${esc(k.name)}</span>${tTag(k)}</button>`).join('')}</div>
+      <div class="mf"><span style="flex:1;align-self:center;display:flex;align-items:center;gap:8px;font:400 12px/18px var(--font);color:var(--text-2)">${pl(M.sel.size,'team')} ·<button class="pickb" style="height:28px" data-a="arole">${M.role||'Contributor'}${I('cd',14)}</button></span><button class="btn" data-a="close">Cancel</button><button class="btn primary" data-a="asave" ${M.sel.size?'':'disabled'}>Assign</button></div></div></div>`; }
+  return ''; }
+function menuHTML(){ const M=S.menu; if(!M) return ''; const B=TB();
+  if(M.k==='row'){ const t=B[M.id];
+    return `<div class="menu" style="left:${M.x}px;top:${M.y}px" role="menu"><button data-a="open" data-v="${t.id}">${I('users',16)}<span>Open</span></button><button data-a="create" data-v="${t.id}">${I('plus',16)}<span>Add sub-team</span></button>
+      <button data-a="move" data-v="${t.id}">${I('move',16)}<span>Move to…</span></button><button data-a="rename2" data-v="${t.id}">${I('edit',16)}<span>Rename</span></button><hr><button class="dz" data-a="del" data-v="${t.id}">${I('trash',16)}<span>Delete</span></button></div>`; }
+  if(M.k==='role'||M.k==='crole'){ const cur=M.k==='role'?((TB()[M.v.split('|')[0]]||{m:[]}).m.find(x=>x[0]===M.v.split('|')[1])||[])[1]:(S.modal.inv[M.i]||{}).r; return `<div class="menu" style="left:${M.x}px;top:${Math.min(M.y,innerHeight-430)}px;width:320px" role="menu">${roleItems(cur,M.k==='role'?'setrole':'csetrole',{team:true})}${M.k==='role'?`<hr><button class="dz" data-a="setrole" data-v="__revoke"><span>Revoke<small>Remove this person from the team.</small></span></button>`:''}</div>`; }
+  if(M.k==='lead'){ const t=B[M.id]; const L=allMembers(t.id).map(x=>x.p);
+    return `<div class="menu" style="left:${M.x}px;top:${M.y}px;width:280px" role="menu">${L.map(p=>`<button data-a="setlead" data-v="${p}">${pAv(p,'sm')}<span>${esc(PB[p].n)}</span></button>`).join('')||'<button disabled><span>Add members first</span></button>'}</div>`; }
+  return ''; }
+
+/* ---------- render ---------- */
+const logo=s=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24"><path fill="#624ed5" d="M12 2 21 7v10l-9 5-9-5V7z"/><path fill="#fff" d="M15.5 9.2c-.6-.9-1.8-1.5-3.3-1.5-2 0-3.4 1-3.4 2.4 0 1.6 1.4 2 3.2 2.4 1.2.3 1.7.5 1.7 1s-.6.9-1.5.9c-1 0-1.8-.4-2.3-1.2l-1.4 1c.7 1.1 2 1.8 3.7 1.8 2.1 0 3.5-1 3.5-2.6 0-1.6-1.4-2.1-3.3-2.5-1.1-.2-1.6-.4-1.6-.9 0-.4.5-.8 1.3-.8.8 0 1.4.3 1.9 1z"/></svg>`;
+function render(){ shell(); const B=TB(); let main='';
+  if(S.page==='teams') main=teamsHTML(); else if(S.page==='team') main=teamHTML(); else if(S.page==='users') main=usersHTML();
+  else main=`<div class="hd"><h2>${S.page==='billing'?'Billing':'Activity'}</h2></div><div class="empty">Not part of this prototype.</div>`;
+  const qf=document.activeElement&&document.activeElement.id; const sel=qf&&document.activeElement.selectionStart;
+  document.getElementById('app').innerHTML=`<div class="wrap"><div class="org"><span class="lg">${logo(28)}</span><span><b>Syntroper’s Org</b><small>261 Members | 42 Workloads</small></span></div><div class="cols">${nav()}<section>${main}</section></div></div>
+    ${S.guide?`<aside class="guide" aria-label="What changed"><b>What’s new in Teams<button data-a="guide" aria-label="Close">${I('x',14)}</button></b><ol>
+      <li><b>Structure.</b> Any team can hold sub-teams, as deep as you need.</li>
+      <li><b>Tree and Org chart.</b> Expand, collapse, search keeps the path.</li>
+      <li><b>Move.</b> Drag a row or card onto another team, or use Move to….</li>
+      <li><b>Members roll up.</b> A team’s member count includes everyone in its sub-teams.</li>
+      <li><b>Inherited access.</b> Team page shows who is in it directly and who comes through a sub-team.</li>
+      <li><b>Invite into any sub-team.</b> Pick the team and role per person. Roles pass down to sub-teams. See Roles.</li><li><b>Safe delete.</b> Choose to lift sub-teams up or delete them too.</li></ol></aside>`:''}`;
+  document.getElementById('layer').innerHTML=modalHTML()+menuHTML()+(S.toast?`<div class="toast" role="status">${S.toast}${undo?`<button data-a="undo">Undo</button>`:''}</div>`:'');
+  const ch=document.querySelector('.chart'); if(ch&&!render._c){ render._c=1; ch.scrollLeft=(ch.scrollWidth-ch.clientWidth)/2; } if(!ch) render._c=0;
+  if(qf){ const el=document.getElementById(qf); if(el){ el.focus(); try{ el.setSelectionRange(sel,sel); }catch(e){} } } }
+function toast(t,u){ S.toast=t; undo=u||null; clearTimeout(toast._t); toast._t=setTimeout(()=>{ S.toast=null; undo=null; render(); },5000); }
+const snap=()=>JSON.parse(JSON.stringify(T));
+
+/* ---------- actions ---------- */
+const A={
+  go(v){ S.page=v; S.team=null; S.menu=null; render(); document.getElementById('app').scrollTop=0; },
+  open(v){ S.page='team'; S.team=v; S.tab='members'; S.mscope='all'; S.menu=null; S.modal=null; render(); },
+  tog(v){ S.open.has(v)?S.open.delete(v):S.open.add(v); render(); },
+  view(v){ S.view=v; render(); },
+  expand(){ T.forEach(t=>S.open.add(t.id)); render(); }, collapse(){ S.open.clear(); render(); },
+  tab(v){ S.tab=v; render(); }, mscope(v){ S.mscope=v; render(); }, guide(){ S.guide=false; render(); },
+  menu(v,e){ const r=e.target.closest('button').getBoundingClientRect(); S.menu={k:'row',id:v,x:Math.min(r.right-220,innerWidth-232),y:r.bottom+4}; render(); },
+  create(v){ S.menu=null; S.modal={k:'create',parent:v||null,name:'',type:'team',inv:[{e:'',r:''}],pick:false}; render(); setTimeout(()=>{ const c=document.getElementById('cn'); c&&c.focus(); },0); },
+  ctype(v){ S.modal.type=v; render(); }, cpar(){ S.modal.pick=!S.modal.pick; render(); }, cpick(v){ S.modal.parent=v||null; S.modal.pick=false; render(); },
+  cadd(){ S.modal.inv.push({e:'',r:''}); render(); }, crm(v){ S.modal.inv.splice(+v,1); if(!S.modal.inv.length) S.modal.inv.push({e:'',r:''}); render(); },
+  crole(v,e){ const r=e.target.closest('button').getBoundingClientRect(); S.menu={k:'crole',i:+v,x:Math.min(r.left,innerWidth-336),y:r.bottom+4}; render(); },
+  csetrole(v){ S.modal.inv[S.menu.i].r=v; S.menu=null; render(); },
+  csave(){ const M=S.modal; const n=(document.getElementById('cn').value||'').trim(); if(!n){ document.getElementById('cn').focus(); document.getElementById('cn').style.borderColor='var(--danger)'; return; }
+    const id='t'+Date.now(); T.push({id,name:n,type:M.type,parent:M.parent,lead:'hamza',wl:0,m:[['hamza','Team admin']],inherit:true,created:'19 Nov, 2026'}); if(M.parent) S.open.add(M.parent);
+    const k=M.inv.filter(x=>x.e).length; S.modal=null; toast(`${esc(n)} created${M.parent?` in ${esc(TB()[M.parent].name)}`:''}${k?` · ${pl(k,'invite')} sent`:''}`); render(); },
+  move(v){ S.menu=null; S.modal={k:'move',id:v,to:TB()[v].parent}; render(); },
+  mpick(v){ S.modal.to=v||null; render(); },
+  msave(){ doMove(S.modal.id,S.modal.to); S.modal=null; render(); },
+  del(v){ S.menu=null; S.modal={k:'del',id:v,mode:'lift'}; render(); }, dmode(v){ S.modal.mode=v; render(); },
+  dsave(){ const M=S.modal; const t=TB()[M.id]; const before=snap(); if(M.mode==='lift') kids(t.id).forEach(k=>k.parent=t.parent); const gone=new Set([t.id,...(M.mode==='all'?desc(t.id).map(x=>x.id):[])]);
+    T=T.filter(x=>!gone.has(x.id)); S.modal=null; if(S.page==='team') { S.page='teams'; S.team=null; } toast(`${esc(t.name)} deleted`,()=>{ T=before; }); render(); },
+  rename2(v){ S.menu=null; A.open(v); S.tab='settings'; render(); setTimeout(()=>{ const i=document.getElementById('sn'); i&&i.select(); },0); },
+  settype(v){ const [id,k]=v.split('|'); TB()[id].type=k; render(); },
+  inherit(v){ const t=TB()[v]; t.inherit=!t.inherit; render(); },
+  lead(v,e){ const r=e.target.closest('button').getBoundingClientRect(); S.menu={k:'lead',id:v,x:r.left,y:r.bottom+4}; render(); },
+  setlead(p){ TB()[S.menu.id].lead=p; S.menu=null; render(); },
+  role(v,e){ const r=e.target.closest('button').getBoundingClientRect(); S.menu={k:'role',v,x:Math.min(r.left,innerWidth-336),y:r.bottom+4}; render(); },
+  setrole(r){ const [id,p]=S.menu.v.split('|'); const t=TB()[id]; if(isOrg(r)){ ORGROLE[p]=r; S.menu=null; toast(`${esc(PB[p].n)} is now ${r}`); render(); return; } if(r==='__revoke') t.m=t.m.filter(x=>x[0]!==p); else t.m.find(x=>x[0]===p)[1]=r; S.menu=null; render(); },
+  rmm(v){ const [id,p]=v.split('|'); const t=TB()[id]; const before=snap(); t.m=t.m.filter(x=>x[0]!==p); toast(`${esc(PB[p].n)} removed from ${esc(t.name)}`,()=>{ T=before; }); render(); },
+  invite(){ toast('Invite flow is the existing Invite members modal'); render(); },
+  assign(v){ S.modal={k:'assign',id:v,sel:new Set()}; render(); }, apick(v){ const s=S.modal.sel; s.has(v)?s.delete(v):s.add(v); render(); },
+  asave(){ const M=S.modal; M.sel.forEach(id=>TB()[id].m.push([M.id,M.role||'Contributor'])); S.modal=null; toast(`${esc(PB[M.id].n)} added to ${pl(M.sel.size,'team')}`); render(); },
+  undo(){ if(undo) undo(); undo=null; S.toast=null; render(); },
+  close(){ S.modal=null; S.menu=null; render(); }, noop(){}
+};
+function doMove(id,to){ const B=TB(); const t=B[id]; if(to===t.parent) return; if(to&&(to===id||desc(id).some(x=>x.id===to))) { toast('A team can’t move inside itself'); return; }
+  const before=snap(); const from=t.parent; t.parent=to; if(to) S.open.add(to);
+  toast(`${esc(t.name)} moved to ${to?esc(B[to].name):'the top level'}`,()=>{ T=before; }); }
+
+document.addEventListener('click',e=>{ const el=e.target.closest('[data-a]'); if(!el){ if(S.menu){ S.menu=null; render(); } return; }
+  const a=el.dataset.a; if(a==='noop'){ if(S.menu&&!e.target.closest('.menu')){ S.menu=null; render(); } return; }
+  if(a==='close'&&el.classList.contains('ov')&&e.target!==el) return;
+  if(S.menu&&!e.target.closest('.menu')&&!['menu','role','crole','lead'].includes(a)) S.menu=null;
+  e.stopPropagation(); (A[a]||(()=>{}))(el.dataset.v,e); });
+document.addEventListener('input',e=>{ if(e.target.id==='tq'){ S.q=e.target.value; render(); } else if(e.target.id==='uq'){ S.uq=e.target.value; render(); }
+  else if(e.target.dataset.inv!==undefined){ S.modal.inv[+e.target.dataset.inv].e=e.target.value; const b=document.querySelector('[data-a=csave]'); const k=S.modal.inv.filter(x=>x.e).length; if(b) b.textContent=k?`Create and invite ${k}`:'Create team'; }
+  else if(e.target.id==='cn'){ S.modal.name=e.target.value; } });
+document.addEventListener('change',e=>{ if(e.target.dataset.a==='rename'){ const t=TB()[e.target.dataset.v]; const v=e.target.value.trim(); if(v){ t.name=v; toast('Team renamed'); render(); } } });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&(S.modal||S.menu)){ S.modal=null; S.menu=null; render(); }
+  const r=e.target.closest&&e.target.closest('.ocard[data-a=open]'); if(r&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); A.open(r.dataset.v); } });
+/* drag to re-parent */
+document.addEventListener('dragstart',e=>{ const r=e.target.closest('[draggable][data-id]'); if(!r) return; S.drag=r.dataset.id; e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',S.drag); r.classList.add('dragging');
+  setTimeout(()=>{ const z=document.querySelector('.tr[data-id=__root]'); if(z) z.style.display='grid'; },0); });
+document.addEventListener('dragend',()=>{ S.drag=null; document.querySelectorAll('.dragging,.drop-in').forEach(x=>x.classList.remove('dragging','drop-in')); const z=document.querySelector('.tr[data-id=__root]'); if(z) z.style.display='none'; });
+const okDrop=id=>S.drag&&id!==S.drag&&!(id!=='__root'&&desc(S.drag).some(x=>x.id===id))&&(id==='__root'?TB()[S.drag].parent!==null:TB()[S.drag].parent!==id);
+document.addEventListener('dragover',e=>{ const r=e.target.closest('[data-id]'); document.querySelectorAll('.drop-in').forEach(x=>x!==r&&x.classList.remove('drop-in')); if(!r||!okDrop(r.dataset.id)) return; e.preventDefault(); r.classList.add('drop-in'); });
+document.addEventListener('drop',e=>{ const r=e.target.closest('[data-id]'); if(!r||!okDrop(r.dataset.id)) return; e.preventDefault(); const id=S.drag; S.drag=null; doMove(id, r.dataset.id==='__root'?null:r.dataset.id); render(); });
+render();
+/* ===== Roles, inherited access and inviting into sub-teams ===== */
+const RANK={'Team admin':4,'Architect':3,'Contributor':2,'Viewer':1};
+const TEAM_ROLES=[
+ {id:'Team admin', ic:'shield', d:'Runs the team: people, repositories, sub-teams.'},
+ {id:'Architect', ic:'dataflow', d:'Edits the model and approves reviews.'},
+ {id:'Contributor', ic:'pen', d:'Proposes changes.'},
+ {id:'Viewer', ic:'eye', d:'Views and comments.'}];
+const ORG_ROLES=[
+ {id:'Super admin', ic:'crown', d:'Everything, including billing and the org itself.'},
+ {id:'Admin', ic:'key', d:'Runs the org. Team admin in every team. No billing.'},
+ {id:'Member', ic:'user', d:'Access through their teams.'}];
+/* one matrix: Super admin · Admin · Team admin · Architect · Contributor · Viewer. 1 yes, 0 no, 'own' own items only, 'team' own team only */
+const ALL=['Super admin','Admin','Team admin','Architect','Contributor','Viewer'];
+const MATRIX=[
+ ['View',[
+  ['View the Galaxy, diagrams and code',[1,1,1,1,1,1]],
+  ['Comment in chat rooms',[1,1,1,1,1,1]]]],
+ ['Create',[
+  ['Propose use cases and changes',[1,1,1,1,1,0]],
+  ['Create sub-teams',[1,1,1,0,0,0]],
+  ['Create top-level teams',[1,1,0,0,0,0]],
+  ['Create business systems',[1,1,'team',0,0,0]]]],
+ ['Edit',[
+  ['Edit use cases and flows',[1,1,1,1,'own',0]],
+  ['Approve or reject reviews',[1,1,1,1,0,0]],
+  ['Change bounded contexts and target architecture',[1,1,1,1,0,0]],
+  ['Rename and set up teams',[1,1,'team',0,0,0]]]],
+ ['Integrations',[
+  ['Connect and sync repositories',[1,1,'team',0,0,0]],
+  ['Connect GitHub, infra and other integrations',[1,1,0,0,0,0]]]],
+ ['Access',[
+  ['Invite people to a team, change team roles',[1,1,'team',0,0,0]],
+  ['Invite people to the org, remove them',[1,1,0,0,0,0]],
+  ['Make someone an Admin',[1,0,0,0,0,0]]]],
+ ['Delete',[
+  ['Delete use cases and bounded contexts',[1,1,'team',0,0,0]],
+  ['Archive or disconnect a business system',[1,1,'team',0,0,0]],
+  ['Delete sub-teams',[1,1,'team',0,0,0]],
+  ['Delete top-level teams',[1,1,0,0,0,0]],
+  ['Billing and plan',[1,0,0,0,0,0]],
+  ['Delete or transfer the org',[1,0,0,0,0,0]]]]];
+const TEAM_CAPS=[];
+const ORGROLE={hamza:'Super admin', sarah:'Admin'};
+const orgRole=p=>ORGROLE[p]||'Member';
+ROLES.length=0; TEAM_ROLES.forEach(r=>ROLES.push([r.id,r.d,r.ic]));
+const OLD={'Admin':'Team admin','Maintainer':'Team admin','Editor':'Architect'};
+T.forEach(t=>t.m.forEach(x=>{ if(OLD[x[1]]) x[1]=OLD[x[1]]; }));
+/* access passes down: a role in a team applies to every sub-team below it (unless a sub-team turns inheritance off). A higher role in a sub-team wins. */
+function fromParents(id){ const B=TB(); const out=new Map(); let t=B[id];
+  while(t&&t.inherit&&t.parent){ const p=B[t.parent]; p.m.forEach(([u,r])=>{ if(!out.has(u)||RANK[r]>RANK[out.get(u).r]) out.set(u,{p:u,r,from:p.id}); }); t=p; }
+  return out; }
+function inSubs(id){ const out=new Map(); desc(id).forEach(t=>t.m.forEach(([u,r])=>{ if(!out.has(u)) out.set(u,{p:u,r,from:t.id}); })); return out; }
+const cell=x=>x===1?`<span class="yes">${I('check',14)}</span>`:x==='own'?'<span class="pt">Own</span>':x==='team'?'<span class="pt">Own team</span>':'<span class="no">–</span>';
+const capsHTML=(cols,hl)=>{ const idx=cols.map(c=>ALL.indexOf(c)); return `<table class="caps"><thead><tr><th></th>${cols.map(c=>`<th class="${hl===c?'hl2':''}">${esc(c)}</th>`).join('')}</tr></thead>
+  <tbody>${MATRIX.map(([g,rows])=>{ const R=rows.filter(([,v])=>idx.some(i=>v[i])); return R.length?`<tr class="grp"><td colspan="${cols.length+1}">${g}</td></tr>`+R.map(([l,v])=>`<tr><td>${esc(l)}</td>${idx.map((i,k)=>`<td class="${hl===cols[k]?'hl2':''}">${cell(v[i])}</td>`).join('')}</tr>`).join(''):''; }).join('')}</tbody></table>`; };
+
+/* ---------- Members tab with three groups ---------- */
+{ const _t=teamHTML; teamHTML=function(){ const B=TB(); const t=B[S.team]; if(!t||S.tab!=='members') return _t();
+  const html=_t(); const i=html.indexOf('<div class="tabs"'); const head=html.slice(0,html.indexOf('</div>',i)+6);
+  const direct=t.m.map(([p,r])=>({p,r,from:t.id})); const ids=new Set(direct.map(x=>x.p));
+  const par=[...fromParents(t.id).values()].filter(x=>!ids.has(x.p)); par.forEach(x=>ids.add(x.p));
+  const sub=[...inSubs(t.id).values()].filter(x=>!ids.has(x.p));
+  const row=(x,kind)=>{ const p=PB[x.p]; const f=B[x.from]; const own=kind==='d';
+    return `<div class="mr"><span class="who">${pAv(p.id)}<span><b>${esc(p.n)}${t.lead===p.id?' <span class="tag neutral" style="margin-left:6px">Lead</span>':''}</b><small>${esc(p.e)}</small></span></span>
+      <span class="via">${own?'':kind==='p'?`From <button data-a="open" data-v="${f.id}">${esc(f.name)}</button>`:`In <button data-a="open" data-v="${f.id}">${esc(f.name)}</button>`}</span>
+      <button class="role" data-a="role" data-v="${f.id}|${p.id}" title="${own?'':'Role in '+esc(f.name)}">${x.r}${I('cd',14)}</button>
+      <button class="ib del" data-a="rmm" data-v="${f.id}|${p.id}" aria-label="Remove ${esc(p.n)} from ${esc(f.name)}" title="Remove from ${esc(f.name)}">${I('trash',16)}</button></div>`; };
+  const grp=(title,hint,L,kind)=>L.length?`<div class="mg"><b>${title} · ${L.length}</b></div>${L.map(x=>row(x,kind)).join('')}`:'';
+  const total=direct.length+sub.length;
+  const show=grp('Direct members','',direct,'d')+
+    grp('In sub-teams','Members through a sub-team. They only have access to their own sub-team.',sub,'s')+
+    (t.inherit?grp('From parent teams','Not members. Their role in a parent team applies here too. Change it in that team.',par,'p'):'');
+  return head+`<div class="hd"><h2>${pl(total,'Member')}</h2>
+    <span class="sp"></span><button class="btn ghost sm" data-a="roles">${I('info',14)}Roles</button><button class="btn primary" data-a="invite" data-v="${t.id}">${I('plus',16)}Invite Member</button></div>
+    <div class="mr h"><span>User</span><span>Member through</span><span>Role</span><span></span></div>${show||'<div class="empty">No members yet.</div>'}`; }; }
+
+/* ---------- Users: org role ---------- */
+{ const _u=usersHTML; usersHTML=function(){ let h=_u();
+  h=h.replace('<button class="btn primary">','<button class="btn ghost sm" data-a="roles">'+I('info',14)+'Roles</button><button class="btn primary" data-a="invite" data-v="">');
+  h=h.replace('<div class="ur h"><span>User</span><span>Joined at</span>','<div class="ur h"><span>User</span><span>Org role</span><span>Joined at</span>');
+  const q=S.uq.toLowerCase(); const L=PEOPLE.filter(([id,n,e])=>!q||n.toLowerCase().includes(q)||e.includes(q)); let j=0;
+  h=h.replace(/(<div class="ur"><span class="who">[\s\S]*?<\/span><\/span>)/g,m=>{ const p=L[j++]; if(!p) return m; const r=orgRole(p[0]); return m+`<span><span class="tag ${r==='Member'?'neutral':r==='Super admin'?'own':'oad'}">${r}</span></span>`; });
+  return h; }; }
+
+/* ---------- Invite: pick a team or any sub-team, and a role, per person ---------- */
+function teamOpts(root){ const out=[]; const walk=(p,d)=>kids(p).forEach(k=>{ out.push([k,d]); walk(k.id,d+1); });
+  if(root){ out.push([TB()[root],0]); walk(root,1); } else walk(null,0); return out; }
+const subsGetting=(team,role)=>{ if(!team||!role) return []; const o=[]; const walk=p=>kids(p).forEach(k=>{ if(k.inherit){ o.push(k); walk(k.id); } }); walk(team); return o; };
+{ const _m=modalHTML; modalHTML=function(){ const M=S.modal; if(!M||(M.k!=='invite'&&M.k!=='roles')) return _m(); const B=TB();
+  if(M.k==='roles') return `<div class="ov" data-a="close"><div class="md" role="dialog" aria-modal="true" aria-label="Roles" data-a="noop">
+    <div class="mh"><span><b>Roles</b><small>Super admin and Admin are set for the whole org. Team roles pass down to sub-teams.</small></span><span class="sp"></span><button class="ib" data-a="close" aria-label="Close">${I('x',18)}</button></div>
+    <div class="rc six">${[...ORG_ROLES.slice(0,2),...TEAM_ROLES].map(r=>`<div><span>${I(r.ic,16)}<b>${r.id}</b></span><small>${esc(r.d)}</small></div>`).join('')}</div>
+    ${capsHTML(ALL,null)}
+    <div class="mf"><button class="btn primary" data-a="close">Done</button></div></div></div>`;
+  const root=M.root&&B[M.root]; const n=M.rows.filter(r=>r.e.trim()).length; const hl=(M.rows[M.focus||0]||{}).role;
+  return `<div class="ov" data-a="close"><div class="md wide" role="dialog" aria-modal="true" aria-label="Invite members" data-a="noop">
+    <div class="mh"><span><b>${root?`Invite to ${esc(root.name)}`:'Invite users'}</b></span><span class="sp"></span><button class="ib" data-a="close" aria-label="Close">${I('x',18)}</button></div>
+    <div class="inv inv3"><div class="r h"><span>Email</span><span>Team</span><span>Role</span><span></span></div>
+    ${M.rows.map((r,i)=>{ const t=r.team&&B[r.team]; const subs=subsGetting(r.team,r.role);
+      return `<div class="r"><input value="${esc(r.e)}" placeholder="name@company.com" data-inv2="${i}" aria-label="Email ${i+1}">
+        ${isOrg(r.role)?`<span class="pickb" style="color:var(--text-2)"><span class="l">All teams</span></span>`:`<button class="pickb" data-a="iteam" data-v="${i}">${t?`${tAv(t,'sm')}<span class="l">${esc(t.name)}${t.parent?`<em>in ${esc(B[t.parent].name)}</em>`:''}</span>`:`<span class="l" style="color:var(--text-2)">${root?'Pick a team':'No team'}</span>`}${I('cd',14)}</button>`}
+        <button class="pickb" data-a="irole" data-v="${i}">${r.role?`<span class="l">${r.role}</span>`:`<span class="l" style="color:var(--text-2)">${t?'Select role':'Member'}</span>`}${I('cd',14)}</button>
+        <button class="ib" data-a="irm" data-v="${i}" aria-label="Remove row">${I('x',14)}</button>
+</div>`; }).join('')}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:-8px"><button class="btn ghost sm" data-a="iadd">${I('plus',14)}Add another</button><span class="sp" style="flex:1"></span><button class="btn ghost sm" data-a="icaps" aria-expanded="${!!M.caps}">${I(M.caps?'cd':'cr',14)}Compare roles</button></div>
+    ${M.caps?capsHTML(['Team admin','Architect','Contributor','Viewer'],hl):''}
+    <div class="mf"><span style="flex:1"></span><button class="btn" data-a="close">Cancel</button><button class="btn primary" data-a="isend" ${n&&M.rows.every(rowOk)?'':'disabled'}>${n?`Send ${pl(n,'invite')}`:'Send invites'}</button></div></div></div>`; }; }
+{ const _mn=menuHTML; menuHTML=function(){ const M=S.menu; if(!M||(M.k!=='iteam'&&M.k!=='irole')) return _mn(); const R=S.modal.rows[M.i];
+  if(M.k==='iteam'){ const q=(M.q||'').trim().toLowerCase(); const B=TB(); const root=S.modal.root; const open=M.open||(M.open=new Set(R.team?anc(R.team).map(a=>a.id):[]));
+    const hit=q?new Set(T.filter(k=>k.name.toLowerCase().includes(q)&&(!root||k.id===root||desc(root).some(d=>d.id===k.id))).map(k=>k.id)):null; const keep=new Set(); if(hit) hit.forEach(id=>{ keep.add(id); anc(id).forEach(a=>keep.add(a.id)); });
+    const rows=[]; const walk=(list,pre)=>{ const ks=list.filter(k=>!hit||keep.has(k.id)); ks.forEach((k,i)=>{ const last=i===ks.length-1; rows.push({k,pre,last}); if(kids(k.id).length&&(hit||open.has(k.id))) walk(kids(k.id),[...pre,last?' ':'v']); }); };
+    walk(root?[B[root]]:kids(null),[]);
+    const nm=k=>{ if(!q) return esc(k.name); const i=k.name.toLowerCase().indexOf(q); return i<0?esc(k.name):esc(k.name.slice(0,i))+`<span class="hl">${esc(k.name.slice(i,i+q.length))}</span>`+esc(k.name.slice(i+q.length)); };
+    const row=({k,pre,last})=>{ const d=pre.length, n=kids(k.id).length, op=hit||open.has(k.id), on=R.team===k.id;
+      const ind=d?`<span class="ind">${pre.slice(1).map(x=>`<i class="${x==='v'?'v':''}"></i>`).join('')}<i class="${last?'l':'t'}"></i></span>`:'';
+      return `<div class="tpr ${on?'on':''} ${hit&&!hit.has(k.id)?'ctx':''}" role="option" aria-selected="${on}" data-a="isetteam" data-v="${k.id}">${ind}<span class="tgw ${n&&op?'down':''} ${!n&&d?'leaf':''}">${n?`<button class="tg" data-a="tptog" data-v="${k.id}" aria-label="${op?'Collapse':'Expand'} ${esc(k.name)}" aria-expanded="${!!op}">${I(op?'cd':'cr',14)}</button>`:'<span class="tg none"></span>'}</span>
+        ${tAv(k,'sm')}<span class="tx"><b>${nm(k)}</b><small>${pl(allMembers(k.id).length,'member')}${n?` · ${pl(n,'sub-team')}`:''}</small></span><span class="rd ${on?'on':''}" aria-hidden="true"></span></div>`; };
+    return `<div class="menu tpk" style="left:${M.x}px;top:${M.y}px" role="dialog" aria-label="Pick a team">
+      <label class="search tps">${I('search',14)}<input id="tpq" value="${esc(M.q||'')}" placeholder="Search teams and sub-teams" aria-label="Search teams" autocomplete="off"></label>
+      <div class="tpl" role="listbox">${root||q?'':`<div class="tpr ${!R.team?'on':''}" data-a="isetteam" data-v=""><span class="tx"><b>No team</b></span><span class="rd ${!R.team?'on':''}"></span></div>`}
+      ${rows.map(row).join('')||`<div class="empty" style="padding:20px">No team matches “${esc(M.q)}”.</div>`}</div></div>`; }
+  return `<div class="menu" style="left:${M.x}px;top:${M.y}px;width:320px;max-height:calc(100vh - 24px);overflow:auto" role="menu">${roleItems(R.role,'isetrole',{team:true,member:!R.team})}
+    <hr><button data-a="icaps2"><span style="color:var(--accent-text)">Compare all roles</span></button></div>`; }; }
+
+/* ---------- every role picker shows the full set ---------- */
+const isOrg=r=>r==='Super admin'||r==='Admin';
+const rowOk=r=>!r.e.trim()||isOrg(r.role)||(r.team?!!RANK[r.role]:true);
+function roleItems(cur,act,o={}){ const it=(r,dis,note)=>`<button class="${cur===r.id?'on':''}" data-a="${act}" data-v="${r.id}" ${dis?'disabled':''}>${I(r.ic,16)}<span style="flex:1">${r.id}<small>${esc(note||r.d)}</small></span>${cur===r.id?I('check',16):''}</button>`;
+  return `<div class="cx-ph">Org</div>${ORG_ROLES.slice(0,2).map(r=>it(r)).join('')}${o.member?it(ORG_ROLES[2]):''}<hr><div class="cx-ph">Team</div>${TEAM_ROLES.map(r=>it(r,!o.team,o.team?null:'Pick a team first')).join('')}`; }
+Object.assign(A,{
+  arole(v,e){ const r=e.target.closest('button').getBoundingClientRect(); S.menu={k:'arole',x:Math.min(r.left,innerWidth-332),y:Math.max(12,r.top-430)}; render(); },
+  asetrole(v){ S.modal.role=v; S.menu=null; render(); }
+});
+{ const _mn2=menuHTML; menuHTML=function(){ const M=S.menu; if(M&&M.k==='arole') return `<div class="menu" style="left:${M.x}px;top:${M.y}px;width:320px" role="menu">${roleItems(S.modal.role||'Contributor','asetrole',{team:true}).replace(/<div class="cx-ph">Org<\/div>[\s\S]*?<hr>/,'')}</div>`; return _mn2(); }; }
+
+Object.assign(A,{ tptog(v){ const o=S.menu&&S.menu.open; if(!o) return; o.has(v)?o.delete(v):o.add(v); render(); } });
+const rectOf=e=>e.target.closest('button').getBoundingClientRect();
+Object.assign(A,{
+  roles(){ S.menu=null; S.modal={k:'roles'}; render(); },
+  invite(v){ S.menu=null; const root=v||null; S.modal={k:'invite',root,rows:[{e:'',team:root,role:root?'Contributor':''}],caps:false,focus:0}; render(); setTimeout(()=>{ const x=document.querySelector('[data-inv2="0"]'); x&&x.focus(); },0); },
+  iadd(){ const last=S.modal.rows[S.modal.rows.length-1]||{}; S.modal.rows.push({e:'',team:last.team??S.modal.root,role:last.role||''}); render(); const k=S.modal.rows.length-1; setTimeout(()=>{ const x=document.querySelector(`[data-inv2="${k}"]`); x&&x.focus(); },0); },
+  irm(v){ S.modal.rows.splice(+v,1); if(!S.modal.rows.length) S.modal.rows.push({e:'',team:S.modal.root,role:S.modal.root?'Contributor':''}); render(); },
+  iteam(v,e){ const r=rectOf(e); S.modal.focus=+v; const h=Math.min(400,innerHeight-24); const below=innerHeight-r.bottom-12; S.menu={k:'iteam',i:+v,q:'',x:Math.min(r.left,innerWidth-372),y:below>=Math.min(h,320)?r.bottom+4:Math.max(12,r.top-h-4),h}; render(); setTimeout(()=>{ const x=document.getElementById('tpq'); x&&x.focus(); },0); },
+  irole(v,e){ const r=rectOf(e); S.modal.focus=+v; const h=520; S.menu={k:'irole',i:+v,x:Math.min(r.left,innerWidth-332),y:r.bottom+4+h<innerHeight?r.bottom+4:Math.max(12,r.top-h-4)}; render(); },
+  isetteam(v){ const R=S.modal.rows[S.menu.i]; R.team=v||null; if(R.team&&(!R.role||R.role==='Member')) R.role='Contributor'; if(!R.team&&RANK[R.role]) R.role=''; S.menu=null; render(); },
+  isetrole(v){ const i=S.menu.i; const R=S.modal.rows[i]; R.role=v; if(isOrg(v)) R.team=null; else if(RANK[v]&&!R.team) R.team=S.modal.root; S.menu=null; render(); if(RANK[v]&&!R.team) setTimeout(()=>{ const b=document.querySelectorAll('[data-a=iteam]')[i]; if(b) A.iteam(String(i),{target:b}); },0); },
+  icaps(){ S.modal.caps=!S.modal.caps; render(); }, icaps2(){ S.menu=null; S.modal.caps=true; render(); },
+  isend(){ const M=S.modal; const L=M.rows.filter(r=>r.e.trim()); const teams=[...new Set(L.map(r=>r.team).filter(Boolean))].map(x=>TB()[x].name);
+    S.modal=null; toast(`${pl(L.length,'invite')} sent${teams.length?` · ${teams.slice(0,2).map(esc).join(', ')}${teams.length>2?` +${teams.length-2}`:''}`:''}`); render(); }
+});
+document.addEventListener('input',e=>{ const i=e.target.dataset&&e.target.dataset.inv2; if(i===undefined) return; S.modal.rows[+i].e=e.target.value; S.modal.focus=+i;
+  const M=S.modal; const n=M.rows.filter(r=>r.e.trim()).length; const b=document.querySelector('[data-a=isend]'); if(b){ b.textContent=n?`Send ${pl(n,'invite')}`:'Send invites'; b.disabled=!(n&&M.rows.every(rowOk)); } });
+document.addEventListener('input',e=>{ if(e.target.id==='tpq'&&S.menu){ S.menu.q=e.target.value; render(); } });
+document.addEventListener('keydown',e=>{ if(e.target.id==='tpq'&&e.key==='Enter'){ const b=document.querySelector('.tpl button:not(.ctx)[data-v]:not([data-v=""])'); if(b){ e.preventDefault(); b.click(); } } });
+document.addEventListener('keydown',e=>{ const i=e.target.dataset&&e.target.dataset.inv2; if(i!==undefined&&e.key==='Enter'){ e.preventDefault(); A.iadd(); } });
+render();
+</script>
+</body>
+</html>
