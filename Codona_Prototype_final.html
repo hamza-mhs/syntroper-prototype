@@ -13594,7 +13594,7 @@ const L=[
  ['Flowchart','Code files and APIs under their own headings','Large steps show 5 files and 4 APIs, then “+N more”. Integration points sit on their API. Example: Request Return, step 2.', FLOW('request-return','cards',null,()=>ACT.fxexp('request-return|2')), ['#ucFlow .fxg']],
  ['Flowchart','File tabs and Open in editor','When a file is open, tabs list every file of the step. Open in editor shows the whole file.', FLOW('request-return','cards',null,()=>ACT.fxopen('request-return|2|f|apps/storefront/src/modules/order/components/return-reason-select/index.tsx')), ['#ucFlow .fxtabs']],
  ['Flowchart','Shape colours and legend','Start and end green, steps blue, decisions orange, other paths purple. Legend on the canvas.', FLOW('cancel-order','cards'), ['#fxKey']],
- ['Swim lane','Swim lane as a third diagram','Sequence, Flowchart, Swim lane. Persona and system lanes, decisions with their branches.', FLOW('cancel-order','swim'), ['#ucFlow .spx']],
+ ['Swim lane','Swim lane as a third diagram','Sequence, Flowchart, Swim lane. One lane for the persona, one for the system. Lane switches drop straight down, loops back run between the lanes, branches that end the flow get their own End. Click a shape to see what it connects to.', FLOW('cancel-order','swim'), ['#ucFlow .spx']],
  ['All diagrams','Interaction rules','Hover is a dashed outline, selected is solid purple, related uses the secondary colour, the rest dims. Written in Syntroper_Interaction_Rules.md.', FLOW('cancel-order','cards'), ['#fxKey']],
  ['New bounded context','Impact on the Galaxy','Today’s integrations are drawn as they are. The ones the move touches turn red. No new lines. Impacted use cases turn red.', BOARD, ['#dbd .imp']],
  ['New bounded context','Impact list','Moves (grouped by source), impacted use cases, impacted integration points, contexts after the move. No decisions to make.', BOARD, ['#dbd .ich2']],
@@ -13616,6 +13616,128 @@ WN.length=0; WN.push(...L); WN.forEach((f,i)=>f.i=i+1);
 ['#wnPanel','#wnBtn','#wnLayer'].forEach(q=>{ const e=document.querySelector(q); if(e) e.remove(); });
 try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); const leg=document.querySelector('#wnPanel .wn-leg'); if(leg) leg.innerHTML='<span><i></i>Changes from 19 to 21 Nov</span>'; }catch(e){} }); }catch(e){}
 { const _s=wnSync; wnSync=function(){ _s(); const leg=document.querySelector('#wnPanel .wn-leg'); if(leg) leg.innerHTML='<span><i></i>Changes from 19 to 21 Nov</span>'; }; }
+})();
+</script>
+<style>
+/* FB76 · swim lane: persona lane and system lane, columns, orthogonal routing */
+.swx{display:block;max-width:none;font-family:var(--font)}
+.swx .ln-u{fill:color-mix(in srgb,#7b97f0 6%,var(--canvas))}
+.swx .ln-s{fill:color-mix(in srgb,#9a84f2 6%,var(--canvas))}
+.swx .ln-b{fill:none;stroke:var(--border-strong);stroke-width:1}
+.swx .hd-u{fill:color-mix(in srgb,#7b97f0 14%,var(--panel))}
+.swx .hd-s{fill:color-mix(in srgb,#9a84f2 14%,var(--panel))}
+.swx .hl{font:600 13px var(--font);fill:var(--text)}
+.swx .hc{font:500 10px var(--font);fill:var(--text-3);letter-spacing:.06em}
+.swx .n{cursor:pointer}
+.swx .n .sh{stroke-width:1.4;transition:opacity .15s}
+.swx .n.u .sh{fill:color-mix(in srgb,#7b97f0 20%,var(--panel));stroke:#7b97f0}
+.swx .n.s .sh{fill:color-mix(in srgb,#9a84f2 20%,var(--panel));stroke:#9a84f2}
+.swx .n.d .sh{fill:color-mix(in srgb,#f0a36b 16%,var(--panel));stroke:#f0a36b}
+.swx .n.t .sh{fill:color-mix(in srgb,#7cc04f 16%,var(--panel));stroke:#7cc04f}
+.swx .n.x .sh{fill:color-mix(in srgb,#ff6b6b 12%,var(--panel));stroke:#e5777a}
+.swx .n:hover .sh{stroke-dasharray:4 3}
+.swx .n.sel .sh{stroke:var(--accent-hover);stroke-width:2;stroke-dasharray:none}
+.swx .tx{font:500 12px var(--font);fill:var(--text);pointer-events:none}
+.swx .nb{font:600 10px var(--font);fill:var(--text-3);pointer-events:none}
+.swx .e path{fill:none;stroke:var(--text-3);stroke-width:1.4}
+.swx .e.br path{stroke:#f0a36b}
+.swx .e.bk path{stroke:#f0a36b;stroke-dasharray:5 4}
+.swx .el{font:500 11px var(--font);fill:var(--text-2)}
+.swx .e.br .el,.swx .e.bk .el{fill:#ffc79f}
+body.light .swx .e.br .el,body.light .swx .e.bk .el{fill:#b4561c}
+.swx .elb{fill:var(--canvas)}
+.swx .mk{fill:var(--text-3)} .swx .mk.o{fill:#f0a36b}
+.swx.has-sel .n:not(.sel):not(.rel){opacity:.35}
+.swx.has-sel .e:not(.rel){opacity:.2}
+.swx .e.rel path{stroke:var(--accent-hover)} .swx .e.rel .mkp{fill:var(--accent-hover)}
+</style>
+<script>
+/* FB76 · swim lane engine.
+   Steps: [{id, who:'user'|'system', kind:'action'|'decision', t, opts:[{t,to:'next'|'end'|stepId}]}]
+   Layout: two horizontal lanes (persona on top, system below). Nodes take columns in order; a lane switch
+   reuses the column when it is free so the arrow drops straight down. Decisions always start a new column.
+   Routing: main flow uses the right side; branches that skip ahead or loop back run in the corridor between
+   the lanes; branches that end the flow drop to a terminal in the outer row of the same lane. */
+(function(){
+const wrap=(t,n,max)=>{ const w=String(t||'').split(/\s+/).filter(Boolean); const L=[]; let c=''; w.forEach(x=>{ if((c+' '+x).trim().length>n){ if(c) L.push(c); c=x; } else c=(c+' '+x).trim(); }); if(c) L.push(c); if(L.length>max){ L.length=max; L[max-1]=L[max-1].replace(/.{0,2}$/,'…'); } return L.length?L:['…']; };
+const NW=168, DW=140, DH=88, PW=112, PH=36, CW=212, HW=132, ROW=104, OUT=70, R=8;
+function rpath(P){ /* orthogonal polyline with rounded corners */
+  let d=`M${P[0][0]} ${P[0][1]}`; for(let i=1;i<P.length;i++){ const [x,y]=P[i]; if(i<P.length-1){ const [px,py]=P[i-1], [nx,ny]=P[i+1];
+      const l1=Math.hypot(x-px,y-py), l2=Math.hypot(nx-x,ny-y); const r=Math.min(R,l1/2,l2/2); if(r<1){ d+=`L${x} ${y}`; continue; }
+      const ax=x-(x-px)/l1*r, ay=y-(y-py)/l1*r, bx=x+(nx-x)/l2*r, by=y+(ny-y)/l2*r; d+=`L${ax} ${ay}Q${x} ${y} ${bx} ${by}`; } else d+=`L${x} ${y}`; }
+  return d; }
+window.specSwim=function(stIn,per,sys){
+  const st=(stIn||[]).filter(x=>x&&(x.t&&x.t.trim()||x.kind==='decision')); const n=st.length;
+  const ix={}; st.forEach((x,i)=>ix[x.id]=i);
+  const tgt=(i,o)=>o.to==='end'?-1:(o.to==='next'||!o.to)?i+1:(ix[o.to]!=null?ix[o.to]:i+1);
+  /* ---- nodes ---- */
+  const N=[]; const occ={}; const key=(c,l)=>c+'|'+l;
+  const add=(o)=>{ N.push(o); occ[key(o.col,o.lane)]=1; return o; };
+  const start=add({k:'start',cls:'t',lane:0,col:0,w:PW,h:PH,L:['Start']});
+  let prev=start; const SN=[];
+  st.forEach((x,i)=>{ const lane=x.who==='user'?0:1; const dec=x.kind==='decision';
+    let col = (!dec && prev.lane!==lane && !occ[key(prev.col,lane)] && prev.k!=='dec') ? prev.col : prev.col+1;
+    const L=wrap(x.t||'Decision',dec?16:22,dec?3:3);
+    const o=add({k:dec?'dec':'step',cls:dec?'d':(lane?'s':'u'),lane,col,i,w:dec?DW:NW,h:dec?DH:Math.max(52,L.length*15+24),L,num:i+1});
+    SN.push(o); prev=o; });
+  const last=prev; const endCol=last.col+1;
+  const end=add({k:'end',cls:'t',lane:last.lane,col:endCol,w:PW,h:PH,L:['Done']});
+  /* ---- edges ---- */
+  const E=[]; const outN=[]; const outOcc={};
+  const nodeOf=j=>j>=n?end:SN[j];
+  if(n) E.push({a:start,b:SN[0],t:'main'}); else E.push({a:start,b:end,t:'main'});
+  SN.forEach((o,i)=>{ const x=st[i];
+    if(o.k!=='dec'){ E.push({a:o,b:nodeOf(i+1),t:'main'}); return; }
+    let mainUsed=false; (x.opts||[]).forEach((op,k)=>{ const j=tgt(i,op); const lab=op.t||(k?'Else':'Yes');
+      if(j<0){ let c=o.col; while(outOcc[key(c,o.lane)]) c+=.8; outOcc[key(c,o.lane)]=1; const tn={k:'term',cls:'x',lane:o.lane,col:c,outer:1,w:156,h:PH,L:wrap('End: '+(op.t||'stop'),22,2)}; tn.h=tn.L.length>1?46:PH; N.push(tn); outN.push(tn); E.push({a:o,b:tn,t:'out',lab}); return; }
+      if(j===i+1&&!mainUsed){ mainUsed=true; E.push({a:o,b:nodeOf(j),t:'main',lab,br:k>0}); return; }
+      const dup=E.find(e=>e.t==='corr'&&e.a===o&&e.b===nodeOf(j)); if(dup){ dup.lab+=' · '+lab; return; } E.push({a:o,b:nodeOf(j),t:'corr',lab,back:j<=i}); }); });
+  /* ---- rows and columns ---- */
+  const uOut=outN.some(t=>t.lane===0), sOut=outN.some(t=>t.lane===1);
+  const CE=E.filter(e=>e.t==='corr'); const corrH=Math.max(36, CE.length*16+20);
+  let y=0; const Y={}; if(uOut){ Y.uo=y+OUT/2; y+=OUT; } Y.u=y+ROW/2; y+=ROW; const corrTop=y; y+=corrH; const mid=corrTop+corrH/2; Y.s=y+ROW/2; y+=ROW; if(sOut){ Y.so=y+OUT/2; y+=OUT; } const H=y;
+  const cols=Math.max(...N.map(o=>o.col))+1; const X0=HW+24; const W=X0+cols*CW+8;
+  N.forEach(o=>{ o.cx=X0+o.col*CW+CW/2-22; o.cy=o.outer?(o.lane?Y.so:Y.uo):(o.lane?Y.s:Y.u);
+    o.l=o.cx-o.w/2; o.r=o.cx+o.w/2; o.t=o.cy-o.h/2; o.b=o.cy+o.h/2;
+    o.inY=o.lane?o.t:o.b; o.outY=o.lane?o.b:o.t; });
+  /* ---- routing ---- */
+  let track=0; const lab=[];
+  E.forEach(e=>{ const a=e.a, b=e.b; let P;
+    if(e.t==='main'){
+      if(a.lane===b.lane && !a.outer && !b.outer){ P=[[a.r,a.cy],[b.l,b.cy]]; e.lp=[a.r+8,a.cy-8]; }
+      else if(a.col===b.col){ const down=b.cy>a.cy; P=[[a.cx,down?a.b:a.t],[b.cx,down?b.t:b.b]]; e.lp=[a.cx+8,(a.b+b.t)/2]; }
+      else { const gx=(a.r+b.l)/2; P=[[a.r,a.cy],[gx,a.cy],[gx,b.cy],[b.l,b.cy]]; e.lp=[a.r+8,a.cy-8]; } }
+    else if(e.t==='out'){ P=[[a.cx,a.outY],[b.cx,a.outY+(a.lane?14:-14)],[b.cx,b.lane?b.t:b.b]]; if(b.cx===a.cx) P=[[a.cx,a.outY],[b.cx,b.lane?b.t:b.b]]; else P=[[a.cx,a.outY],[a.cx,(a.outY+(b.lane?b.t:b.b))/2],[b.cx,(a.outY+(b.lane?b.t:b.b))/2],[b.cx,b.lane?b.t:b.b]]; e.lp=[a.cx+8,a.outY+(a.lane?16:-8)]; }
+    else { const ty=corrTop+12+track*16; track++; const ex=b.cx+(e.back?-1:1)*Math.min(b.w/4,30);
+      P=[[a.cx,a.inY],[a.cx,ty],[ex,ty],[ex,b.inY]]; e.lp=[Math.min(a.cx,ex)+12,ty-4]; e.lpA=e.back?'start':'start'; e.lpc=[(a.cx+ex)/2, ty+4]; }
+    e.P=P; });
+  /* ---- svg ---- */
+  const id='sw'+Math.random().toString(36).slice(2,7);
+  let s=`<defs><marker id="${id}a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0 0L10 5L0 10z"/></marker><marker id="${id}o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk o" d="M0 0L10 5L0 10z"/></marker></defs>`;
+  s+=`<rect class="ln-u" x="0" y="0" width="${W}" height="${mid}"/><rect class="ln-s" x="0" y="${mid}" width="${W}" height="${H-mid}"/>`;
+  s+=`<rect class="hd-u" x="0" y="0" width="${HW}" height="${mid}"/><rect class="hd-s" x="0" y="${mid}" width="${HW}" height="${H-mid}"/>`;
+  const head=(txt,cap,y0,y1)=>{ const L=wrap(txt,15,2); const cy=(y0+y1)/2-(L.length-1)*8; return `<text class="hc" x="16" y="${cy-14}">${cap}</text>`+L.map((l,k)=>`<text class="hl" x="16" y="${cy+4+k*16}">${esc(l)}</text>`).join(''); };
+  s+=head(per||'User','PERSONA',0,mid)+head(sys||'System','SYSTEM',mid,H);
+  s+=`<rect class="ln-b" x=".5" y=".5" width="${W-1}" height="${H-1}" rx="10"/><line class="ln-b" x1="0" y1="${mid}" x2="${W}" y2="${mid}"/><line class="ln-b" x1="${HW}" y1="0" x2="${HW}" y2="${H}"/>`;
+  let es='', ls='';
+  E.forEach((e,k)=>{ const br=e.t!=='main'||e.br; const cl=e.t==='corr'?'bk':br?'br':'';
+    es+=`<g class="e ${cl}" data-a="${N.indexOf(e.a)}" data-b="${N.indexOf(e.b)}"><path d="${rpath(e.P)}" marker-end="url(#${id}${br?'o':'a'})"/></g>`;
+    if(e.lab&&e.a.k==='dec'&&e.t!=='out'){ const w=e.lab.length*6.2+10; if(e.lpc) e.lp=[e.lpc[0]-w/2+4,e.lpc[1]]; ls+=`<g class="e ${cl}" data-a="${N.indexOf(e.a)}" data-b="${N.indexOf(e.b)}"><rect class="elb" x="${e.lp[0]-4}" y="${e.lp[1]-11}" width="${w}" height="15" rx="3"/><text class="el" x="${e.lp[0]+1}" y="${e.lp[1]}">${esc(e.lab)}</text></g>`; } });
+  let ns='';
+  N.forEach((o,k)=>{ let sh;
+    if(o.k==='dec') sh=`<path class="sh" d="M${o.cx} ${o.t}L${o.r} ${o.cy}L${o.cx} ${o.b}L${o.l} ${o.cy}Z"/>`;
+    else if(o.k==='step') sh=`<rect class="sh" x="${o.l}" y="${o.t}" width="${o.w}" height="${o.h}" rx="8"/>`;
+    else sh=`<rect class="sh" x="${o.l}" y="${o.t}" width="${o.w}" height="${o.h}" rx="${o.h/2}"/>`;
+    const lh=15, ty=o.cy-(o.L.length-1)*lh/2+4;
+    ns+=`<g class="n ${o.cls}" data-n="${k}">${sh}${o.num?`<text class="nb" x="${o.k==='dec'?o.cx-4:o.l+8}" y="${o.k==='dec'?o.t+18:o.t+13}">${o.num}</text>`:''}${o.L.map((l,j)=>`<text class="tx" x="${o.cx}" y="${ty+j*lh+(o.num&&o.k==='step'?3:0)}" text-anchor="middle">${esc(l)}</text>`).join('')}</g>`; });
+  return `<svg class="spx swx" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Swim lane">${s}${es}${ns}${ls}</svg>`; };
+/* click a shape: selected purple, its arrows and neighbours stay, the rest dims */
+document.addEventListener('click',e=>{ const g=e.target.closest&&e.target.closest('.swx .n'); const sv=e.target.closest&&e.target.closest('.swx'); if(!sv) return;
+  sv.querySelectorAll('.sel,.rel').forEach(x=>x.classList.remove('sel','rel'));
+  if(!g||g.classList.contains('was')){ sv.classList.remove('has-sel'); sv.querySelectorAll('.was').forEach(x=>x.classList.remove('was')); return; }
+  sv.querySelectorAll('.was').forEach(x=>x.classList.remove('was'));
+  const k=g.dataset.n; g.classList.add('sel','was'); sv.classList.add('has-sel');
+  sv.querySelectorAll('.e').forEach(x=>{ if(x.dataset.a===k||x.dataset.b===k){ x.classList.add('rel'); const o=x.dataset.a===k?x.dataset.b:x.dataset.a; const m=sv.querySelector(`.n[data-n="${o}"]`); if(m) m.classList.add('rel'); } }); });
 })();
 </script>
 </body>
