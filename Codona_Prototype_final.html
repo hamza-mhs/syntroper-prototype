@@ -13620,36 +13620,35 @@ try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); const 
 </script>
 <style>
 /* FB76 · swim lane: persona lane and system lane, columns, orthogonal routing */
-.swx{display:block;max-width:none;font-family:var(--font)}
-.swx .ln-u{fill:color-mix(in srgb,#7b97f0 6%,var(--canvas))}
-.swx .ln-s{fill:color-mix(in srgb,#9a84f2 6%,var(--canvas))}
+.swx{display:block;max-width:none;font-family:var(--font);overflow:visible}
+.swx .ln-u,.swx .ln-s{fill:transparent}
 .swx .ln-b{fill:none;stroke:var(--border-strong);stroke-width:1}
-.swx .hd-u{fill:color-mix(in srgb,#7b97f0 14%,var(--panel))}
-.swx .hd-s{fill:color-mix(in srgb,#9a84f2 14%,var(--panel))}
+.swx .hd-u,.swx .hd-s{fill:var(--panel)}
+.swx .hic{fill:var(--surface);stroke:var(--border-strong)}
+.swx .hig{fill:none;stroke:var(--text-2);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .swx .hl{font:600 13px var(--font);fill:var(--text)}
 .swx .hc{font:500 10px var(--font);fill:var(--text-3);letter-spacing:.06em}
 .swx .n{cursor:pointer}
-.swx .n .sh{stroke-width:1.4;transition:opacity .15s}
-.swx .n.u .sh{fill:color-mix(in srgb,#7b97f0 20%,var(--panel));stroke:#7b97f0}
-.swx .n.s .sh{fill:color-mix(in srgb,#9a84f2 20%,var(--panel));stroke:#9a84f2}
-.swx .n.d .sh{fill:color-mix(in srgb,#f0a36b 16%,var(--panel));stroke:#f0a36b}
-.swx .n.t .sh{fill:color-mix(in srgb,#7cc04f 16%,var(--panel));stroke:#7cc04f}
-.swx .n.x .sh{fill:color-mix(in srgb,#ff6b6b 12%,var(--panel));stroke:#e5777a}
-.swx .n:hover .sh{stroke-dasharray:4 3}
-.swx .n.sel .sh{stroke:var(--accent-hover);stroke-width:2;stroke-dasharray:none}
+.swx .n .sh{fill:var(--panel);stroke-width:1.2;stroke:var(--border-strong);filter:drop-shadow(0 1px 2px rgba(0,0,0,.28));transition:opacity .15s}
+.swx .n.u .sh,.swx .n.s .sh{stroke:color-mix(in srgb,var(--fs-step,#7b97f0) 55%,var(--border-strong))}
+.swx .n.d .sh{stroke:color-mix(in srgb,var(--fs-dec,#f0a36b) 60%,var(--border-strong))}
+.swx .n.t .sh{stroke:color-mix(in srgb,var(--fs-term,#7cc04f) 55%,var(--border-strong))}
+.swx .n.x .sh{stroke:color-mix(in srgb,var(--danger,#ea4d44) 55%,var(--border-strong))}
+.swx .n:not(.sel):hover .sh{stroke:var(--sel-hov,#8673f2);stroke-dasharray:4 3}
+.swx .n.sel .sh{stroke:var(--sel,#8673f2);stroke-width:2}
+.swx .n.rel .sh{stroke:var(--rel,#9a88f5)}
 .swx .tx{font:500 12px var(--font);fill:var(--text);pointer-events:none}
-.swx .nb{font:600 10px var(--font);fill:var(--text-3);pointer-events:none}
-.swx .e path{fill:none;stroke:var(--text-3);stroke-width:1.4}
-.swx .e.br path{stroke:#f0a36b}
-.swx .e.bk path{stroke:#f0a36b;stroke-dasharray:5 4}
+.swx .nbc{fill:var(--surface-strong)}
+.swx .nb{font:600 10px var(--font);fill:var(--text-2);pointer-events:none}
+.swx .e path{fill:none;stroke:var(--text-3);stroke-width:1.3}
+.swx .e.br path{stroke:var(--fs-dec,#f0a36b)}
+.swx .e.bk path{stroke:var(--fs-dec,#f0a36b);stroke-dasharray:5 4}
 .swx .el{font:500 11px var(--font);fill:var(--text-2)}
-.swx .e.br .el,.swx .e.bk .el{fill:#ffc79f}
-body.light .swx .e.br .el,body.light .swx .e.bk .el{fill:#b4561c}
-.swx .elb{fill:var(--canvas)}
-.swx .mk{fill:var(--text-3)} .swx .mk.o{fill:#f0a36b}
+.swx .elb{fill:var(--panel);stroke:var(--border-strong)}
+.swx .mk{fill:context-stroke}
 .swx.has-sel .n:not(.sel):not(.rel){opacity:.35}
 .swx.has-sel .e:not(.rel){opacity:.2}
-.swx .e.rel path{stroke:var(--accent-hover)} .swx .e.rel .mkp{fill:var(--accent-hover)}
+.swx .e.rel path{stroke:var(--sel,#8673f2)}
 </style>
 <script>
 /* FB76 · swim lane engine.
@@ -13660,7 +13659,7 @@ body.light .swx .e.br .el,body.light .swx .e.bk .el{fill:#b4561c}
    the lanes; branches that end the flow drop to a terminal in the outer row of the same lane. */
 (function(){
 const wrap=(t,n,max)=>{ const w=String(t||'').split(/\s+/).filter(Boolean); const L=[]; let c=''; w.forEach(x=>{ if((c+' '+x).trim().length>n){ if(c) L.push(c); c=x; } else c=(c+' '+x).trim(); }); if(c) L.push(c); if(L.length>max){ L.length=max; L[max-1]=L[max-1].replace(/.{0,2}$/,'…'); } return L.length?L:['…']; };
-const NW=168, DW=140, DH=88, PW=112, PH=36, CW=212, HW=132, ROW=104, OUT=70, R=8;
+const NW=172, DW=144, DH=88, PW=112, PH=36, CW=220, HW=148, ROW=104, OUT=70, R=8;
 function rpath(P){ /* orthogonal polyline with rounded corners */
   let d=`M${P[0][0]} ${P[0][1]}`; for(let i=1;i<P.length;i++){ const [x,y]=P[i]; if(i<P.length-1){ const [px,py]=P[i-1], [nx,ny]=P[i+1];
       const l1=Math.hypot(x-px,y-py), l2=Math.hypot(nx-x,ny-y); const r=Math.min(R,l1/2,l2/2); if(r<1){ d+=`L${x} ${y}`; continue; }
@@ -13713,11 +13712,13 @@ window.specSwim=function(stIn,per,sys){
     e.P=P; });
   /* ---- svg ---- */
   const id='sw'+Math.random().toString(36).slice(2,7);
-  let s=`<defs><marker id="${id}a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0 0L10 5L0 10z"/></marker><marker id="${id}o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk o" d="M0 0L10 5L0 10z"/></marker></defs>`;
+  let s=`<defs><marker id="${id}a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0 0L10 5L0 10z"/></marker><marker id="${id}o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0 0L10 5L0 10z"/></marker></defs>`;
   s+=`<rect class="ln-u" x="0" y="0" width="${W}" height="${mid}"/><rect class="ln-s" x="0" y="${mid}" width="${W}" height="${H-mid}"/>`;
   s+=`<rect class="hd-u" x="0" y="0" width="${HW}" height="${mid}"/><rect class="hd-s" x="0" y="${mid}" width="${HW}" height="${H-mid}"/>`;
-  const head=(txt,cap,y0,y1)=>{ const L=wrap(txt,15,2); const cy=(y0+y1)/2-(L.length-1)*8; return `<text class="hc" x="16" y="${cy-14}">${cap}</text>`+L.map((l,k)=>`<text class="hl" x="16" y="${cy+4+k*16}">${esc(l)}</text>`).join(''); };
-  s+=head(per||'User','PERSONA',0,mid)+head(sys||'System','SYSTEM',mid,H);
+  const ICU='<circle cx="12" cy="8" r="3.5"/><path d="M5 19c1.2-3.3 3.8-5 7-5s5.8 1.7 7 5"/>', ICS='<rect x="4" y="4" width="16" height="6" rx="2"/><rect x="4" y="14" width="16" height="6" rx="2"/><path d="M8 7h.01M8 17h.01"/>';
+  const head=(txt,cap,ic,y0,y1)=>{ const L=wrap(txt,13,2); const blk=28+12+L.length*16; const top=(y0+y1)/2-blk/2;
+    return `<rect class="hic" x="16" y="${top}" width="28" height="28" rx="8"/><g class="hig" transform="translate(20 ${top+4}) scale(.833)">${ic}</g><text class="hc" x="52" y="${top+18}">${cap}</text>`+L.map((l,k)=>`<text class="hl" x="16" y="${top+52+k*16}">${esc(l)}</text>`).join(''); };
+  s+=head(per||'User','PERSONA',ICU,0,mid)+head(sys||'System','SYSTEM',ICS,mid,H);
   s+=`<rect class="ln-b" x=".5" y=".5" width="${W-1}" height="${H-1}" rx="10"/><line class="ln-b" x1="0" y1="${mid}" x2="${W}" y2="${mid}"/><line class="ln-b" x1="${HW}" y1="0" x2="${HW}" y2="${H}"/>`;
   let es='', ls='';
   E.forEach((e,k)=>{ const br=e.t!=='main'||e.br; const cl=e.t==='corr'?'bk':br?'br':'';
@@ -13726,10 +13727,10 @@ window.specSwim=function(stIn,per,sys){
   let ns='';
   N.forEach((o,k)=>{ let sh;
     if(o.k==='dec') sh=`<path class="sh" d="M${o.cx} ${o.t}L${o.r} ${o.cy}L${o.cx} ${o.b}L${o.l} ${o.cy}Z"/>`;
-    else if(o.k==='step') sh=`<rect class="sh" x="${o.l}" y="${o.t}" width="${o.w}" height="${o.h}" rx="8"/>`;
+    else if(o.k==='step') sh=`<rect class="sh" x="${o.l}" y="${o.t}" width="${o.w}" height="${o.h}" rx="12"/>`;
     else sh=`<rect class="sh" x="${o.l}" y="${o.t}" width="${o.w}" height="${o.h}" rx="${o.h/2}"/>`;
     const lh=15, ty=o.cy-(o.L.length-1)*lh/2+4;
-    ns+=`<g class="n ${o.cls}" data-n="${k}">${sh}${o.num?`<text class="nb" x="${o.k==='dec'?o.cx-4:o.l+8}" y="${o.k==='dec'?o.t+18:o.t+13}">${o.num}</text>`:''}${o.L.map((l,j)=>`<text class="tx" x="${o.cx}" y="${ty+j*lh+(o.num&&o.k==='step'?3:0)}" text-anchor="middle">${esc(l)}</text>`).join('')}</g>`; });
+    ns+=`<g class="n ${o.cls}" data-n="${k}">${sh}${o.num?(o.k==='dec'?`<text class="nb" x="${o.cx}" y="${o.t+20}" text-anchor="middle">${o.num}</text>`:`<circle class="nbc" cx="${o.l}" cy="${o.t}" r="9"/><text class="nb" x="${o.l}" y="${o.t+3.5}" text-anchor="middle">${o.num}</text>`):''}${o.L.map((l,j)=>`<text class="tx" x="${o.cx}" y="${ty+j*lh+0}" text-anchor="middle">${esc(l)}</text>`).join('')}</g>`; });
   return `<svg class="spx swx" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Swim lane">${s}${es}${ns}${ls}</svg>`; };
 /* click a shape: selected purple, its arrows and neighbours stay, the rest dims */
 document.addEventListener('click',e=>{ const g=e.target.closest&&e.target.closest('.swx .n'); const sv=e.target.closest&&e.target.closest('.swx'); if(!sv) return;
