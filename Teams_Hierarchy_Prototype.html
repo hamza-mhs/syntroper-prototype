@@ -744,5 +744,130 @@ document.addEventListener('keydown',e=>{ if(e.target.id==='tpq'&&e.key==='Enter'
 document.addEventListener('keydown',e=>{ const i=e.target.dataset&&e.target.dataset.inv2; if(i!==undefined&&e.key==='Enter'){ e.preventDefault(); A.iadd(); } });
 render();
 </script>
+<style>
+/* Org chart is the only Teams view: add teams on the chart, people at any level, edit in a side panel */
+.ocw{position:relative;border-top:1px solid var(--border)}
+.ocw .chart{max-height:none;min-height:560px;padding:28px 8px 60px;overflow:auto}
+.ocw.has-panel .chart{padding-right:392px}
+.oc li{padding-top:24px}
+.oc ul{padding-top:24px}
+.ocard{width:200px;gap:6px;transition:border-color .12s,box-shadow .12s}
+.ocard .meta{flex-wrap:wrap}
+.ocard.on{border-color:var(--accent-hover);box-shadow:0 0 0 2px var(--accent-sub)}
+.ocard:hover:not(.on){border-style:dashed}
+.ocard .avs{display:flex;align-items:center;gap:0;margin-top:2px}
+.ocard .avs .av{width:22px;height:22px;font-size:9px;margin-right:-6px;box-shadow:0 0 0 2px var(--panel)}
+.ocard .avs em{font-style:normal;margin-left:12px;font:500 11px/16px var(--font);color:var(--text-2)}
+.ocard .add{position:absolute;left:50%;bottom:-13px;transform:translateX(-50%);width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;opacity:0;transition:opacity .12s;z-index:2;box-shadow:0 0 0 3px var(--canvas)}
+.ocard:hover .add,.ocard:focus-within .add,.ocard.on .add{opacity:1}
+.ocard .add:hover{background:var(--accent-hover)}
+.ocard .ex{bottom:-11px;left:auto;right:10px;transform:none}
+.ocard.pc{width:168px;padding:10px;border-radius:10px;background:var(--canvas);flex-direction:row;align-items:center;gap:8px;cursor:pointer}
+.ocard.pc b{font:500 13px/18px var(--font)} .ocard.pc small{display:block;font:400 11px/16px var(--font);color:var(--text-3)}
+.ocard.pc .tx{min-width:0;display:flex;flex-direction:column} .ocard.pc .tx b,.ocard.pc .tx small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocard.more{width:120px;justify-content:center;align-items:center;flex-direction:row;font:500 12px/18px var(--font);color:var(--text-2);background:var(--canvas)}
+.ocard.nw{border-color:var(--accent-hover);border-style:dashed}
+.ocard.nw input{width:100%;height:30px;padding:0 8px;border-radius:6px;background:var(--canvas);border:1px solid var(--border-strong);color:var(--text);font:500 13px/18px var(--font);outline:0}
+.ocard.nw input:focus{border-color:var(--accent-hover)}
+.ocard.nw small{font:400 11px/16px var(--font);color:var(--text-3)}
+.oc li.root>.ocard .add{opacity:1}
+/* side panel */
+.tpn{position:fixed;top:52px;right:0;bottom:0;z-index:20;box-shadow:var(--shadow);width:380px;border-left:1px solid var(--border);background:var(--panel);display:flex;flex-direction:column;min-height:560px}
+.tpn .ph{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.tpn .ph b{flex:1;font:600 15px/20px var(--font);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tpn .pb{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:18px}
+.tpn .ps h4{margin:0 0 8px;display:flex;align-items:center;gap:8px;font:600 12px/18px var(--font);color:var(--text-2)}
+.tpn .ps h4 .sp{flex:1}
+.tpn .mrow{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)}
+.tpn .mrow:last-child{border-bottom:0}
+.tpn .mrow .who{flex:1;min-width:0}
+.tpn .mrow .who b{display:block;font:500 13px/18px var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tpn .mrow .who small{display:block;font:400 12px/16px var(--font);color:var(--text-3)}
+.tpn .srow{display:flex;align-items:center;gap:10px;width:100%;padding:6px 0;border-bottom:1px solid var(--border);text-align:left}
+.tpn .srow:hover b{text-decoration:underline}
+.tpn .srow b{flex:1;font:500 13px/18px var(--font)} .tpn .srow small{font:400 12px/16px var(--font);color:var(--text-3)}
+.tpn .pf{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border)}
+.tpn .pf .sp{flex:1}
+.tpn .stat{display:flex;gap:16px;font:400 12px/18px var(--font);color:var(--text-2)} .tpn .stat b{display:block;font:600 16px/22px var(--font);color:var(--text)}
+</style>
+<script>
+/* ===== Org chart only ===== */
+S.view='chart'; S.panel=null; S.adding=null; S.zoom=.7; S.open=new Set(T.filter(t=>!t.parent).map(t=>t.id));
+const roleOf=(t,p)=>(t.m.find(x=>x[0]===p)||[])[1]||'';
+chartHTML=function(){ const q=(S.q||'').trim().toLowerCase();
+  const people=t=>{ const L=t.m; if(!L.length) return ''; const show=L.slice(0,2);
+    return show.map(([p,r])=>`<li class="pli"><div class="ocard pc" data-a="panel" data-v="${t.id}" title="${esc(PB[p].n)} · ${esc(r)} in ${esc(t.name)}">${pAv(p,'sm')}<span class="tx"><b>${esc(PB[p].n)}</b><small>${esc(r)}</small></span></div></li>`).join('')
+      +(L.length>2?`<li class="pli"><div class="ocard more" data-a="panel" data-v="${t.id}">+${L.length-2} people</div></li>`:''); };
+  const adding=id=>S.adding===id?`<li><div class="ocard nw"><input id="ocNew" placeholder="Team name" aria-label="New team name" autocomplete="off"><small>Enter to add · Esc to cancel</small></div></li>`:'';
+  const node=t=>{ const ks=kids(t.id); const open=S.open.has(t.id); const all=allMembers(t.id); const hit=q&&t.name.toLowerCase().includes(q);
+    const kidsHTML=open?people(t)+ks.map(node).join('')+adding(t.id):adding(t.id);
+    return `<li><div class="ocard ${S.panel===t.id?'on':''}" draggable="true" data-id="${t.id}" data-a="panel" data-v="${t.id}" role="button" tabindex="0" style="${q&&!hit?'opacity:.35':''}">
+      <div class="r">${tAv(t,'sm')}<b>${q?mark(t.name):esc(t.name)}</b></div>
+      <span class="meta"><span>${pl(all.length,'member')}</span>${ks.length?`<span>${pl(ks.length,'sub-team')}</span>`:''}</span>
+      ${t.m.length?`<span class="avs">${t.m.slice(0,4).map(([p])=>pAv(p,'sm')).join('')}${t.m.length>4?`<em>+${t.m.length-4}</em>`:''}</span>`:''}
+      ${ks.length||t.m.length?`<button class="ex" data-a="tog" data-v="${t.id}" aria-label="${open?'Collapse':'Expand'}">${open?I('cd',12):I('cr',12)+' '+(ks.length+t.m.length)}</button>`:''}
+      <button class="add" data-a="addsub" data-v="${t.id}" aria-label="Add a team under ${esc(t.name)}" title="Add a team under ${esc(t.name)}">${I('plus',14)}</button></div>
+      ${kidsHTML?`<ul>${kidsHTML}</ul>`:''}</li>`; };
+  const top=kids(null);
+  return `<div class="ocw ${S.panel?'has-panel':''}"><div class="chart"><div class="oc"><ul><li class="root"><div class="ocard" data-id="__root"><div class="r"><span class="av t sm" style="background:#fff">${logo(14)}</span><b>Syntroper’s Org</b></div><span class="meta"><span>${pl(top.length,'top-level team')}</span><span>${pl(new Set(T.flatMap(t=>t.m.map(x=>x[0]))).size,'member')}</span></span>
+      <button class="add" data-a="addsub" data-v="__root" aria-label="Add a top-level team">${I('plus',14)}</button></div>
+    <ul>${top.map(node).join('')}${adding('__root')}</ul></li></ul></div></div>
+    <div class="zm"><button data-a="zoom" data-v="out" aria-label="Zoom out">−</button><span>${Math.round((S.zoom||1)*100)}%</span><button data-a="zoom" data-v="in" aria-label="Zoom in">+</button><button data-a="zoom" data-v="fit" aria-label="Reset">⤢</button></div>
+    <div class="hint">Hover a team and press + to add one under it · drag a team onto another to move it</div>
+    ${S.panel?panelHTML():''}</div>`; };
+function panelHTML(){ const B=TB(); const t=B[S.panel]; if(!t) return ''; const ks=kids(t.id); const par=t.parent&&B[t.parent]; const all=allMembers(t.id);
+  return `<aside class="tpn" aria-label="${esc(t.name)}"><div class="ph">${tAv(t)}<b>${esc(t.name)}</b><button class="ib" data-a="panelx" aria-label="Close">${I('x',16)}</button></div>
+    <div class="pb">
+      <div class="stat"><span><b>${all.length}</b>Members in total</span><span><b>${t.m.length}</b>Direct</span><span><b>${ks.length}</b>Sub-teams</span></div>
+      <div class="fld"><label for="pnName">Team name</label><input id="pnName" class="inp" value="${esc(t.name)}" data-a="rename" data-v="${t.id}"></div>
+      <div class="fld"><label>Parent</label><button class="inp" data-a="move" data-v="${t.id}">${par?tAv(par,'sm')+esc(par.name):'<span style="color:var(--text-2)">None · top level</span>'}<span class="sp"></span>${I('cd',16)}</button></div>
+      <div class="ps"><h4>Members · ${t.m.length}<span class="sp"></span><button class="btn sm" data-a="invite" data-v="${t.id}">${I('plus',14)}Invite</button></h4>
+        ${t.m.map(([p,r])=>`<div class="mrow">${pAv(p,'sm')}<span class="who"><b>${esc(PB[p].n)}</b>${t.lead===p?'<small>Lead</small>':''}</span><button class="role" data-a="role" data-v="${t.id}|${p}">${r}${I('cd',14)}</button><button class="ib del" data-a="rmm" data-v="${t.id}|${p}" aria-label="Remove ${esc(PB[p].n)}">${I('trash',14)}</button></div>`).join('')||'<div class="empty" style="padding:16px">No direct members. People in sub-teams still count.</div>'}</div>
+      <div class="ps"><h4>Sub-teams · ${ks.length}<span class="sp"></span><button class="btn sm" data-a="addsub" data-v="${t.id}">${I('plus',14)}Add</button></h4>
+        ${ks.map(k=>`<button class="srow" data-a="panel" data-v="${k.id}">${tAv(k,'sm')}<b>${esc(k.name)}</b><small>${pl(allMembers(k.id).length,'member')}</small>${I('cr',14)}</button>`).join('')||'<div class="empty" style="padding:16px">No sub-teams yet.</div>'}</div>
+      <div class="sw"><div class="t"><b>Inherit roles from parent teams</b></div><button class="tog ${t.inherit?'on':''}" role="switch" aria-checked="${t.inherit}" data-a="inherit" data-v="${t.id}" aria-label="Inherit roles from parent teams"></button></div>
+    </div>
+    <div class="pf"><button class="btn" style="color:var(--danger-text)" data-a="del" data-v="${t.id}">${I('trash',14)}Delete team</button><span class="sp"></span><button class="btn" data-a="roles">${I('info',14)}Roles</button></div></aside>`; }
+teamsHTML=function(){ S._nd=false;
+  return `<div class="hd"><h2>${pl(T.length,'Team')}</h2><span class="sp"></span><label class="search" style="width:260px">${I('search',16)}<input id="tq" value="${esc(S.q)}" placeholder="Search teams" aria-label="Search teams"></label>
+      <button class="btn" data-a="roles">${I('info',14)}Roles</button><button class="btn primary" data-a="addsub" data-v="__root">${I('plus',16)}Create Team</button></div>
+    ${chartHTML()}`; };
+Object.assign(A,{
+  panel(v){ S.panel=S.panel===v?null:v; S.adding=null; render(); },
+  panelx(){ S.panel=null; render(); },
+  open(v){ S.page='teams'; S.panel=v; S.adding=null; render(); },
+  addsub(v){ S.adding=v; if(v!=='__root') S.open.add(v); S.menu=null; render(); setTimeout(()=>{ const i=document.getElementById('ocNew'); if(i){ i.focus(); i.scrollIntoView({block:'nearest',inline:'center'}); } },0); },
+  tog(v){ S.open.has(v)?S.open.delete(v):S.open.add(v); render(); },
+  zoom(v){ S.zoom=v==='fit'?1:Math.max(.4,Math.min(1.6,(S.zoom||1)*(v==='in'?1.15:.87))); render(); }
+});
+/* pan the chart by dragging empty space; keep scroll and zoom across renders */
+let pan=null, keep=null;
+document.addEventListener('pointerdown',e=>{ const c=e.target.closest&&e.target.closest('.ocw .chart'); if(!c||e.target.closest('.ocard,button,input')) return; pan={c,x:e.clientX,y:e.clientY,l:c.scrollLeft,t:c.scrollTop}; c.classList.add('drag'); });
+document.addEventListener('pointermove',e=>{ if(!pan) return; pan.c.scrollLeft=pan.l-(e.clientX-pan.x); pan.c.scrollTop=pan.t-(e.clientY-pan.y); });
+document.addEventListener('pointerup',()=>{ if(pan){ pan.c.classList.remove('drag'); pan=null; } });
+{ const _r0=render; render=function(){ const c=document.querySelector('.ocw .chart'); if(c) keep={l:c.scrollLeft,t:c.scrollTop}; _r0(); const c2=document.querySelector('.ocw .chart'); if(!c2) return; const oc=c2.querySelector('.oc'); if(oc) oc.style.zoom=S.zoom||1;
+    if(keep&&!render._first){ c2.scrollLeft=keep.l; c2.scrollTop=keep.t; } else { render._first=false; c2.scrollLeft=(c2.scrollWidth-c2.clientWidth)/2; } }; render._first=true; }
+const saveNew=()=>{ const i=document.getElementById('ocNew'); if(!i) return; const n=i.value.trim(); const par=S.adding==='__root'?null:S.adding; if(!n){ S.adding=null; render(); return; }
+  const id='t'+Date.now(); T.push({id,name:n,type:'team',parent:par,lead:'hamza',wl:0,m:[['hamza','Team admin']],inherit:true,created:'21 Nov, 2026'}); S.adding=null; S.open.add(id); if(par) S.open.add(par); S.panel=id; toast(`${esc(n)} added${par?` under ${esc(TB()[par].name)}`:''}`); render(); };
+document.addEventListener('keydown',e=>{ if(e.target.id!=='ocNew') return; if(e.key==='Enter'){ e.preventDefault(); saveNew(); } if(e.key==='Escape'){ e.preventDefault(); S.adding=null; render(); } });
+document.addEventListener('focusout',e=>{ if(e.target.id==='ocNew'){ setTimeout(()=>{ if(S.adding&&document.activeElement&&document.activeElement.id!=='ocNew'){ const i=document.getElementById('ocNew'); if(i&&i.value.trim()) saveNew(); } },120); } });
+{ const _d=A.dsave; A.dsave=function(){ const id=S.modal&&S.modal.id; _d(); if(id&&!TB()[id]) { S.panel=null; render(); } }; }
+/* the team page is replaced by the panel; old links land on the chart */
+{ const _r=render; render=function(){ if(S.page==='team'){ S.page='teams'; S.panel=S.team; } _r(); }; }
+render();
+</script>
+<style>
+/* org chart as a canvas: pan by dragging, zoom with the buttons */
+.ocw{height:calc(100vh - 230px);min-height:420px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background-color:var(--canvas);background-image:radial-gradient(circle at 1px 1px,var(--surface-strong) 1px,transparent 1.2px);background-size:18px 18px}
+.ocw .chart{height:100%;min-height:0;overflow:auto;border:0;padding:32px 40px 80px;cursor:grab;scrollbar-width:thin}
+.ocw .chart.drag{cursor:grabbing;user-select:none}
+.ocw .oc{margin:0 auto}
+.ocw .zm{position:absolute;left:12px;bottom:12px;display:flex;gap:2px;padding:4px;border-radius:10px;background:var(--panel);border:1px solid var(--border);z-index:3}
+.ocw .zm button{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;color:var(--text-2)} .ocw .zm button:hover{background:var(--surface);color:var(--text)}
+.ocw .zm span{display:grid;place-items:center;min-width:44px;font:500 12px/18px var(--font);color:var(--text-2)}
+.ocw .hint{position:absolute;right:12px;bottom:12px;padding:6px 10px;border-radius:8px;background:var(--panel);border:1px solid var(--border);font:400 12px/18px var(--font);color:var(--text-3);z-index:3}
+.ocw.has-panel .hint{right:392px}
+body:has(.ocw) .org{display:none}
+</style>
 </body>
 </html>
