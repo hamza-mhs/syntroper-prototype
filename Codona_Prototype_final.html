@@ -13143,17 +13143,17 @@ chartHTML=function(){ const q=(S.q||'').trim().toLowerCase();
     return `<li><div class="ocard ${S.panel===t.id?'on':''}" draggable="true" data-id="${t.id}" data-a="panel" data-v="${t.id}" role="button" tabindex="0" style="${q&&!hit?'opacity:.35':''}">
       <div class="r">${tAv(t,'sm')}<b>${q?mark(t.name):esc(t.name)}</b></div>
       <span class="meta"><span>${pl(all.length,'member')}</span>${ks.length?`<span>${pl(ks.length,'sub-team')}</span>`:''}</span>
-      ${t.m.length?`<span class="avs">${t.m.slice(0,4).map(([p])=>pAv(p,'sm')).join('')}${t.m.length>4?`<em>+${t.m.length-4}</em>`:''}</span>`:''}
+      ${S.panel===t.id?expandHTML(t):t.m.length?`<span class="avs">${t.m.slice(0,4).map(([p])=>pAv(p,'sm')).join('')}${t.m.length>4?`<em>+${t.m.length-4}</em>`:''}</span>`:''}
       ${ks.length||t.m.length?`<button class="ex" data-a="tog" data-v="${t.id}" aria-label="${open?'Collapse':'Expand'}">${open?I('cd',12):I('cr',12)+' '+(ks.length+t.m.length)}</button>`:''}
       <button class="add" data-a="addsub" data-v="${t.id}" aria-label="Add a team under ${esc(t.name)}" title="Add a team under ${esc(t.name)}">${I('plus',14)}</button></div>
       ${kidsHTML?`<ul>${kidsHTML}</ul>`:''}</li>`; };
   const top=kids(null);
-  return `<div class="ocw ${S.panel?'has-panel':''}"><div class="chart"><div class="oc"><ul><li class="root"><div class="ocard" data-id="__root"><div class="r"><span class="av t sm" style="background:#fff">${logo(14)}</span><b>Syntroper’s Org</b></div><span class="meta"><span>${pl(top.length,'top-level team')}</span><span>${pl(new Set(T.flatMap(t=>t.m.map(x=>x[0]))).size,'member')}</span></span>
+  return `<div class="ocw"><div class="chart"><div class="oc"><ul><li class="root"><div class="ocard" data-id="__root"><div class="r"><span class="av t sm" style="background:#fff">${logo(14)}</span><b>Syntroper’s Org</b></div><span class="meta"><span>${pl(top.length,'top-level team')}</span><span>${pl(new Set(T.flatMap(t=>t.m.map(x=>x[0]))).size,'member')}</span></span>
       <button class="add" data-a="addsub" data-v="__root" aria-label="Add a top-level team">${I('plus',14)}</button></div>
     <ul>${top.map(node).join('')}${adding('__root')}</ul></li></ul></div></div>
     <div class="zm"><button data-a="zoom" data-v="out" aria-label="Zoom out">−</button><span>${Math.round((S.zoom||1)*100)}%</span><button data-a="zoom" data-v="in" aria-label="Zoom in">+</button><button data-a="zoom" data-v="fit" aria-label="Reset">⤢</button></div>
-    <div class="hint">Hover a team and press + to add one under it · drag a team onto another to move it</div>
-    ${S.panel?panelHTML():''}</div>`; };
+    <div class="hint">Hover a team and press + to add one under it · pinch or ⌘ scroll to zoom · drag the canvas to pan</div>
+    </div>`; };
 function panelHTML(){ const B=TB(); const t=B[S.panel]; if(!t) return ''; const ks=kids(t.id); const par=t.parent&&B[t.parent]; const all=allMembers(t.id);
   return `<aside class="tpn" aria-label="${esc(t.name)}"><div class="ph">${tAv(t)}<b>${esc(t.name)}</b><button class="ib" data-a="panelx" aria-label="Close">${I('x',16)}</button></div>
     <div class="pb">
@@ -13187,7 +13187,7 @@ document.addEventListener('pointerup',()=>{ if(pan){ pan.c.classList.remove('dra
 { const _r0=render; render=function(){ const c=document.querySelector('.ocw .chart'); if(c) keep={l:c.scrollLeft,t:c.scrollTop}; _r0(); const c2=document.querySelector('.ocw .chart'); if(!c2) return; const oc=c2.querySelector('.oc'); if(oc) oc.style.zoom=S.zoom||1;
     if(keep&&!render._first){ c2.scrollLeft=keep.l; c2.scrollTop=keep.t; } else { render._first=false; c2.scrollLeft=(c2.scrollWidth-c2.clientWidth)/2; } }; render._first=true; }
 const saveNew=()=>{ const i=document.getElementById('ocNew'); if(!i) return; const n=i.value.trim(); const par=S.adding==='__root'?null:S.adding; if(!n){ S.adding=null; render(); return; }
-  const id='t'+Date.now(); T.push({id,name:n,type:'team',parent:par,lead:'hamza',wl:0,m:[['hamza','Team admin']],inherit:true,created:'21 Nov, 2026'}); S.adding=null; S.open.add(id); if(par) S.open.add(par); S.panel=id; toast(`${esc(n)} added${par?` under ${esc(TB()[par].name)}`:''}`); render(); };
+  const id='t'+Date.now(); T.push({id,name:n,type:'team',parent:par,lead:null,wl:0,m:[],inherit:true,created:'21 Nov, 2026'}); S.adding=null; S.open.add(id); if(par) S.open.add(par); S.panel=id; toast(`${esc(n)} added${par?` under ${esc(TB()[par].name)}`:''}`); render(); };
 document.addEventListener('keydown',e=>{ if(e.target.id!=='ocNew') return; if(e.key==='Enter'){ e.preventDefault(); saveNew(); } if(e.key==='Escape'){ e.preventDefault(); S.adding=null; render(); } });
 document.addEventListener('focusout',e=>{ if(e.target.id==='ocNew'){ setTimeout(()=>{ if(S.adding&&document.activeElement&&document.activeElement.id!=='ocNew'){ const i=document.getElementById('ocNew'); if(i&&i.value.trim()) saveNew(); } },120); } });
 { const _d=A.dsave; A.dsave=function(){ const id=S.modal&&S.modal.id; _d(); if(id&&!TB()[id]) { S.panel=null; render(); } }; }
@@ -13208,6 +13208,65 @@ render();
 .ocw.has-panel .hint{right:392px}
 body:has(.ocw) .org{display:none}
 </style>
+<style>
+/* the canvas takes the room; a selected team expands in place */
+body:has(.ocw) .wrap{max-width:none;margin:0;padding:24px 0 0 40px}
+body:has(.ocw) .cols{grid-template-columns:180px minmax(0,1fr);gap:24px}
+body:has(.ocw) .snav{min-height:0}
+body:has(.ocw) section>.hd{padding-right:24px;margin-bottom:12px}
+.ocw{height:calc(100vh - 52px - 24px - 60px)!important;border-radius:12px 0 0 0!important;border-right:0!important;border-bottom:0!important;background-image:radial-gradient(circle at 1px 1px,var(--surface) 1px,transparent 1.2px)!important;background-size:18px 18px!important}
+body.light .ocw{background-image:radial-gradient(circle at 1px 1px,#c1bdda 1.1px,transparent 1.3px)!important}
+.ocw .hint{right:16px!important}
+.ocard.open{width:300px;cursor:default}
+.ocard .xp{display:flex;flex-direction:column;gap:10px;margin-top:4px;padding-top:10px;border-top:1px solid var(--border)}
+.ocard .xp input.nm{width:100%;height:32px;padding:0 10px;border-radius:7px;background:var(--canvas);border:1px solid var(--border-strong);color:var(--text);font:500 13px/18px var(--font);outline:0;box-sizing:border-box}
+.ocard .xp input.nm:focus{border-color:var(--accent-hover)}
+.ocard .xp h5{display:flex;align-items:center;gap:6px;margin:0;font:600 11px/16px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-3)}
+.ocard .xp h5 .sp{flex:1}
+.ocard .xp .mr2{display:flex;align-items:center;gap:8px;min-height:32px}
+.ocard .xp .mr2 b{flex:1;min-width:0;font:500 12px/16px var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocard .xp .role{height:26px;padding:0 6px;font-size:12px}
+.ocard .xp .ib{width:24px;height:24px}
+.ocard .xp .none{font:400 12px/18px var(--font);color:var(--text-3)}
+.ocard .xp .acts2{display:flex;gap:6px;flex-wrap:wrap}
+.ocard .xp .acts2 .btn{height:28px;padding:0 10px;font-size:12px}
+.ocard .xp .mlist{display:flex;flex-direction:column;max-height:220px;overflow:auto}
+</style>
+<SCRIPT_START>
+function expandHTML(t){ const ks=kids(t.id);
+  return `<div class="xp" data-a="noop">
+    <input class="nm" value="${esc(t.name)}" data-a="rename" data-v="${t.id}" aria-label="Team name">
+    <h5>Members · ${t.m.length}<span class="sp"></span><button class="btn sm" data-a="invite" data-v="${t.id}">${I('plus',12)}Invite</button></h5>
+    <div class="mlist">${t.m.map(([p,r])=>`<div class="mr2">${pAv(p,'sm')}<b>${esc(PB[p].n)}</b><button class="role" data-a="role" data-v="${t.id}|${p}">${r}${I('cd',12)}</button><button class="ib" data-a="rmm" data-v="${t.id}|${p}" aria-label="Remove ${esc(PB[p].n)}">${I('x',12)}</button></div>`).join('')||'<span class="none">No members yet. Invite people to this team.</span>'}</div>
+    <div class="acts2"><button class="btn" data-a="addsub" data-v="${t.id}">${I('plus',12)}Sub-team</button><button class="btn" data-a="move" data-v="${t.id}">Move</button><button class="btn" style="color:var(--danger-text)" data-a="del" data-v="${t.id}">${I('trash',12)}Delete</button><span style="flex:1"></span><button class="ib" data-a="panelx" aria-label="Close">${I('x',14)}</button></div></div>`; }
+/* the expanded card is part of the chart: mark it, and open a new team straight away */
+{ const _c=chartHTML; chartHTML=function(){ let h=_c(); if(S.panel) h=h.replace(`class="ocard on" draggable="true" data-id="${S.panel}"`,`class="ocard on open" draggable="false" data-id="${S.panel}"`); return h; }; }
+<\/script>
+<style>
+/* FB75 · settings nav line runs to the bottom; canvas zoom with pinch / ctrl+wheel */
+body:has(.ocw) .snav{height:calc(100vh - 52px - 24px);min-height:0}
+body:has(.ocw) #app{overflow:hidden}
+</style>
+<SCRIPT_START>
+/* FB75 · zoom at the cursor: trackpad pinch, ctrl/cmd + wheel, Safari gestures. Wheel and two-finger scroll pan. */
+(function(){
+const MIN=.25, MAX=2;
+function zoomAt(c,z1,mx,my){ const oc=c.querySelector('.oc'); if(!oc) return; const z0=S.zoom||1; z1=Math.max(MIN,Math.min(MAX,z1)); if(Math.abs(z1-z0)<.001) return;
+  const r=c.getBoundingClientRect(); const x=mx-r.left, y=my-r.top; const cs=getComputedStyle(c); const pl=parseFloat(cs.paddingLeft)||0, pt=parseFloat(cs.paddingTop)||0;
+  const ox=oc.offsetLeft*z0; /* centred margin */ const px=(c.scrollLeft+x-pl)/z0, py=(c.scrollTop+y-pt)/z0;
+  S.zoom=z1; oc.style.zoom=z1; c.scrollLeft=px*z1+pl-x; c.scrollTop=py*z1+pt-y;
+  const lb=c.parentElement.querySelector('.zm span'); if(lb) lb.textContent=Math.round(z1*100)+'%'; }
+document.addEventListener('wheel',e=>{ const c=e.target.closest&&e.target.closest('.ocw .chart'); if(!c) return;
+  if(e.ctrlKey||e.metaKey){ e.preventDefault(); const k=Math.exp(-e.deltaY*(e.deltaMode?0.05:0.01)); zoomAt(c,(S.zoom||1)*k,e.clientX,e.clientY); }
+  else if(e.shiftKey&&!e.deltaX){ e.preventDefault(); c.scrollLeft+=e.deltaY; } },{passive:false});
+let g=null;
+document.addEventListener('gesturestart',e=>{ const c=e.target.closest&&e.target.closest('.ocw .chart'); if(!c) return; e.preventDefault(); g={c,z:S.zoom||1}; },{passive:false});
+document.addEventListener('gesturechange',e=>{ if(!g) return; e.preventDefault(); zoomAt(g.c,g.z*e.scale,e.clientX,e.clientY); },{passive:false});
+document.addEventListener('gestureend',()=>{ g=null; });
+/* buttons also zoom around the centre */
+const _z=A.zoom; A.zoom=function(v){ const c=document.querySelector('.ocw .chart'); if(!c||v==='fit') return _z(v); const r=c.getBoundingClientRect(); zoomAt(c,(S.zoom||1)*(v==='in'?1.2:1/1.2),r.left+r.width/2,r.top+r.height/2); };
+})();
+<\/script>
 </body>
 </html>
 </script>
@@ -13546,7 +13605,7 @@ const L=[
  ['New use case','Review and save as draft','Saves a use case specification.', NP(3), ['#npModal .rv']],
  ['Change specifications','List by status','Draft, In review, Approved, In progress, Done. Use case and refactoring specifications. Click one for the details.', TAB('specs'), ['#vSpecs .csg']],
  ['Change specifications','Push to Jira, ClickUp or Notion','Connect a tool, then Push to… on any specification. The ticket key shows on the row.', TAB('specs'), ['#vSpecs .csintg']],
- ['Teams','Org chart','Teams in the left navigation. Hover a team and press + to add one under it, click a team to edit it in the side panel, drag to move. People can sit at any level. Roles: Super admin, Admin, Team admin, Architect, Contributor, Viewer.', TAB('teams'), ['#vTeams']],
+ ['Teams','Org chart','Teams in the left navigation. Hover a team and press + to add one under it, click a team and it opens in place: rename, members, invite, sub-team, move, delete. A new team starts empty. Drag to move. Pinch or ⌘ scroll zooms at the cursor; scroll or drag the canvas to pan. People can sit at any level. Roles: Super admin, Admin, Team admin, Architect, Contributor, Viewer.', TAB('teams'), ['#vTeams']],
  ['APIs','Group APIs by use case','Toggle in the APIs layer.', ()=>{ H0(); ACT.layer(3); }, ['.cx-tool']],
  ['APIs','Every use case of an API','Open an API to see every use case that calls it.', ()=>{ H0(); ACT.layer(3); }, ['.apiu']],
  ['General','Light mode','Account menu › Dark Mode. White top bar, navigation and panels, grey dotted canvas, white diagram nodes.', ()=>{ H0(); S.nav.me=true; renderShell(); }, ['#appTop .tb-menu']],
