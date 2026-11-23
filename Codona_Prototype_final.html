@@ -2190,7 +2190,7 @@ const SNAP = {repo:'medusajs/medusa', branch:'develop', sha:'a1b2c3d', date:'14 
 const PEOPLE = {'Hamza M.':'#2f7a4f','Oliver F.':'#8a5a1f','Zoe K.':'#7a2f6b','Amy N.':'#2f5f8a','Sarah R.':'#624ed5','Ryan S.':'#5a6274'};
 
 const LAYERS = [null,
- {n:1, name:'Channels',            one:'Channel',            color:'#A8DAFF', read:'The outer chip on each spoke counts the channel apps that reach that use case: Storefront, Admin dashboard, or none for background triggers.'},
+ {n:1, name:'Channel apps',        one:'Channel app',            color:'#A8DAFF', read:'The outer chip on each spoke counts the channel apps that reach that use case: Storefront, Admin dashboard, or none for background triggers.'},
  {n:2, name:'Use cases',           one:'Use case',           color:'#B4A7FF', read:'Each spoke is one use case. Spokes are grouped by the bounded context that owns them.'},
  {n:3, name:'APIs',                one:'API',                color:'#6FD6C8', read:'The inner chip on each spoke counts the API operations the use case calls.'},
  {n:4, name:'Bounded contexts',    one:'Bounded context',    color:'#F59AC3', read:'Arc length is the context’s share of use cases. A dashed outline means the grouping is a suggestion that still needs review.'},
@@ -2199,9 +2199,9 @@ const LAYERS = [null,
 ];
 
 const CHANNELS = {
- store:{id:'store', name:'Storefront',       app:'nextjs-starter-medusa',     kind:'Web app · Next.js'},
- admin:{id:'admin', name:'Admin dashboard',  app:'packages/admin/dashboard',  kind:'Web app · React'},
- none: {id:'none',  name:'Background',       app:'Subscribers and jobs',      kind:'No user channel'}
+ store:{id:'store', name:'Storefront',       app:'nextjs-starter-medusa',     kind:'Web app · Next.js', team:'Storefront team'},
+ admin:{id:'admin', name:'Admin dashboard',  app:'packages/admin/dashboard',  kind:'Web app · React', team:'Merchant tools team'},
+ none: {id:'none',  name:'Background',       app:'Subscribers and jobs',      kind:'No user channel', team:'Platform team'}
 };
 
 const TRUST = {
@@ -6217,7 +6217,7 @@ const fbI = (k,s=14,cls='') => `<svg class="fbi ${cls}" width="${s}" height="${s
 
 /* ---------- 1 · kinds ---------- */
 const KINDS = {
-  channel:['Channel','browser','channel'], usecase:['Use case','oval','use-case'], api:['API','socket','api'],
+  channel:['Channel app','browser','channel'], usecase:['Use case','oval','use-case'], api:['API','socket','api'],
   context:['Bounded context','hexagon','bounded-context'], point:['Integration point','plug','integration-point'], integration:['Integration','link','integration'],
   person:['Person','user','people'],
   container:['Container','container','runtime'], datastore:['Data store','database','runtime'], external:['External system','globe','runtime'], provider:['Runtime provider','cloud','runtime'], system:['Software system','cube4','runtime'],
@@ -8564,9 +8564,8 @@ function npHTML(){ const M=S.np; if(!M) return ''; if(window.npHTML2){ const h2=
   const body1 = `<div class="npb npb1"><div class="npc">
         <div class="fld"><label class="nl" for="npName">Name <span class="req" aria-hidden="true">*</span></label><label class="field"><input id="npName" type="text" autocomplete="off" required aria-required="true" value="${esc(M.name)}" placeholder="What the user gets done, for example Reorder a past order"></label></div>
         ${window.perFieldHTML?perFieldHTML(M):""}
-        <div class="fld"><label class="nl" for="npCh">Channel</label>${sel('npCh', Object.values(CHANNELS).map(C=>`<option value="${C.id}" ${M.ch===C.id?'selected':''}>${esc(C.id==='none'?'Background jobs':C.name)} · ${esc(C.kind)}</option>`).join(''))}</div>
-        <div class="fld"><label class="nl" for="npCtx">Bounded context</label>${sel('npCtx', `<option value="auto" ${M.ctx==='auto'?'selected':''}>Let Syntroper suggest after you pick the APIs</option><optgroup label="Already reached from ${esc(CHANNELS[M.ch].name)}">${CTX.filter(c=>reach.has(c.id)).map(ctxOpt).join('')}</optgroup><optgroup label="Other contexts">${CTX.filter(c=>!reach.has(c.id)).map(ctxOpt).join('')}</optgroup>`)}<small class="hint">A context isn’t tied to one channel. The first group is the contexts this channel already reaches.</small></div>
-        <div class="fld"><label class="nl" for="npWho">Reviewer</label>${sel('npWho', `<option value="auto" ${M.who==='auto'?'selected':''}>${who&&M.pick.length?esc(whoName(who))+' · owns '+esc(CTB[ctxNow].name):'Owner of the context'}</option>${people.map(([v,l])=>`<option value="${esc(v)}" ${M.who===v?'selected':''}>${esc(l)}</option>`).join('')}`)}</div>
+        ${chAppsHTML(M)}
+        <div class="fld"><label class="nl" for="npWho">Business owner</label>${sel('npWho', `<option value="auto" ${M.who==='auto'?'selected':''}>Pick who owns this requirement</option>${people.map(([v,l])=>`<option value="${esc(v)}" ${M.who===v?'selected':''}>${esc(l)}</option>`).join('')}`)}<small class="hint">The person or team who asked for it and decides what it must do.</small></div>
       </div></div>`;
   const body2 = `<div class="npb npb2">
       <div class="npc npc-l"><h3>API calls <span class="req" aria-hidden="true">*</span><span class="selc">${M.pick.length?`<span class="db-selc">${M.pick.length} selected<button data-act="npclear" aria-label="Clear all ${M.pick.length} selected" title="Clear all">${I('x',12)}</button></span>`:'<span class="none">None selected</span>'}</span></h3>
@@ -9500,10 +9499,10 @@ const zoom=d3.zoom().scaleExtent([.3,2.5]).filter(e=>(e.type==='wheel' ? (!e.tar
   .on('zoom',e=>{ T=e.transform; fw.style.transform=`translate(${T.x}px,${T.y}px) scale(${T.k})`; updateDockPct(); });
 d3.select(box).call(zoom).on('dblclick.zoom',null);
 const lines=(t,n)=>Math.max(1,Math.ceil((t||'').length/n));
-const decLabel = alts => alts.some(a=>a.kind==='validation') ? 'Is it valid?' : alts.some(a=>a.kind==='error') ? 'Did it work?' : 'Carry on?';
-const edgeLbl = a => a.kind==='validation'?'Not valid':a.kind==='cancel'?'Leaves':'Fails';
+const decLabel = alts => (alts[0]&&alts[0]._q) ? alts[0]._q : alts.some(a=>a.kind==='validation') ? 'Is it valid?' : alts.some(a=>a.kind==='error') ? 'Did it work?' : 'Carry on?';
+const edgeLbl = a => a._q ? a.t : a.kind==='validation'?'Not valid':a.kind==='cancel'?'Leaves':'Fails';
 function layout(id, v, MH){ const F=ucFlowOf(id), u=UCB[id]; const SY=v==='symbols'; const W=SY?260:320; const OW=SY?600:640; const anyO=F.steps.some((s,i)=>fxO(id,i+1)); const cx=(anyO?OW:W)/2; const GAP=SY?44:40;
-  const N=[], E=[], A=[]; let y=0; const put=n=>{ n.x=cx-n.w/2; n.y=y; y+=n.h+GAP; if(N.length) E.push({a:N[N.length-1], b:n, lbl:N[N.length-1].k==='dec'?'Yes':''}); N.push(n); return n; };
+  const N=[], E=[], A=[]; let y=0; const put=n=>{ n.x=cx-n.w/2; n.y=y; y+=n.h+GAP; if(N.length) E.push({a:N[N.length-1], b:n, lbl:N[N.length-1].k==='dec'?((N[N.length-1].al||[])[0]&&N[N.length-1].al[0].a&&N[N.length-1].al[0].a._ok||'Yes'):''}); N.push(n); return n; };
   const chn=u.ch==='both'?'Storefront and Admin':u.ch==='none'?'Subscribers and jobs':CHANNELS[u.ch].name;
   const start=put({k:'term', t:(ACTOR[u.ch]||'User')+' · '+chn, sub:F.start, w:SY?240:W, h:SY?48:(F.start?64:48)});
   const decs=[];
@@ -9628,7 +9627,7 @@ function seqModel(id){ const F=ucFlowOf(id), u=UCB[id]; const lv=S.ucx.sl; const
     M.push({row:'step', step:st, t:s.t, ...fl});
     const scr=B.find(b=>b.step===st&&(b.kind==='Screen'||b.kind==='Server action'));
     /* system level: one arrow per user action; the APIs behind it are sidebar detail */
-    M.push({f:'p', to:UI, label:s.t, kind:'act', step:st, code:scr, apis:s.apis, O: lv==='sys'&&s.apis.length?{k:'a',v:s.apis[0]}:(scr?{k:'f',v:scr.file}:null), ...fl});
+    if(!s.sysOnly) M.push({f:'p', to:UI, label:s.t, kind:'act', step:st, code:scr, apis:s.apis, O: lv==='sys'&&s.apis.length?{k:'a',v:s.apis[0]}:(scr?{k:'f',v:scr.file}:null), ...fl});
     s.apis.forEach(a=>{ const rb=B.find(b=>b.route===a);
       if(lv==='sys'){ return; }
       else if(lv==='ctx'){ const oc=rCtx(a); const ol=lane('c:'+oc, cLabel(oc), 'Bounded context', 'context'); M.push({f:'app', to:ol.k, label:a, kind:'call', mono:1, step:st, code:rb, O:{k:'a',v:a}, ...fl});
@@ -9645,7 +9644,7 @@ function seqModel(id){ const F=ucFlowOf(id), u=UCB[id]; const lv=S.ucx.sl; const
           M.push({f:rl.k, to:fk, label:it.symbol.length>34?it.symbol.slice(0,32)+'…':it.symbol, kind:/event/i.test(it.type)?'event':'call', mono:1, step:st, code:ib, O:ib?{k:'f',v:ib.file}:null, ...fl}); });
         M.push({f:rl.k, to:'app', label:'', kind:'ret', step:st, ...fl}); }
     });
-    M.push({f:UI, to:'p', label:respOf(s), kind:'ret', step:st, sys:1, ...fl});
+    if(s.sysOnly||(s.r&&s.r.trim())||!s._spec) M.push({f:UI, to:'p', label:s.sysOnly?s.t+(s.r&&s.r.trim()?'. '+s.r:''):respOf(s), kind:'ret', step:st, sys:1, ...fl});
     const al=F.alts.map((a,k)=>({a,k})).filter(x=>x.a.at===st&&!x.a._del);
     if(al.length){ const cur=S.sq.dec[id+'|'+st]||'ok'; M.push({row:'dec', step:st, al, cur, lane:UI, next:F.steps[st]?F.steps[st].t:F.result});
       if(cur!=='ok' && F.alts[+cur]){ const a=F.alts[+cur]; (a.steps||[]).forEach(t=>M.push({f:UI, to:'p', label:t, kind:'ret', step:st, sys:1, altk:a.kind}));
@@ -9663,7 +9662,7 @@ function buildSeq(id){ const X=seqModel(id); const F2=X.F; const LW=X.L.length<=
   X.M.forEach((m,k)=>{ const on = SEL===k; const rel = !on && (SEL!=null ? m.step===selStep : hl!=null && m.step===hl); const dim = (SEL!=null||hl!=null) && !on && !rel;
     if(m.row==='step'){ y+=10; html+=`<button class="sq-step ${(SEL!=null?m.step===selStep:hl===m.step)?'on':''} ${m.nw?'nw':''} ${m.dl?'dl':''}" data-act="ucstep" data-arg="${id}|${m.step}" style="left:6px;top:${y}px" title="Step ${m.step}">${m.step}</button>`; svg+=`<line class="sq-sep" x1="${G-8}" y1="${y+12}" x2="${W-8}" y2="${y+12}"/>`; y+=24; return; }
     if(m.row==='dec'){ const xi=cx(li(m.lane)); const yy=y+18; const cur=m.cur==='ok'?null:F2.alts[+m.cur];
-      const opts=[{k:'ok', t:'Works as expected', sub:m.next?`Continues: ${m.next}`:'Continues', kind:'ok', on:!cur}, ...m.al.map(({a,k})=>({k, t:a.t, sub:a.back?`Back to step ${a.back}`:`Ends · ${a.end||''}`, kind:a.kind, on:cur===a}))];
+      const opts=[{k:'ok', t:(m.al[0]&&m.al[0].a&&m.al[0].a._ok)||'Works as expected', sub:m.next?`Continues: ${m.next}`:'Continues', kind:'ok', on:!cur}, ...m.al.map(({a,k})=>({k, t:a.t, sub:a.back?`Back to step ${a.back}`:`Ends · ${a.end||''}`, kind:a.kind, on:cur===a}))];
       const RH=30, top=yy-9; html+=`<span class="sq-dia ${cur?'alt':''}" style="left:${xi-9}px;top:${top}px" title="Decision at step ${m.step}"></span>`;
       const bx=Math.max(xi,cx(X.L.length-1))+22; html+=`<div class="sq-brs" style="left:${bx}px;top:${top-3}px" role="radiogroup" aria-label="Step ${m.step} · what happens next">${opts.map((o,n)=>`<button class="sq-br ${o.kind} ${o.on?'on':''}" role="radio" aria-checked="${o.on}" data-act="sqdecset" data-arg="${id}|${m.step}|${o.k}" style="top:${n*RH}px"><span class="dk ${o.kind}"></span><b>${n?'Else if ':'If '}${esc(o.t.charAt(0).toLowerCase()+o.t.slice(1))}</b><small>${esc(o.sub)}</small></button>`).join('')}</div>`;
       svg+=opts.map((o,n)=>`<path class="sq-brl ${o.on?'on':''}" d="M${xi+9} ${top+9}H${bx-6}V${top+9+n*RH}H${bx}"/>`).join('');
@@ -10835,16 +10834,19 @@ function planOf(D){ const R=D.M.res, tn=D.tName, L=[];
 window.dbH={cName,nm,OPTS,planOf,chip,mp,model,get el(){return el;}};
 /* ---------- left: use cases with every API ---------- */
 function leftHTML(D){ const M=D.M; const q=(M.q||'').trim().toLowerCase();
-  const groups=CTX.filter(c=>!(D.add&&c.id===M.to)).map(c=>({c, us:ucsOf(c.id).filter(u=>u.apis.length&&(!q||u.name.toLowerCase().includes(q)||u.apis.some(a=>a.toLowerCase().includes(q))))})).filter(g=>g.us.length);
-  const rows=groups.map(g=>`<div class="db-g">${g.c.id==='unassigned'?'No context':esc(g.c.name)}<span class="count">${g.us.length}</span></div>${g.us.map(u=>{ const n=u.apis.filter(a=>D.sel.has(a)).length, all=n===u.apis.length, mix=n>0&&!all; const op=M.open[u.id]||q&&u.apis.some(a=>a.toLowerCase().includes(q));
-      return `<div class="db-uw ${n?'on':''}"><div class="db-u" draggable="true" data-uc="${u.id}"><button class="ngcb" data-act="ncpick" data-arg="${u.id}" role="checkbox" aria-checked="${all?'true':mix?'mixed':'false'}" aria-label="Move all of ${esc(u.name)}"><span class="cx-cb ${all?'on':mix?'mix':''}">${all?I('check',12,'',2.2):mix?'<i></i>':''}</span></button>
-        <button class="l" data-act="dbopen" data-arg="${u.id}" aria-expanded="${!!op}"><span>${esc(u.name)}</span><small>${n?`${n} of ${u.apis.length}`:`${u.apis.length} API${u.apis.length===1?'':'s'}`}</small>${I(op?'chevron-up':'chevron-down',14)}</button></div>
-        ${op?`<div class="db-al">${u.apis.map(a=>{ const on=D.sel.has(a); return `<button class="db-ap ${on?'on':''}" draggable="true" data-r="${esc(a)}" data-from="${u.id}" data-act="dbapi" data-arg="${u.id}|${esc(a)}" role="checkbox" aria-checked="${on}"><span class="cx-cb ${on?'on':''}">${on?I('check',12,'',2.2):''}</span>${mp(a)}</button>`; }).join('')}</div>`:''}</div>`; }).join('')}`).join('') || '<div class="db-g">Nothing matches</div>';
+  const chN=c=>c==='both'?['store','admin']:c==='none'?['none']:[c];
+  const usersOf2=r=>((OPS[r]||{users:[]}).users||[]).filter(id=>UCB[id]&&UC.includes(UCB[id]));
+  const groups=CTX.filter(c=>!(D.add&&c.id===M.to)).map(c=>({c, apis:Object.keys(OPS).filter(r=>rCtx(r)===c.id&&usersOf2(r).length&&(!q||r.toLowerCase().includes(q)||usersOf2(r).some(id=>UCB[id].name.toLowerCase().includes(q)))).sort()})).filter(g=>g.apis.length);
+  const rows=groups.map(g=>{ const n=g.apis.filter(a=>D.sel.has(a)).length; const all=n===g.apis.length, mix=n>0&&!all;
+    return `<div class="db-g dbg2"><button class="ngcb" data-act="dbctx" data-arg="${g.c.id}" role="checkbox" aria-checked="${all?'true':mix?'mixed':'false'}" aria-label="Select every API in ${esc(g.c.name)}"><span class="cx-cb ${all?'on':mix?'mix':''}">${all?I('check',12,'',2.2):mix?'<i></i>':''}</span></button>${g.c.id==='unassigned'?'No context':esc(g.c.name)}<span class="count">${g.apis.length}</span>${n?`<small class="seln">${n} selected</small>`:''}</div>`
+    +g.apis.map(a=>{ const on=D.sel.has(a); const us=usersOf2(a); const op=M.open['api:'+a];
+      return `<div class="db-aw ${on?'on':''}"><div class="db-ar2"><button class="ngcb" data-act="dbapi" data-arg="${esc(a)}" role="checkbox" aria-checked="${on}"><span class="cx-cb ${on?'on':''}">${on?I('check',12,'',2.2):''}</span></button><span class="ap">${mp(a)}</span><button class="uc" data-act="dbopen" data-arg="api:${esc(a)}" aria-expanded="${!!op}">${us.length} use case${us.length===1?'':'s'}${I(op?'chevron-up':'chevron-down',12)}</button></div>
+        ${op?`<div class="db-ul">${us.map(id=>{ const u=UCB[id]; const ch=chN(u.ch).map(c=>CHANNELS[c]); return `<div class="db-ui">${kindIc('usecase',12)}<span class="n">${esc(u.name)}</span><span class="c">${ch.map(c=>esc(c.name)).join(', ')}</span><span class="o">${esc([...new Set(ch.map(c=>c.team))].join(', '))}</span></div>`; }).join('')}</div>`:''}</div>`; }).join(''); }).join('') || '<div class="db-g">Nothing matches</div>';
   const nameErr=!D.add && M.name.trim() && CTX.some(c=>c.name.toLowerCase()===M.name.trim().toLowerCase());
   return `<div class="db-side db-l"><div class="db-h"><span class="ic">${fbI(D.add?'swap':'cubedash',16)}</span><b>${D.add?`Move to ${esc(D.tName)}`:'New bounded context'}</b><button class="ib" data-act="ncclose" aria-label="Close">${I('x',16)}</button></div>
     <div class="db-sc">
-      <div class="db-sec db-grow"><div class="db-sh">Use cases and APIs${D.sel.size?`<span class="db-selc">${D.sel.size} selected<button data-act="ncclear" aria-label="Clear all ${D.sel.size} selected APIs" title="Clear all">${I('x',12)}</button></span>`:''}</div>${D.sel.size?'':'<div class="db-selrow"><span class="none">Tick APIs or whole use cases, or drag them onto the canvas</span></div>'}
-        <label class="field">${I('search',16)}<input id="ncQ" type="text" autocomplete="off" value="${esc(M.q||'')}" placeholder="Search use cases or routes"></label><div class="db-list">${rows}</div></div>
+      <div class="db-sec db-grow"><div class="db-sh">APIs by bounded context${D.sel.size?`<span class="db-selc">${D.sel.size} selected<button data-act="ncclear" aria-label="Clear all ${D.sel.size} selected APIs" title="Clear all">${I('x',12)}</button></span>`:''}</div>${D.sel.size?'':'<div class="db-selrow"><span class="none">Tick the APIs to move. Each shows the use cases that depend on it.</span></div>'}
+        <label class="field">${I('search',16)}<input id="ncQ" type="text" autocomplete="off" value="${esc(M.q||'')}" placeholder="Search APIs or use cases"></label><div class="db-list">${rows}</div></div>
     </div></div>`; }
 
 /* ---------- right: dependencies, plan, save ---------- */
@@ -10930,6 +10932,7 @@ Object.assign(ACT,{
   ncclear(){ const M=ensure(); M.sel=[]; M.res={}; M.from=[]; renderBoard(); },
   dbapi(a){ const M=ensure(); const i=a.indexOf('|'); const uid=i>0&&UCB[a.slice(0,i)]?a.slice(0,i):null; const r=uid?a.slice(i+1):a; toggle(M.sel,r); if(uid){ const u=UCB[uid]; toggle(M.from,uid,u.apis.some(x=>M.sel.includes(x))); } renderBoard(); },
   dbopen(id){ const M=ensure(); M.open[id]=!M.open[id]; renderBoard(); },
+  dbctx(c){ const M=ensure(); const L=Object.keys(OPS).filter(r=>rCtx(r)===c&&(OPS[r].users||[]).some(id=>UCB[id]&&UC.includes(UCB[id]))); const all=L.every(r=>M.sel.includes(r)); L.forEach(r=>toggle(M.sel,r,!all)); renderBoard(); },
   dbres(a){ const i=a.lastIndexOf('|'); const k=a.slice(0,i), v=a.slice(i+1); const M=ensure(); const x=model().issues.find(z=>z.key===k); const ok=x&&OPTS(x,model()).some(o=>o[0]===v); M.res[k] = M.res[k]===v ? null : (ok?v:(x?OPTS(x,model())[0][0]:v)); M.focus=k; M.col=M.col||{}; M.col[k]=false; renderBoard(); },
   dbfocus(k){ const M=ensure(); M.focus=M.focus===k?null:k; renderBoard(); },
   dbtab(t){ const M=ensure(); M.dtab=t; renderBoard(); },
@@ -11768,7 +11771,7 @@ window.impactBind=function(D, first){ const root=H.el.querySelector('.imp'); if(
   if(S.nc.isel){ focus(S.nc.isel); const g=svg.querySelector(`[data-n="${S.nc.isel}"]`); if(g) g.classList.add('sel'); } };
 /* right panel: Summary / Connected */
 window.impactRight=function(D, html){ const M=D.M; const G=graph(D); const n=G.dep.size;
-  html=html.replace('<b>Dependencies</b>',`<b class="imh">Impacted use cases${D.sel.size?`<span class="count">${n}</span>`:''}</b>`).replace(/<span class="dbs (warn|ok)">[^<]*<\/span>/,'');
+  html=html.replace('<b>Dependencies</b>',`<b class="imh">Impact</b>`).replace(/<span class="dbs (warn|ok)">[^<]*<\/span>/,'');
   const a=html.indexOf('<div class="db-sc">'), b=html.indexOf('<div class="db-f">'); if(a<0||b<0) return html;
   let foot=html.slice(b); foot=foot.replace(/<span class="db-ns[\s\S]*?<\/span><\/span>/,`<span class="db-ns">${I('info',14)}<span>Saves a draft refactoring specification. Nothing changes in the code or the current architecture.</span></span>`).replace(/>Save and create</,'>Save as draft<').replace(/>Save</,'>Save as draft<');
   if(!D.add){ const nm=(M.name||'').trim(); const dup=nm&&CTX.some(c=>c.name.toLowerCase()===nm.toLowerCase());
@@ -11945,8 +11948,14 @@ window.impCon=function(D,G,sel,plan){ if(!D.sel.size) return '<div class="db-inf
   const ctxs=srcs.map(c=>{ const n=[...G.moved].filter(x=>UCB[x].ctx===c).length; const a=[...G.moved].filter(x=>UCB[x].ctx===c).reduce((s,id)=>s+movedApis(D,id).length,0); return row('c:'+c,`<span class="l">${esc(H.cName(c))}<em class="n">−${pl(n,'use case')} · −${pl(a,'API')}</em></span>`); }).join('')
     + row('c:'+G.tgt,`<span class="l">${esc(D.tName)}<em class="m">+${pl(G.moved.size,'use case')} · +${pl(D.routes.length,'API')}</em></span>`);
   const pl2=plan?plan.replace('<div class="db-plan">','<section class="iss iplan">').replace(/<div class="h">[\s\S]*?<\/div>/,'<h4>Refactoring plan</h4>').replace(/<\/ol><\/div>$/,'</ol></section>'):'';
-  const apis=D.routes.map(a=>`<div class="isa">${api(a)}</div>`).join('');
-  return `<div class="ich2">${pl2}${G.dep.size?`<section class="iss">${dep}</section>`:'<section class="iss"><div class="db-info">Nothing else is impacted.</div></section>'}${sec(`Selected APIs`,D.routes.length,`<div class="isal">${apis}</div>`)}${sec('Summary',srcs.length+1,ctxs)}</div>`; };
+  const selR=new Set(D.routes); const callers=[...new Set(D.routes.flatMap(r=>(OPS[r]||{users:[]}).users||[]))].filter(id=>UCB[id]&&UC.includes(UCB[id]));
+  const chN=c=>c==='both'?['store','admin']:c==='none'?['none']:[c]; const apps={}; callers.forEach(id=>chN(UCB[id].ch).forEach(c=>{ (apps[c]=apps[c]||new Set()).add(id); }));
+  const appsH=Object.entries(apps).map(([c,set])=>{ const C=CHANNELS[c]; return `<div class="ira"><span class="l">${kindIc('channel',14)}<b>${esc(C.name)}</b><em class="n">${set.size} use case${set.size===1?'':'s'}</em></span><small>Owned by ${esc(C.team)} · re-test ${[...set].slice(0,3).map(id=>esc(UCB[id].name)).join(', ')}${set.size>3?` and ${set.size-3} more`:''}</small></div>`; }).join('');
+  const ptsH=[...G.pts.keys()].map(iid=>{ const P=ptInfo(D,G,iid); const it=P.it; const us=(typeof usersOf==='function'?usersOf(iid):[]).filter(u=>UC.includes(u)); const ow=[...new Set(us.map(u=>{ const t=(window.ASSIGN||{})['uc:'+u.id]; return t&&t.id?String(t.id):''; }).filter(Boolean))];
+    return `<div class="irp"><span class="l">${kindIc('point',14)}<b>${esc(it.label)}</b><em class="${P.st[0]}">${esc(P.st[1])}</em></span><small><button class="lk" data-act="dbgo" data-arg="ctx:${esc(it.from)}">${esc(H.cName(it.from))}</button> → <button class="lk" data-act="dbgo" data-arg="ctx:${esc(it.to)}">${esc(ctxName(it.to))}</button></small>${us.length?`<small>Used by ${us.slice(0,3).map(u=>`<button class="lk" data-act="dbgo" data-arg="uc:${u.id}">${esc(u.name)}</button>`).join(', ')}${us.length>3?` and ${us.length-3} more`:''}${ow.length?` · owner ${esc(ow.join(', '))}`:''}</small>`:''}</div>`; }).join('');
+  const files={}; callers.forEach(id=>{ let B=[]; try{ B=codeOf(id); }catch(e){} const F=ucFlowOf(id)||{steps:[]}; B.forEach(b=>{ const st=F.steps[(b.step||1)-1]; const hit=(b.route&&selR.has(b.route))||(st&&st.apis&&st.apis.some(a=>selR.has(a))&&/Screen|Server action/.test(b.kind||'')); if(!hit||!b.file) return; const f=files[b.file]=files[b.file]||{k:b.kind||'File', u:new Set(), b}; f.u.add(id); }); }); window.__dbFiles=files;
+  const codeH=Object.entries(files).sort((a,b)=>b[1].u.size-a[1].u.size).map(([f,v])=>`<button class="irc" data-act="dbcode" data-arg="${esc(f)}" title="Open ${esc(f)} in the code editor"><code>${esc(f.split('/').slice(-3).join('/'))}</code><small>${esc(v.k)} · ${v.u.size} use case${v.u.size===1?'':'s'}</small></button>`).join('');
+  return `<div class="ich2">${pl2}${sec('Impacted use cases',G.dep.size,G.dep.size?dep:'')}${G.dep.size?'':'<section class="iss"><h4>Impacted use cases<span class="count">0</span></h4><div class="db-info">Nothing else depends on these APIs.</div></section>'}${sec('Channel apps to re-test',Object.keys(apps).length,appsH)}${sec('Integration points',G.pts.size,ptsH)}${sec('Code references',Object.keys(files).length,codeH)}</div>`; };
 try{ if(S.nc) renderNC(); }catch(e){}
 })();
 </script>
@@ -12840,12 +12849,12 @@ function modalHTML(){ const M=S.modal; if(!M) return ''; const B=TB();
       ${M.to!==t.parent&&B[M.to]&&B[M.to].inherit&&t.inherit?`<div class="note">${I('info',16)}<span>Admins of ${esc(B[M.to].name)} will be able to manage ${esc(t.name)}.</span></div>`:''}
       <div class="mf"><button class="btn" data-a="close">Cancel</button><button class="btn primary" data-a="msave" ${M.to===t.parent?'disabled':''}>Move here</button></div></div></div>`; }
   if(M.k==='del'){ const t=B[M.id]; const ks=kids(t.id); const par=t.parent&&B[t.parent];
-    return `<div class="ov" data-a="close"><div class="md sm" role="alertdialog" aria-modal="true" aria-label="Delete team" data-a="noop">
-      <div class="mh"><span><b>Delete ${esc(t.name)}?</b></span><span class="sp"></span><button class="ib" data-a="close" aria-label="Close">${I('x',18)}</button></div>
+    return `<div class="ov" data-a="close"><div class="md sm" role="alertdialog" aria-modal="true" aria-label="Archive team" data-a="noop">
+      <div class="mh"><span><b>Archive ${esc(t.name)}?</b></span><span class="sp"></span><button class="ib" data-a="close" aria-label="Close">${I('x',18)}</button></div>
       ${ks.length?`<div style="display:flex;flex-direction:column;gap:8px"><span style="font:500 12px/18px var(--font)">It has ${pl(ks.length,'sub-team')}. What should happen to ${ks.length===1?'it':'them'}?</span>
         <button class="radio ${M.mode==='lift'?'on':''}" data-a="dmode" data-v="lift"><span class="dot"></span><span><b>Move ${ks.length===1?'it':'them'} up to ${par?esc(par.name):'the top level'}</b></span></button>
-        <button class="radio ${M.mode==='all'?'on':''}" data-a="dmode" data-v="all"><span class="dot"></span><span><b>Delete ${ks.length===1?'it':'them'} too</b><small>${pl(desc(t.id).length+1,'team')} in total will be deleted.</small></span></button></div>`:''}
-      <div class="mf"><button class="btn" data-a="close">Cancel</button><button class="btn danger" data-a="dsave">Delete</button></div></div></div>`; }
+        <button class="radio ${M.mode==='all'?'on':''}" data-a="dmode" data-v="all"><span class="dot"></span><span><b>Archive ${ks.length===1?'it':'them'} too</b><small>${pl(desc(t.id).length+1,'team')} in total will be archived. You can restore them later.</small></span></button></div>`:''}
+      <div class="mf"><button class="btn" data-a="close">Cancel</button><button class="btn danger" data-a="dsave">Archive</button></div></div></div>`; }
   if(M.k==='assign'){ const p=PB[M.id]; const out=[]; const walk=(q,d)=>kids(q).forEach(k=>{ out.push([k,d]); walk(k.id,d+1); }); walk(null,0);
     return `<div class="ov" data-a="close"><div class="md sm" role="dialog" aria-modal="true" aria-label="Assign teams" data-a="noop">
       <div class="mh"><span><b>Assign ${esc(p.n)} to teams</b></span><span class="sp"></span><button class="ib" data-a="close" aria-label="Close">${I('x',18)}</button></div>
@@ -13147,7 +13156,7 @@ render();
 </style>
 <SCRIPT_START>
 /* ===== Org chart only ===== */
-S.view='chart'; S.panel=null; S.adding=null; S.zoom=.7; S.open=new Set(T.filter(t=>!t.parent).map(t=>t.id));
+S.view='chart'; S.panel=null; S.adding=null; S.zoom=.7; S.open=new Set([...T.filter(t=>!t.parent).map(t=>t.id),'eng','plat','checkout','design'].filter(id=>T.some(t=>t.id===id)));
 const roleOf=(t,p)=>(t.m.find(x=>x[0]===p)||[])[1]||'';
 chartHTML=function(){ const q=(S.q||'').trim().toLowerCase();
   const people=t=>{ const L=t.m; if(!L.length) return ''; const show=L.slice(0,2);
@@ -13155,18 +13164,18 @@ chartHTML=function(){ const q=(S.q||'').trim().toLowerCase();
       +(L.length>2?`<li class="pli"><div class="ocard more" data-a="panel" data-v="${t.id}">+${L.length-2} people</div></li>`:''); };
   const adding=id=>S.adding===id?`<li><div class="ocard nw"><input id="ocNew" placeholder="Team name" aria-label="New team name" autocomplete="off"><small>Enter to add · Esc to cancel</small></div></li>`:'';
   const node=t=>{ const ks=kids(t.id); const open=S.open.has(t.id); const all=allMembers(t.id); const hit=q&&t.name.toLowerCase().includes(q);
-    const kidsHTML=open?people(t)+ks.map(node).join('')+adding(t.id):adding(t.id);
+    const kidsHTML=open?pnodes(t)+ks.map(node).join('')+adding(t.id):adding(t.id);
     return `<li><div class="ocard ${S.panel===t.id?'on':''}" draggable="true" data-id="${t.id}" data-a="panel" data-v="${t.id}" role="button" tabindex="0" style="${q&&!hit?'opacity:.35':''}">
       <div class="r">${tAv(t,'sm')}<b>${q?mark(t.name):esc(t.name)}</b></div>
       <span class="meta"><span>${pl(all.length,'member')}</span>${ks.length?`<span>${pl(ks.length,'sub-team')}</span>`:''}</span>
       ${S.panel===t.id?expandHTML(t):t.m.length?`<span class="avs">${t.m.slice(0,4).map(([p])=>pAv(p,'sm')).join('')}${t.m.length>4?`<em>+${t.m.length-4}</em>`:''}</span>`:''}
-      ${ks.length||t.m.length?`<button class="ex ${open?'exo':''}" data-a="tog" data-v="${t.id}" aria-label="${open?'Collapse':'Expand'}">${open?I('cd',12)+(ks.length?' '+ks.length+' sub-team'+(ks.length===1?'':'s'):''):I('cr',12)+' '+(ks.length+t.m.length)}</button>`:''}
+      ${ks.length||t.m.length?`<button class="ex ${open?'exo':''}" data-a="tog" data-v="${t.id}" aria-label="${open?'Hide':'Show'} what is in ${esc(t.name)}">${I(open?'cd':'cr',12)} ${[ks.length?pl(ks.length,'sub-team'):'',t.m.length?pl(t.m.length,'member'):''].filter(Boolean).join(' · ')}</button>`:''}
       <button class="add" data-a="addsub" data-v="${t.id}" aria-label="Add a team under ${esc(t.name)}" title="Add a team under ${esc(t.name)}">${I('plus',14)}</button></div>
       ${kidsHTML?`<ul>${kidsHTML}</ul>`:''}</li>`; };
   const top=kids(null);
   return `<div class="ocw"><div class="chart"><div class="oc"><ul><li class="root"><div class="ocard" data-id="__root"><div class="r"><span class="av t sm" style="background:#fff">${logo(14)}</span><b>Syntroper’s Org</b></div><span class="meta"><span>${pl(top.length,'top-level team')}</span><span>${pl(new Set(T.flatMap(t=>t.m.map(x=>x[0]))).size,'member')}</span></span>
       <button class="add" data-a="addsub" data-v="__root" aria-label="Add a top-level team">${I('plus',14)}</button></div>
-    <ul>${top.map(node).join('')}${adding('__root')}</ul></li></ul></div></div>
+    <ul>${orgOnly()}${top.map(node).join('')}${adding('__root')}</ul></li></ul></div></div>
     <div class="zm"><button data-a="zoom" data-v="out" aria-label="Zoom out">−</button><span>${Math.round((S.zoom||1)*100)}%</span><button data-a="zoom" data-v="in" aria-label="Zoom in">+</button><button data-a="zoom" data-v="fit" aria-label="Reset">⤢</button></div>
     <div class="hint">Hover a team and press + to add one under it · pinch or ⌘ scroll to zoom · drag the canvas to pan</div>
     </div>`; };
@@ -13182,10 +13191,10 @@ function panelHTML(){ const B=TB(); const t=B[S.panel]; if(!t) return ''; const 
         ${ks.map(k=>`<button class="srow" data-a="panel" data-v="${k.id}">${tAv(k,'sm')}<b>${esc(k.name)}</b><small>${pl(allMembers(k.id).length,'member')}</small>${I('cr',14)}</button>`).join('')||'<div class="empty" style="padding:16px">No sub-teams yet.</div>'}</div>
       <div class="sw"><div class="t"><b>Inherit roles from parent teams</b></div><button class="tog ${t.inherit?'on':''}" role="switch" aria-checked="${t.inherit}" data-a="inherit" data-v="${t.id}" aria-label="Inherit roles from parent teams"></button></div>
     </div>
-    <div class="pf"><button class="btn" style="color:var(--danger-text)" data-a="del" data-v="${t.id}">${I('trash',14)}Delete team</button><span class="sp"></span><button class="btn" data-a="roles">${I('info',14)}Roles</button></div></aside>`; }
+    <div class="pf"><button class="btn" style="color:var(--danger-text)" data-a="del" data-v="${t.id}">${I('trash',14)}Archive team</button><span class="sp"></span><button class="btn" data-a="roles">${I('info',14)}Roles</button></div></aside>`; }
 teamsHTML=function(){ S._nd=false;
   return `<div class="hd"><h2>${pl(T.length,'Team')}</h2><span class="sp"></span><label class="search" style="width:260px">${I('search',16)}<input id="tq" value="${esc(S.q)}" placeholder="Search teams" aria-label="Search teams"></label>
-      <button class="btn" data-a="roles">${I('info',14)}Roles</button><button class="btn primary" data-a="addsub" data-v="__root">${I('plus',16)}Create Team</button></div>
+      <button class="btn" data-a="roles">${I('info',14)}Roles</button><button class="btn primary" data-a="addsub" data-v="${S.panel&&TB()[S.panel]?S.panel:'__root'}">${I('plus',16)}${S.panel&&TB()[S.panel]?'Create team in '+esc(TB()[S.panel].name):'Create Team'}</button></div>
     ${chartHTML()}`; };
 Object.assign(A,{
   panel(v){ S.panel=S.panel===v?null:v; S.adding=null; render(); },
@@ -13252,10 +13261,10 @@ body.light .ocw{background-image:radial-gradient(circle at 1px 1px,#c1bdda 1.1px
 function expandHTML(t){ const ks=kids(t.id);
   return `<div class="xp" data-a="noop">
     <input class="nm" value="${esc(t.name)}" data-a="rename" data-v="${t.id}" aria-label="Team name">
-    <h5>Members · ${t.m.length}<span class="sp"></span>${S.invOpen===t.id?'':`<button class="btn sm" data-a="invo" data-v="${t.id}">${I('plus',12)}Invite</button>`}</h5>
-    <div class="mlist">${t.m.map(([p,r])=>`<div class="mr2 ${S.justAdded===p?'nw':''}">${pAv(p,'sm')}<b>${esc(PB[p].n)}</b><button class="role" data-a="role" data-v="${t.id}|${p}">${r}${I('cd',12)}</button><button class="ib" data-a="rmm" data-v="${t.id}|${p}" aria-label="Remove ${esc(PB[p].n)}">${I('x',12)}</button></div>`).join('')||'<span class="none">No members yet. Invite people to this team.</span>'}</div>
-    ${S.invOpen===t.id?`<div class="inv2"><input class="ie" data-v="${t.id}" type="text" placeholder="Name or email" aria-label="Invite by name or email" autocomplete="off"><button class="btn primary sm" data-a="invin" data-v="${t.id}">Invite</button><button class="ib" data-a="invc" aria-label="Cancel invite">${I('x',12)}</button></div>`:''}
-    <div class="acts2"><button class="btn" data-a="addsub" data-v="${t.id}">${I('plus',12)}Sub-team</button><button class="btn" data-a="move" data-v="${t.id}">Move</button><button class="btn" style="color:var(--danger-text)" data-a="del" data-v="${t.id}">${I('trash',12)}Delete</button><span style="flex:1"></span><button class="ib" data-a="panelx" aria-label="Close">${I('x',14)}</button></div></div>`; }
+    <h5>Members · ${t.m.length}<span class="sp"></span>${S.addm&&S.addm.tid===t.id?'':`<button class="btn sm" data-a="addm" data-v="${t.id}">${I('plus',12)}Add members</button>`}</h5>
+    <span class="xhint">${t.m.length?`${pl(t.m.length,'member')} below the card. Change a role or remove someone on their card.`:'No members yet.'}</span>
+    ${S.addm&&S.addm.tid===t.id?addmHTML(t):''}
+    <div class="acts2"><button class="btn" data-a="addsub" data-v="${t.id}">${I('plus',12)}Sub-team</button><button class="btn" data-a="move" data-v="${t.id}">Move</button><button class="btn" style="color:var(--danger-text)" data-a="del" data-v="${t.id}">Archive</button><span style="flex:1"></span><button class="ib" data-a="panelx" aria-label="Close">${I('x',14)}</button></div></div>`; }
 /* the expanded card is part of the chart: mark it, and open a new team straight away */
 { const _c=chartHTML; chartHTML=function(){ let h=_c(); if(S.panel) h=h.replace(`class="ocard on" draggable="true" data-id="${S.panel}"`,`class="ocard on open" draggable="false" data-id="${S.panel}"`); return h; }; }
 <\/script>
@@ -13338,6 +13347,63 @@ document.addEventListener('click',e=>{ if(!down) return; const moved=Math.hypot(
   if(S.adding||S.panel){ S.adding=null; S.panel=null; S.invOpen=null; render(); } },true);
 })();
 <\/script>
+<style>
+.ocard .xp .am{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:10px;background:var(--canvas);border:1px solid var(--border-strong);animation:rowIn .22s ease both}
+.ocard .xp .am .q{height:32px;padding:0 10px;border-radius:7px;background:var(--panel);border:1px solid var(--border-strong);color:var(--text);font:400 13px/18px var(--font);outline:0;width:100%;box-sizing:border-box}
+.ocard .xp .am .q:focus{border-color:var(--accent-hover)}
+.ocard .xp .am .ls{max-height:208px;overflow:auto;display:flex;flex-direction:column}
+.ocard .xp .am .pr{display:flex;align-items:center;gap:8px;min-height:36px;padding:0 6px;border-radius:7px;text-align:left;font:400 13px/18px var(--font);color:var(--text)} .ocard .xp .am .pr:hover{background:var(--surface)}
+.ocard .xp .am .pr .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .ocard .xp .am .pr .nm small{display:block;font-size:11px;color:var(--text-3)}
+.ocard .xp .am .cb{width:16px;height:16px;border-radius:4px;flex:none;display:grid;place-items:center;box-shadow:inset 0 0 0 1.5px var(--border-strong)} .ocard .xp .am .cb.on{background:var(--accent);box-shadow:none;color:#fff}
+.ocard .xp .am .ft{display:flex;align-items:center;gap:6px} .ocard .xp .am .ft .sp{flex:1}
+.ocard .xp .am .inv{font:500 12px/18px var(--font);color:var(--accent-on)} .ocard .xp .am .inv:hover{text-decoration:underline}
+.ocard .xp .am .none{font:400 12px/18px var(--font);color:var(--text-3);padding:6px}
+.ex{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+</style>
+<SCRIPT_START>
+/* add org members to a team: search, tick several, add in one go. Invitations happen at org level. */
+(function(){
+window.addmHTML=t=>{ const M=S.addm; const q=(M.q||'').toLowerCase(); const have=new Set(t.m.map(x=>x[0]));
+  const L=PEOPLE.map(x=>PB[x[0]]).filter(p=>!have.has(p.id)&&(!q||p.n.toLowerCase().includes(q)||p.e.toLowerCase().includes(q)));
+  return `<div class="am" data-a="noop"><input class="q" id="amQ" value="${esc(M.q||'')}" placeholder="Search people in Syntroper’s Org" autocomplete="off">
+    <div class="ls">${L.map(p=>{ const on=M.sel.has(p.id); return `<button class="pr" data-a="ampick" data-v="${p.id}" role="checkbox" aria-checked="${on}"><span class="cb ${on?'on':''}">${on?I('check',11):''}</span>${pAv(p.id,'sm')}<span class="nm" title="${esc(p.e)}">${esc(p.n)}</span></button>`; }).join('')||`<span class="none">${q?'Nobody in the org matches.':'Everyone in the org is already in this team.'}</span>`}</div>
+    <div class="ft"><button class="inv" data-a="amorg">Invite to org</button><span class="sp"></span><button class="btn sm" data-a="amx">Cancel</button><button class="btn primary sm" data-a="amgo" data-v="${t.id}" ${M.sel.size?'':'disabled'}>Add${M.sel.size?' '+M.sel.size:''}</button></div></div>`; };
+A.addm=v=>{ S.addm={tid:v,sel:new Set(),q:''}; render(); setTimeout(()=>{ const i=document.getElementById('amQ'); if(i) i.focus(); },0); };
+A.amx=()=>{ S.addm=null; render(); };
+A.ampick=v=>{ const s=S.addm.sel; s.has(v)?s.delete(v):s.add(v); const sc=document.querySelector('.am .ls'); const top=sc?sc.scrollTop:0; render(); const n=document.querySelector('.am .ls'); if(n) n.scrollTop=top; };
+A.amgo=v=>{ const t=TB()[v]; const ids=[...S.addm.sel]; S.open.add(v); ids.forEach(id=>t.m.push([id,'Contributor'])); S.justAdded=ids[ids.length-1]; S.addm=null; toast(`Added ${ids.length===1?PB[ids[0]].n:ids.length+' people'} to ${t.name} as Contributor`); render(); };
+A.amorg=()=>{ S.addm=null; toast('Invite people from Users. Once they join the org you can add them to any team.'); try{ A.go('users'); }catch(e){ render(); } };
+document.addEventListener('input',e=>{ if(e.target.id==='amQ'){ S.addm.q=e.target.value; const p=e.target.selectionStart; render(); const i=document.getElementById('amQ'); if(i){ i.focus(); i.setSelectionRange(p,p); } } });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&S.addm){ S.addm=null; render(); } });
+/* the open card follows the panel; the add list closes with it */
+const _r=render; render=function(){ if(S.addm&&S.addm.tid!==S.panel) S.addm=null; _r(); };
+})();
+<\/script>
+<style>.ocw{background-image:radial-gradient(circle at 1px 1px,#626b83 1.2px,transparent 1.4px)!important}</style>
+<style>
+/* members as tree nodes */
+.ocard.pn{flex-direction:row;align-items:center;gap:10px;padding:10px 12px;cursor:default;background:var(--canvas)}
+.ocard.pn .av{width:32px;height:32px;font-size:12px;flex:none}
+.ocard.pn .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.ocard.pn .tx b{font:500 13px/18px var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocard.pn .tx small{font:400 12px/16px var(--font);color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocard.pn .role{margin-top:4px;align-self:flex-start;height:22px;padding:0 6px 0 8px;border-radius:6px;background:var(--surface);font:500 11px/16px var(--font);color:var(--text-2);display:inline-flex;align-items:center;gap:4px}
+.ocard.pn .role:hover{color:var(--text)}
+.ocard.pn .rm{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;color:var(--text-3);opacity:0;transition:opacity .15s}
+.ocard.pn:hover .rm{opacity:1} .ocard.pn .rm:hover{color:var(--danger-text);background:var(--surface)}
+.ocard.pn.nw{animation:ocIn .24s cubic-bezier(.2,.8,.2,1) both}
+.ocard .xp .xhint{font:400 12px/18px var(--font);color:var(--text-3)}
+</style>
+<SCRIPT_START>
+window.orgOnly=()=>{ const inT=new Set(T.flatMap(t=>t.m.map(x=>x[0]))); const L=PEOPLE.map(x=>PB[x[0]]).filter(p=>!inT.has(p.id)); return !L.length?'':'<li class="pli mli"><div class="mstack">'+L.map(P=>`<div class="ocard pn">${pAv(P.id)}<span class="tx"><b>${esc(P.n)}</b><small>${esc(P.e)}</small><span class="role" style="cursor:default">Org member · no team</span></span></div>`).join('')+'</div></li>'; };
+window.pnodes=t=>!t.m.length?'':'<li class="pli mli"><div class="mstack">'+t.m.map(([p,r])=>{ const P=PB[p]; return `<div class="ocard pn ${S.justAdded===p?'nw':''}" data-pid="${p}">${pAv(p)}<span class="tx"><b>${esc(P.n)}</b><small>${esc(P.e)}</small><button class="role" data-a="role" data-v="${t.id}|${p}" aria-label="Role of ${esc(P.n)}">${esc(r)}${I('cd',12)}</button></span><button class="rm" data-a="rmm" data-v="${t.id}|${p}" aria-label="Remove ${esc(P.n)} from ${esc(t.name)}">${I('x',12)}</button></div>`; }).join('')+'</div></li>';
+<\/script>
+<style>
+/* members: one column under the team, cards stacked and joined by a line; sub-teams to the right */
+.oc li.mli>.mstack{display:flex;flex-direction:column;align-items:center;gap:14px}
+.oc li.mli .ocard.pn{position:relative}
+.oc li.mli .ocard.pn+.ocard.pn::before{content:"";position:absolute;left:50%;top:-15px;height:14px;width:0;border-left:1px solid var(--line,var(--border-strong))}
+</style>
 </body>
 </html>
 </script>
@@ -13524,8 +13590,8 @@ window.npHTML2=function(M){ if(!M||(M.stage||1)===1) return null; ensure(M); con
       <button class="ib" data-act="npsmv" data-arg="${i}|-1" ${i?'':'disabled'} aria-label="Move up">${I('arrow-up',14)}</button><button class="ib" data-act="npsmv" data-arg="${i}|1" ${i<M.steps.length-1?'':'disabled'} aria-label="Move down">${I('arrow-down',14)}</button><button class="ib" data-act="npsrm" data-arg="${x.id}" aria-label="Remove step">${I('x',14)}</button></div>
     <input class="npS" data-s="${x.id}" value="${esc(x.t)}" placeholder="${x.kind==='decision'?'What is decided, for example Is the card accepted?':x.who==='user'?'What the '+esc(PN(M).toLowerCase())+' does':'What the system does'}">
     ${x.kind==='decision'?(x.opts||[]).map((o,k)=>opt(x,o,k)).join('')+`<button class="btn ghost sm" data-act="npOadd" data-arg="${x.id}" style="align-self:flex-start">${I('plus',14)}Add an option</button>`:''}</div>`).join('');
-  const body2=`<div class="ue"><div class="ue-l"><h3>Steps<small>Each step is done by the ${esc(PN(M).toLowerCase())} or the system</small></h3>${rows}
-      <div class="uadd"><button class="btn sm" data-act="npadd" data-arg="user|action">${I('plus',14)}${esc(UL(M))} step</button><button class="btn sm" data-act="npadd" data-arg="system|action">${I('plus',14)}${esc(SL(M))} step</button><button class="btn sm" data-act="npadd" data-arg="system|decision">${I('plus',14)}Decision</button></div></div>
+  const body2=`<div class="ue"><div class="ue-l">${M.mode==='prompt'?window.npPromptHTML(M):`<div class="sthd"><div><h3>Steps</h3><p>Who does what, in order.</p></div><button class="btn sm aigen" data-act="npmode" data-arg="prompt">${window.sparkI?sparkI():''}Generate with AI</button></div>${rows}
+      <div class="uadd"><button class="btn sm" data-act="npadd" data-arg="user|action">${I('plus',14)}${esc(UL(M))} step</button><button class="btn sm" data-act="npadd" data-arg="system|action">${I('plus',14)}${esc(SL(M))} step</button><button class="btn sm" data-act="npadd" data-arg="system|decision">${I('plus',14)}Decision</button></div>`}</div>
     <div class="ue-r"><div class="tb"><b style="font:600 13px/18px var(--font)">Live diagram</b><span style="flex:1"></span>${tog(M)}</div><div class="cv">${diag(M)}</div></div></div>`;
   const filled=M.steps.filter(x=>x.t.trim());
   const body3=`<div class="rv"><div class="rv-l"><div class="kv"><span>Name</span><span>${esc(M.name)}</span><span>Persona</span><span>${esc(PN(M))}</span><span>Saved as</span><span>Use case specification · Draft</span></div>
@@ -13688,6 +13754,14 @@ const L=[
  ['Change specifications','Real use case diagrams','A use case spec uses the same Flowchart, Sequence and Swim lane as Open sequence steps, embedded in the document. Drag to pan, ⌘ scroll to zoom.', ()=>{ H0(); ACT.tab('specs'); ACT.spopen('cs4'); }, ['#csDoc .udg-live']],
  ['New use case','All three steps on the canvas','Details, Steps and Review all sit in the floating sidebar. On Details the canvas says the diagram will appear there. Review is grouped into Summary, Steps and Endings. Saving shows View spec.', NP(1), ['#npModal .npside']],
  ['Teams','Invite on demand, smooth cards','Cards share one width. Invite is a small button that opens the field. Opening a card, expanding sub-teams, adding a team or a member animate. Clicking empty canvas cancels a new team and closes the open card.', TAB('teams'), ['#vTeams']],
+ ['Teams','Members as nodes','Expanding a team shows every member as a node under it, with avatar, name, email and role; change the role or remove them on the node. Org members in no team hang off the org card.', TAB('teams'), ['#vTeams']],
+ ['Teams','Ready for development · add from the org','People join the org through Users. In a team, Add members lists org members to tick several and add in one go. No team invitations. Create Team creates under the open team. Delete is now Archive. The chart shows teams only; the chip under a card toggles sub-teams.', TAB('teams'), ['#vTeams']],
+ ['New bounded context','Open code from the impact','Each code reference opens the file in the code editor. A Back button returns to the board with the selection kept.', BOARD, ['#dbd .irc']],
+ ['New bounded context','Design only · APIs first','APIs grouped by the context that owns them, each with how many use cases depend on it; open one to see those use cases, their channel apps and owner teams. Impact lists dependent use cases, channel apps to re-test, integration points (links open the context or use case) and code references.', BOARD, ['#dbd']],
+ ['New use case','Design only · details','Business owner replaces Reviewer. No bounded context field. Channel apps is multi-select. Channel is called Channel apps everywhere, including the Galaxy.', NP(1), ['#npModal .npca']],
+ ['New use case','Design only · Generate with AI','Build steps one by one (drag the handle to reorder), or press Generate with AI to paste a description and turn it into steps. Review shows the use case, a step timeline with every branch, endings and optional business details. Decisions keep their own question and option names in the diagram; system-started steps are drawn from the system.', NP(2), ['#npModal .npmode']],
+ ['Change specifications','On hold','Held from development while Arsalan works out naming and independently deployable change chains.', ()=>{ H0(); ACT.tab('specs'); }, ['.csside']],
+ ['General','Canvas dots','Brighter in dark mode, subtler in light mode.', ()=>{ H0(); }, []],
  ['Teams','Sub-team count on the line','An expanded team shows a chip on its connector, like 2 sub-teams · 1 person. Click it to collapse.', TAB('teams'), ['#vTeams']],
  ['Teams','Invite inside the card','The open card has a name-or-email field and Invite. No dialog.', TAB('teams'), ['#vTeams']],
  ['Change specifications','A document you can share','Share opens link, access and people with view, comment or edit. Publish and Share sit at the top.', ()=>{ H0(); ACT.tab('specs'); ACT.spopen('cs1'); ACT.sdshare(); }, ['#sdModal .sdm']],
@@ -14123,19 +14197,24 @@ function dock(){ const n=document.querySelector('#npModal .ncm.npm'); if(!n||n.q
   const sd=document.createElement('div'); sd.className='npside'; const hd=n.querySelector(':scope > .mhd'), ft=n.querySelector(':scope > .mft'), ed=n.querySelector('.ue-l')||n.querySelector('.rv-l')||n.querySelector('.npb1');
   [hd,ed,ft].forEach(x=>{ if(x) sd.appendChild(x); }); n.prepend(sd); if(a&&n.contains(a)&&document.activeElement!==a){ a.focus(); try{ if(pos!=null) a.setSelectionRange(pos,pos); }catch(e){} } }
 const per=M=>{ const p=(window.PERSONAS||[]).find(x=>x.id===(M.per||[])[0]); return p?p.name:'User'; };
-function toFlow(M){ const steps=[], alts=[], idx={}; let cur=null;
-  (M.steps||[]).forEach(x=>{ const t=(x.t||'').trim();
-    if(x.kind==='decision'){ if(!cur){ cur={t:'Start',sc:null,apis:[]}; steps.push(cur); } const at=steps.length; idx[x.id]=at;
-      (x.opts||[]).forEach((o,k)=>{ if(k===0&&(o.to==='next'||!o.to)) return; const a={t:o.t||'Other option', kind:o.to==='end'?'cancel':'validation', at, steps:t?[t]:[]};
-        if(o.to==='end') a.end='Ends'; else if(o.to==='next'||!o.to) a.end='Continues'; else a._to=o.to; alts.push(a); }); cur._after=1; return; }
+window.ucToFlow=function(F,persona,result){ const steps=[], alts=[], idx={}; let cur=null;
+  (F||[]).forEach(z=>{ const t=(z.t||'').trim();
+    if(z.kind==='decision'){ const q=t||'Decision';
+      if(!cur||cur._after){ cur={t:q, sysOnly:true, apis:[], sc:null, _spec:1}; steps.push(cur); }
+      const at=steps.length; idx[z.id]=at; const O=z.opts||[]; const ok=O.find(o=>o.to==='next'||!o.to);
+      O.forEach(o=>{ if(o===ok) return; const a={t:o.t||'Other option', kind:o.to==='end'?'cancel':'validation', at, steps:o.note?[o.note]:[], _q:q.replace(/\?*$/,'?'), _ok:ok?(ok.t||'Yes'):'Continues'};
+        if(o.to==='end') a.end=o.note||'Ends'; else if(o.to==='next'||!o.to) a.end='Continues'; else a._to=o.to; alts.push(a); });
+      cur._after=1; return; }
     if(!t) return;
-    if(x.who==='user'||!cur||cur._sys||cur._after){ cur={t, sc:null, apis:[]}; if(x.who!=='user') cur._sys=1; steps.push(cur); }
-    else cur.r=cur.r?cur.r+'. '+t:t;
-    idx[x.id]=steps.length; });
+    if(z.who==='user'){ cur={t, apis:[], sc:null, _spec:1}; steps.push(cur); }
+    else if(cur&&!cur._after&&!cur._sysBlock){ cur.r=cur.r?cur.r+'. '+t:t; cur._sysBlock=cur.sysOnly?1:0; }
+    else { cur={t, sysOnly:true, apis:[], sc:null, _spec:1}; steps.push(cur); }
+    idx[z.id]=steps.length; });
   alts.forEach(a=>{ if(a._to){ a.back=idx[a._to]||1; delete a._to; } });
-  steps.forEach(s=>{ if(!s.r) s.r=' '; delete s._sys; delete s._after; });
-  if(!steps.length) steps.push({t:'Write the first step on the left', sc:null, apis:[], r:' '});
-  return {start:`${per(M)} starts`, result:(M.name||'').trim()||'Done', steps, alts}; }
+  steps.forEach(s=>{ if(!s.r) s.r=''; delete s._after; delete s._sysBlock; });
+  if(!steps.length) steps.push({t:'Write the first step on the left', apis:[], sc:null, r:'', _spec:1});
+  return {start:`${persona||'User'} starts`, result:result||'Done', steps, alts}; };
+function toFlow(M){ return ucToFlow(M.steps, per(M), (M.name||'').trim()||'Done'); }
 function sync(){ const M=S.np; if(!M) return; const ctx=M.ctx&&M.ctx!=='auto'&&window.CTB&&CTB[M.ctx]?M.ctx:'orders';
   const u=UCB[ID]||{}; Object.assign(u,{id:ID, name:(M.name||'').trim()||'New use case', ch:M.ch||'store', ctx, personas:(M.per||[]).slice(0,1), apis:[], i:[], ext:[], m:{rpd:0}, _draft:1}); UCB[ID]=u;
   FLOW[ID]=toFlow(M); }
@@ -14461,11 +14540,11 @@ function ucDoc(x){ ucData(x); const s=ST(x.status); const F=x.flow||[]; const pe
     <h1>${esc(x.title)}</h1>
     <div class="sd-meta"><span class="sd-st"><i style="background:${s[2]}"></i>${s[1]}</span><span>${pAv(x.by,18)}Proposed by ${esc(x.by)}</span></div>
     <p class="sd-intro ${x.goal?'':'ph'}">${esc(x.goal||'Add one sentence: what the persona gets done.')}</p>
-    <div class="ucl2">${kindIc('person',14)}<b>${esc(per)}</b><span>·</span>${kindIc('channel',14)}<span>${esc(chName(x.ch))}</span><span>·</span>${kindIc('system',14)}<span>${esc(SYS())}</span></div>
+    <div class="ucl2">${kindIc('person',14)}<b>${esc(per)}</b><span>·</span>${kindIc('channel',14)}<span>${esc((x.chs||[x.ch]).filter(Boolean).map(chName).join(', '))}</span><span>·</span>${kindIc('system',14)}<span>${esc(SYS())}</span></div>
     ${T.join('')}`; }
 function ucDetails(x){ const c=x.ctxPick; const st=!c||c==='auto'?(x.scope?['Suggested','sg']:['Awaiting suggestion','aw']):['Selected by author','ok'];
   const cn=c&&c!=='auto'?cxN(c):(x.scope||'—'); const owner=(()=>{ try{ const k=c&&c!=='auto'?c:null; const o=k&&window.ctxOwner?ctxOwner(k):null; return o?o:null; }catch(e){ return null; } })();
-  return `<div class="sd-c"><h3>Details</h3><div class="ukv"><span>Context</span><span>${esc(cn)}<em class="${st[1]}">${st[0]}</em></span><span>Persona</span><span>${esc(x.persona||'—')}</span><span>Channel</span><span>${esc(chName(x.ch))}</span><span>Reviewer</span><span>${x.who&&x.who!=='auto'?esc(x.who):'Owner of the context'}${owner?` · ${esc(owner)}`:''}</span></div></div>`; }
+  return `<div class="sd-c"><h3>Details</h3><div class="ukv"><span>Context</span><span>${esc(cn)}<em class="${st[1]}">${st[0]}</em></span><span>Persona</span><span>${esc(x.persona||'—')}</span><span>Channel apps</span><span>${esc((x.chs||[x.ch]).filter(Boolean).map(chName).join(', ')||'—')}</span><span>Business owner</span><span>${esc(x.owner2||(x.who&&x.who!=='auto'?String(x.who).split('|').pop():'')||'Not set')}</span></div></div>`; }
 function rail(x){ const rv=x.reviewers||[]; const L=x.link; const draft=x.status==='draft';
   return `<aside class="sd-rail">${x.type==='uc'?ucDetails(x):''}
     <div class="sd-c"><h3>Review<span class="count">${rv.length}</span></h3>${rv.length?rv.map(([n,st])=>`<div class="sd-rv">${pAv(n,20)}${esc(n)}<em class="${st==='approved'?'ok':st==='changes'?'ch':draft?'':'wt'}">${st==='approved'?'Approved':st==='changes'?'Changes requested':draft?'Selected':'Waiting'}</em></div>`).join(''):'<div class="sd-rv" style="color:var(--text-3)">No reviewers yet</div>'}
@@ -14852,16 +14931,7 @@ body.cs2 #cTop .fvt,body.cs2 #cTop .sql,body.cs2 #cTop .fx-close{display:none!im
 (function(){
 const box=document.getElementById('ucFlow'), home=document.getElementById('cStage');
 const FV={flow:'cards',seq:'seq',swim:'swim'};
-function toFlow(x){ const F=x.flow||[]; const steps=[], alts=[], idx={}; let cur=null;
-  F.forEach(z=>{ const t=(z.t||'').trim();
-    if(z.kind==='decision'){ if(!cur){ cur={t:'Start',sc:null,apis:[]}; steps.push(cur); } const at=steps.length; idx[z.id]=at;
-      (z.opts||[]).forEach((o,k)=>{ if(k===0&&(o.to==='next'||!o.to)) return; const a={t:o.t||'Other option', kind:o.to==='end'?'cancel':'validation', at, steps:o.note?[o.note]:(t?[t]:[])}; if(o.to==='end') a.end='Ends'; else if(o.to==='next'||!o.to) a.end='Continues'; else a._to=o.to; alts.push(a); }); cur._after=1; return; }
-    if(!t) return;
-    if(z.who==='user'||!cur||cur._sys||cur._after){ cur={t, sc:null, apis:[]}; if(z.who!=='user') cur._sys=1; steps.push(cur); } else cur.r=cur.r?cur.r+'. '+t:t;
-    idx[z.id]=steps.length; });
-  alts.forEach(a=>{ if(a._to){ a.back=idx[a._to]||1; delete a._to; } });
-  steps.forEach(s=>{ if(!s.r) s.r=' '; delete s._sys; delete s._after; });
-  return {start:`${x.persona||'User'} starts`, result:x.result||x.title, steps, alts}; }
+function toFlow(x){ return ucToFlow(x.flow, x.persona, x.result||x.title); }
 const _na=window.npArea; window.npArea=function(){ if(box&&box.closest('#csDoc')) return {x:24,y:24,w:Math.max(200,box.clientWidth-48),h:Math.max(200,box.clientHeight-48)}; return _na?_na():null; };
 document.addEventListener('wheel',e=>{ if(box&&box.closest('#csDoc')&&box.contains(e.target)&&!e.ctrlKey&&!e.metaKey) e.stopPropagation(); },{capture:true});
 let shown=null;
@@ -14937,21 +15007,194 @@ const SY=()=>(S.bs&&S.bs.name)||'Commerce platform';
 const pname=M=>{ const p=(window.PERSONAS||[]).find(x=>x.id===(M.per||[])[0]); return p?p.name:'User'; };
 function review(M){ const per=pname(M); const clash=/^system$/i.test(per); const who=w=>w==='user'?(clash?'Persona · System':per):(clash?SY():'System');
   const st=(M.steps||[]).filter(x=>(x.t||'').trim()); const ix={}; st.forEach((x,i)=>ix[x.id]=i);
-  const to=(o,i)=>o.to==='end'?'End':(o.to==='next'||!o.to)?(i+1<st.length?`Step ${i+2}`:'End'):(ix[o.to]!=null?`Step ${ix[o.to]+1}`:'Next step');
-  let ch='—'; try{ ch=CHANNELS[M.ch]?(M.ch==='none'?'Background jobs':CHANNELS[M.ch].name):'—'; }catch(e){}
-  let cx='Suggested after the APIs are picked'; try{ if(M.ctx&&M.ctx!=='auto'&&CTB[M.ctx]) cx=CTB[M.ctx].name; }catch(e){}
-  const rv=!M.who||M.who==='auto'?'Owner of the context':M.who;
-  const ends=st.flatMap((x,i)=>(x.opts||[]).filter(o=>o.to==='end').map(o=>`${x.t} → ${o.t||'…'}`));
-  return `<div class="nprv"><div class="rs"><span class="chip"><i></i>Saved as a draft use case specification</span></div>
-    <div class="rs"><h4>Summary</h4><div class="kv"><span>Name</span><span>${esc(M.name||'')}</span><span>Persona</span><span>${esc(per)}</span><span>Channel</span><span>${esc(ch)}</span><span>Context</span><span>${esc(cx)}</span><span>Reviewer</span><span>${esc(rv)}</span></div></div>
-    <div class="rs"><h4>Steps<span class="count">${st.length}</span></h4><ol>${st.map((x,i)=>`<li class="${x.kind==='decision'?'dec':''}"><span class="n">${i+1}</span><div><span class="w ${x.who==='user'?'u':''}">${esc(who(x.who))}${x.kind==='decision'?' · Decision':''}</span><div class="t">${esc(x.t)}</div>${x.kind==='decision'?`<div class="br">${(x.opts||[]).map((o,k)=>`<span><b>${k?'Else if':'If'}</b> ${esc(o.t||'…')} → ${to(o,i)}</span>`).join('')}</div>`:''}</div></li>`).join('')}</ol></div>
-    <div class="rs"><h4>Endings</h4><div class="kv" style="grid-template-columns:minmax(0,1fr)"><span style="color:var(--text)">Main flow completes</span>${ends.map(e=>`<span style="color:var(--text-2)">${esc(e)}</span>`).join('')}</div></div>
-    <div class="rs"><div class="note">${I('alert',14)}<span>APIs and code are picked later, in the solution design.</span></div></div></div>`; }
+  const to=(o,i)=>o.to==='end'?'Ends':(o.to==='next'||!o.to)?(i+1<st.length?`Step ${i+2}`:'Ends'):(ix[o.to]!=null?`Step ${ix[o.to]+1}`:'Next step');
+  const L=Array.isArray(M.chs)?M.chs:(M.ch?[M.ch]:[]); const apps=L.map(id=>CHANNELS[id]&&CHANNELS[id].name).filter(Boolean);
+  const w=M.who&&M.who!=='auto'?M.who.split('|'):null; const owner=w?(w[0]==='team'?(TEAMS.find(t=>t.id===w[1])||{name:w[1]}).name:w[1]):'';
+  const ends=st.flatMap((x,i)=>(x.opts||[]).filter(o=>o.to==='end').map(o=>[`${x.t.replace(/\?*$/,'')}: ${o.t||'…'}`, o.note||'The flow stops here']));
+  const xf=M.xf||{};
+  const row=(k,v,miss)=>`<div class="srw"><span class="skk">${k}</span><span class="svv ${miss?'miss':''}">${v}</span></div>`;
+  return `<div class="nprv" data-v2="1">
+    <div class="rhd"><h3>Review</h3><p>Check the specification, then save it as a draft. Nothing changes in the system.</p></div>
+    <section class="rc"><div class="rt">${kindIc('usecase',16)}<b>${esc(M.name||'Untitled use case')}</b></div>
+      ${row('Persona',esc(per))}${row('Channel apps',apps.length?apps.map(a=>`<span class="rchip">${esc(a)}</span>`).join(''):'Not set',!apps.length)}${row('Business owner',owner?esc(owner):'Not set',!owner)}</section>
+    <section class="rc"><div class="rt"><b>Steps</b><span class="count">${st.length}</span></div>
+      <ol class="rtl">${st.map((x,i)=>`<li class="${x.kind==='decision'?'dec':''}"><span class="n">${i+1}</span><div class="b"><div class="w"><span class="wc ${x.who==='user'?'u':'s'}">${esc(who(x.who))}</span>${x.kind==='decision'?'<span class="wc d">Decision</span>':''}</div><div class="t">${esc(x.t)}</div>
+        ${x.kind==='decision'?`<div class="br">${(x.opts||[]).map((o,k)=>`<div><span class="if">${k?'Else if':'If'}</span><span class="ot">${esc(o.t||'…')}</span><span class="ar">→</span><span class="dst">${to(o,i)}</span></div>`).join('')}</div>`:''}</div></li>`).join('')||'<li class="none">No steps yet.</li>'}</ol></section>
+    <section class="rc"><div class="rt"><b>Endings</b><span class="count">${ends.length+1}</span></div>
+      <div class="ren"><div><i class="ok"></i><span><b>Main flow completes</b><small>The ${esc(per.toLowerCase())} gets it done</small></span></div>${ends.map(([a,b])=>`<div><i></i><span><b>${esc(a)}</b><small>${esc(b)}</small></span></div>`).join('')}</div></section>
+    <section class="rc"><div class="rt"><b>More about this use case</b><span class="opt">Optional</span></div><div class="xf">
+      <label>Key business rules<textarea data-xf="rules" placeholder="For example, only during school holidays; refunds over 1,000 need a second approver">${esc(xf.rules||'')}</textarea></label>
+      <label>How often it happens<input data-xf="freq" value="${esc(xf.freq||'')}" placeholder="For example, about 2,000 times a day"></label>
+      <label>Peak load and scale<input data-xf="peak" value="${esc(xf.peak||'')}" placeholder="For example, 50,000 an hour at month end, 5–6 pm peak"></label></div></section>
+    <div class="note">${I('alert',14)}<span>APIs and code are picked later, in the solution design.</span></div></div>`; }
 function post(){ const n=document.querySelector('#npModal .ncm.npm'); if(!n||!S.np) return; const st=S.np.stage||1;
   let ph=n.querySelector(':scope > .npph'); if(st===1){ if(!ph) n.insertAdjacentHTML('beforeend',`<div class="npph"><div>${I('layers',28)}<span>New use case diagram will appear here</span></div></div>`); } else if(ph) ph.remove();
   if(st===3){ const l=n.querySelector('.npside .rv-l'); if(l&&!l.dataset.rv){ l.dataset.rv=1; l.innerHTML=review(S.np); } } }
 { const el=document.getElementById('npModal'); if(el) new MutationObserver(()=>requestAnimationFrame(()=>{ try{ post(); }catch(e){ console.error(e); } })).observe(el,{childList:true}); }
 })();
 </script>
+<style>
+/* FB90 · canvas dots: brighter in dark mode, subtler in light mode */
+body:not(.light) .stage,body:not(.light) #ucFlow,body:not(.light) #dbd,body:not(.light) .wstage,body:not(.light) .npx .npb3 .db-cv,body:not(.light) .npg,body:not(.light) .ocw,body:not(.light) .npx .ue-r,body:not(.light) .sd-bd,body:not(.light) .udg,body:not(.light) #npModal .npph{background-image:radial-gradient(circle at 1px 1px,#626b83 1.2px,transparent 1.4px)!important;background-size:18px 18px!important}
+body.light:not(.nodots) .stage,body.light:not(.nodots) #ucFlow,body.light:not(.nodots) #dbd,body.light:not(.nodots) .wstage,body.light:not(.nodots) .npx .npb3 .db-cv,body.light:not(.nodots) .npg,body.light:not(.nodots) .ocw,body.light:not(.nodots) .npx .ue-r,body.light:not(.nodots) .sd-bd,body.light:not(.nodots) .udg,body.light:not(.nodots) #npModal .npph{background-image:radial-gradient(circle at 1px 1px,#cdd0da 1.05px,transparent 1.25px)!important;background-size:18px 18px!important}
+</style>
+<style>
+/* FB91 · new use case: channel apps (multi), business owner, designer vs prompt mode, fuller review */
+.npca{position:relative}
+.npca .b{display:flex;align-items:center;gap:6px;flex-wrap:wrap;width:100%;min-height:36px;padding:4px 36px 4px 10px;border-radius:8px;background:var(--canvas);border:1px solid var(--border-strong);text-align:left;position:relative;font:400 14px/20px var(--font);color:var(--text)}
+.npca .b.open{border-color:var(--accent-hover)} .npca .b>svg{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text-2)}
+.npca .b .ph{color:var(--text-3)}
+.npca .m{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:20;padding:4px;border-radius:10px;background:var(--panel);border:1px solid var(--border-strong);box-shadow:var(--shadow)}
+.npca .m button{display:flex;align-items:center;gap:10px;width:100%;min-height:36px;padding:0 8px;border-radius:7px;text-align:left;font:400 13px/18px var(--font);color:var(--text)} .npca .m button:hover{background:var(--surface)}
+.npca .m small{margin-left:auto;color:var(--text-3);font-size:12px}
+.npmode{display:inline-flex;align-self:flex-start;gap:2px;padding:3px;border-radius:9px;background:var(--canvas);border:1px solid var(--border);margin-bottom:6px}
+.npmode button{height:28px;padding:0 12px;border-radius:6px;font:500 12px/18px var(--font);color:var(--text-2)} .npmode button.on{background:var(--surface-strong);color:var(--text)}
+.nppr{display:flex;flex-direction:column;gap:10px}
+.nppr textarea{min-height:240px;resize:vertical;padding:12px;border-radius:10px;background:var(--canvas);border:1px solid var(--border-strong);color:var(--text);font:400 13px/21px var(--font);outline:0} .nppr textarea:focus{border-color:var(--accent-hover)}
+.nppr .hint{font:400 12px/18px var(--font);color:var(--text-3)}
+.nppr .f{display:flex;gap:8px;justify-content:flex-end}
+.nprv .xf{display:flex;flex-direction:column;gap:10px}
+.nprv .xf label{font:500 12px/18px var(--font);color:var(--text-2)}
+.nprv .xf textarea,.nprv .xf input{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;background:var(--canvas);border:1px solid var(--border-strong);color:var(--text);font:400 13px/20px var(--font);outline:0}
+.nprv .xf textarea{min-height:56px;resize:vertical}
+.nprv .soon{font:400 11px/16px var(--font);color:var(--text-3);margin-left:auto}
+</style>
+<script>
+/* FB91 */
+(function(){
+const chList=()=>Object.values(CHANNELS).filter(c=>c.id!=='none');
+const chs=M=>{ if(!Array.isArray(M.chs)) M.chs=M.ch&&M.ch!=='none'?[M.ch]:['store']; return M.chs; };
+window.chAppsHTML=M=>{ const L=chs(M); const open=!!M.chm;
+  return `<div class="fld"><span class="nl">Channel apps</span><div class="npca"><button class="b ${open?'open':''}" data-act="npchm" aria-expanded="${open}" aria-haspopup="listbox">${L.length?L.map(id=>esc(CHANNELS[id].name)).join(', '):'<span class="ph">Where people do this</span>'}${I(open?'chevron-up':'chevron-down',16)}</button>
+    ${open?`<div class="m" role="listbox" aria-multiselectable="true">${chList().map(c=>{ const on=L.includes(c.id); return `<button role="option" aria-selected="${on}" data-act="npchp" data-arg="${c.id}"><span class="cx-cb ${on?'on':''}">${on?I('check',12,'',2.2):''}</span>${esc(c.name)}<small>${esc(c.kind)}</small></button>`; }).join('')}</div>`:''}</div><small class="hint">A use case can live in more than one app.</small></div>`; };
+Object.assign(ACT,{
+  npchm(){ S.np.chm=!S.np.chm; S.np.pmenu=false; renderNP(); },
+  npchp(id){ const L=chs(S.np); const i=L.indexOf(id); if(i>=0) L.splice(i,1); else L.push(id); S.np.ch=L[0]||'store'; renderNP(); },
+  npmode(k){ S.np.mode=k; renderNP(k==='prompt'?{id:'npPrompt'}:null); },
+  nppgo(){ const M=S.np; const t=(M.prompt||'').trim(); if(!t){ toast('Paste or write the steps first'); return; } const st=parse(t,M); if(!st.length){ toast('Couldn’t find any steps in that text'); return; } M.steps=st; M.mode='design'; renderNP(); toast(`Turned into ${st.length} step${st.length===1?'':'s'}. Check who does each one.`); }
+});
+document.addEventListener('click',e=>{ if(S.np&&S.np.chm&&!e.target.closest('.npca')){ S.np.chm=false; renderNP(); } },true);
+document.addEventListener('input',e=>{ if(e.target.id==='npPrompt'&&S.np) S.np.prompt=e.target.value; if(e.target.dataset&&e.target.dataset.xf&&S.np){ S.np.xf=S.np.xf||{}; S.np.xf[e.target.dataset.xf]=e.target.value; } });
+/* prompt mode: paste a paragraph, get steps */
+const pname=M=>{ const p=(window.PERSONAS||[]).find(x=>x.id===(M.per||[])[0]); return p?p.name:'User'; };
+function parse(text,M){ const per=pname(M).toLowerCase();
+  const parts=text.replace(/\r/g,'').split(/\n+|(?<=[.!?])\s+(?=[A-Z0-9])/).map(s=>s.replace(/^\s*(\d+[.)]|[-*•]|step\s*\d+[:.)]?)\s*/i,'').trim()).filter(s=>s.length>2);
+  const out=[]; let n=0; const id=()=>'p'+Date.now().toString(36)+(n++);
+  parts.forEach(s=>{ let t=s.replace(/[.!]+$/,'');
+    const mIf=t.match(/^(?:if|when|in case)\s+(.+?)(?:,\s*(?:then\s+)?(.+))?$/i);
+    if(mIf||/\?$/.test(t)){ const q=mIf?mIf[1]:t.replace(/\?$/,''); const then=mIf&&mIf[2];
+      const prev=out[out.length-1]; const dec={id:id(), who:'system', kind:'decision', t:q.charAt(0).toUpperCase()+q.slice(1).replace(/\?*$/,'?'), opts:[{t:'Yes',to:'next'},{t:'No',to:'end'}]};
+      if(/otherwise|else/i.test(s)){ const ot=s.split(/otherwise|else/i)[1]; if(ot) dec.opts[1].note=ot.replace(/^[\s,]+/,'').replace(/[.!]+$/,''); }
+      out.push(dec);
+      if(then){ let tt=then.replace(/\s*(otherwise|else)\b.*$/i,'').replace(/[.!]+$/,''); let w='user'; const lw=tt.toLowerCase(); if(/^(the\s+)?(system|platform|app|it)\b/.test(lw)){ w='system'; tt=tt.replace(/^(the\s+)?(system|platform|app|it)\s+/i,''); } else tt=tt.replace(new RegExp('^(the\\s+)?'+per+'\\s+','i'),'').replace(/^(the\s+)?(user|customer|shopper|admin)\s+/i,'');
+        out.push({id:id(), who:w, kind:'action', t:tt.charAt(0).toUpperCase()+tt.slice(1)}); dec.opts[1]._skip=1; }
+      return; }
+    let who='user'; const low=t.toLowerCase();
+    if(/^(the\s+)?(system|platform|app|syntroper|it)\b/.test(low)){ who='system'; t=t.replace(/^(the\s+)?(system|platform|app|syntroper|it)\s+/i,''); }
+    else if(low.startsWith('the '+per+' ')||low.startsWith(per+' ')){ t=t.slice(low.indexOf(per)+per.length).trim(); }
+    else if(/^(the\s+)?(user|customer|shopper|admin|finance|merchant)\s+/i.test(t)) t=t.replace(/^(the\s+)?\w+\s+/i,'');
+    t=t.charAt(0).toUpperCase()+t.slice(1); out.push({id:id(), who, kind:'action', t}); });
+  /* “No” on a decision with its own then-step skips past it */
+  out.forEach((x,i)=>(x.opts||[]).forEach(o=>{ if(o._skip){ delete o._skip; const nx=out[i+2]; if(nx&&!o.note) o.to=nx.id; } }));
+  return out; }
+window.npPromptHTML=M=>`<div class="nppr"><div class="sthd"><div><h3>Generate steps with AI</h3><p>Describe it, or paste from ChatGPT or Claude.</p></div><button class="btn sm" data-act="npmode" data-arg="design">Back to steps</button></div>
+  <textarea id="npPrompt" placeholder="For example: The shopper opens a past order and presses Buy again. The system checks if the items are still available. If some are sold out, the shopper reviews which ones can be added. The system adds the items to a new cart.">${esc(M.prompt||'')}</textarea>
+  <span class="hint">One sentence per step. Sentences starting with “The system” become system steps. “If …” becomes a decision.${(M.steps||[]).some(x=>(x.t||'').trim())?' Turning text into steps replaces the current steps.':''}</span>
+  <div class="f"><button class="btn primary sm" data-act="nppgo">${window.sparkI?sparkI():''}Turn into steps</button></div></div>`;
+/* review: channel apps, business owner, and the extra spec fields */
+const _post=new MutationObserver(()=>requestAnimationFrame(()=>{ const M=S.np; if(!M||(M.stage||1)!==3) return; const l=document.querySelector('#npModal .npside .rv-l .nprv'); if(!l||l.dataset.v2) return; l.dataset.v2=1;
+  const kv=l.querySelector('.rs .kv'); if(kv){ const sp=[...kv.children]; for(let i=0;i<sp.length;i+=2){ const k=sp[i].textContent;
+      if(k==='Channel'){ sp[i].textContent='Channel apps'; sp[i+1].textContent=chs(M).map(id=>CHANNELS[id].name).join(', ')||'—'; }
+      if(k==='Reviewer'){ sp[i].textContent='Business owner'; const w=M.who&&M.who!=='auto'?M.who.split('|')[1]:''; sp[i+1].textContent=w?(TEAMS.find(t=>t.id===w)||{name:w}).name:'Not set'; }
+      if(k==='Context'){ sp[i].remove(); sp[i+1].remove(); } } }
+  const xf=M.xf||{}; const ends=[...l.querySelectorAll('.rs')].find(r=>/Endings/.test(r.textContent));
+  (ends||l.lastElementChild).insertAdjacentHTML('afterend',`<div class="rs"><h4>More about this use case<span class="soon">Optional</span></h4><div class="xf">
+    <label>Key business rules<textarea data-xf="rules" placeholder="For example, only during school holidays; refunds over 1,000 need a second approver">${esc(xf.rules||'')}</textarea></label>
+    <label>How often it happens<input data-xf="freq" value="${esc(xf.freq||'')}" placeholder="For example, about 2,000 times a day"></label>
+    <label>Peak load and scale<input data-xf="peak" value="${esc(xf.peak||'')}" placeholder="For example, 50,000 an hour at month end, 5–6 pm peak"></label></div></div>`); }));
+{ const el=document.getElementById('npModal'); if(el) _post.observe(el,{childList:true,subtree:true}); }
+/* save keeps the new fields */
+{ const _s=ACT.npsave; ACT.npsave=function(){ const M=S.np; const keep={chs:M&&chs(M).slice(), who:M&&M.who, xf:M&&M.xf}; const n=SPECS.length; const r=_s.apply(this,arguments); if(SPECS.length>n){ const x=SPECS[0]; x.chs=keep.chs; x.ch=keep.chs[0]; x.xf=keep.xf; x.owner2=keep.who&&keep.who!=='auto'?keep.who.split('|')[1]:''; if(keep.xf&&keep.xf.rules) x.rules=keep.xf.rules.split(/\n+/).filter(Boolean).map(t=>[x.flow&&x.flow[0]?x.flow[0].id:'',t]); } return r; }; }
+})();
+</script>
+<style>
+/* FB92 · new bounded context: APIs first; impact on use cases, channel apps, integration points and code */
+.db-g.dbg2{display:flex;align-items:center;gap:8px} .db-g.dbg2 .seln{margin-left:auto;font:500 11px/16px var(--font);color:var(--accent-on);text-transform:none;letter-spacing:0}
+.db-aw{border-radius:8px} .db-aw.on{background:var(--selected)}
+.db-ar2{display:flex;align-items:center;gap:8px;min-height:34px;padding:0 8px}
+.db-ar2 .ap{flex:1;min-width:0;display:flex;align-items:center;gap:6px;overflow:hidden;white-space:nowrap} .db-ar2 .ap code{overflow:hidden;text-overflow:ellipsis;font-size:12px}
+.db-ar2 .uc{flex:none;display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 6px 0 8px;border-radius:999px;background:var(--surface);font:500 11px/16px var(--font);color:var(--text-2)} .db-ar2 .uc:hover{color:var(--text)}
+.db-ul{display:flex;flex-direction:column;gap:2px;padding:2px 8px 8px 34px}
+.db-ui{display:grid;grid-template-columns:14px minmax(0,1fr);column-gap:6px;font:400 12px/18px var(--font);color:var(--text-2)}
+.db-ui .n{color:var(--text)} .db-ui .c,.db-ui .o{grid-column:2;color:var(--text-3);font-size:11px;line-height:16px}
+.ich2 .ira,.ich2 .irp,.ich2 .irc{display:flex;flex-direction:column;gap:3px;padding:8px 0;border-bottom:1px solid var(--border)} .ich2 .ira:last-child,.ich2 .irp:last-child,.ich2 .irc:last-child{border-bottom:0}
+.ich2 .ira .l,.ich2 .irp .l{display:flex;align-items:center;gap:8px;font:500 13px/18px var(--font)} .ich2 .ira .l em,.ich2 .irp .l em{margin-left:auto}
+.ich2 .ira small,.ich2 .irp small,.ich2 .irc small{padding-left:22px;font:400 12px/18px var(--font);color:var(--text-2)}
+.ich2 .irc{flex-direction:row;align-items:baseline;gap:8px} .ich2 .irc code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 12px/18px var(--mono);color:var(--text)} .ich2 .irc small{padding:0;flex:none}
+.ich2 .lk{color:var(--accent-on);font:inherit} .ich2 .lk:hover{text-decoration:underline}
+</style>
+<script>
+/* FB92 · links in the impact panel open the context or use case */
+ACT.dbgo=function(a){ try{ S.nc=null; renderNC(); }catch(e){} S.tab='codona'; S.level=0; try{ ACT.gsel(a); }catch(e){ render(); } };
+</script>
+<style>/* option inputs keep neutral text and placeholder */
+.npx .us .op input{color:var(--text)!important}
+.npx .us .op input::placeholder,.npx .us input::placeholder,.npx textarea::placeholder{color:var(--text-3)!important;opacity:1}</style>
+<style>
+/* FB93 · steps header, full-width stepper, review */
+.npx .us [data-act=npsmv]{display:none!important}
+.npx .sthd{display:flex;align-items:flex-start;gap:12px;margin-bottom:4px}
+.npx .sthd>div{flex:1;min-width:0}
+.npx .sthd h3{display:block!important;margin:0;font:600 15px/22px var(--font)!important;color:var(--text)}
+.npx .sthd p{margin:2px 0 0;font:400 13px/20px var(--font);color:var(--text-2)}
+.npx .sthd .btn{flex:none}
+.npx .aigen svg{color:#e879f9}
+body.npscr.npcv #npModal .npside .mhd .npsteps{display:flex!important;width:100%;gap:8px}
+body.npscr.npcv #npModal .npside .mhd .npsteps .ln{flex:1;min-width:16px;height:1px;background:var(--border-strong)}
+body.npscr.npcv #npModal .npside .mhd .npsteps button{flex:none}
+#npModal .nprv{gap:16px!important}
+#npModal .nprv .rhd h3{margin:0;font:600 15px/22px var(--font)} #npModal .nprv .rhd p{margin:2px 0 0;font:400 13px/20px var(--font);color:var(--text-2)}
+#npModal .nprv .rc{padding:14px 16px;border-radius:12px;background:var(--canvas);border:1px solid var(--border)}
+#npModal .nprv .rt{display:flex;align-items:center;gap:8px;margin-bottom:10px;font:600 13px/20px var(--font)} #npModal .nprv .rt .count{margin-left:0} #npModal .nprv .rt .opt{margin-left:auto;font:400 12px/16px var(--font);color:var(--text-3)}
+#npModal .nprv .rc:first-of-type .rt b{font-size:15px}
+#npModal .nprv .srw{display:grid;grid-template-columns:112px minmax(0,1fr);gap:12px;padding:6px 0;border-top:1px solid var(--border);font:400 13px/20px var(--font)}
+#npModal .nprv .skk{color:var(--text-3);white-space:nowrap} #npModal .nprv .svv{color:var(--text);display:flex;flex-wrap:wrap;gap:6px} #npModal .nprv .svv.miss{color:var(--warn-text)}
+#npModal .nprv .rchip{height:22px;padding:0 8px;border-radius:999px;background:var(--surface);font:500 12px/22px var(--font)}
+#npModal .nprv .rtl{list-style:none;margin:0;padding:0;position:relative}
+#npModal .nprv .rtl li{display:grid;grid-template-columns:24px minmax(0,1fr);gap:12px;padding:0 0 14px;position:relative}
+#npModal .nprv .rtl li:not(:last-child)::before{content:"";position:absolute;left:11px;top:26px;bottom:0;width:2px;background:var(--border)}
+#npModal .nprv .rtl .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--surface-strong);font:600 11px/1 var(--font);position:relative;z-index:1}
+#npModal .nprv .rtl li.dec .n{background:color-mix(in srgb,#f0a36b 24%,var(--panel));color:#ffc79f}
+#npModal .nprv .rtl .w{display:flex;gap:6px;margin-bottom:3px}
+#npModal .nprv .wc{height:20px;padding:0 7px;border-radius:999px;font:500 11px/20px var(--font);background:var(--surface);color:var(--text-2)}
+#npModal .nprv .wc.u{background:color-mix(in srgb,#7b97f0 18%,transparent);color:#b4c4f7} #npModal .nprv .wc.d{background:color-mix(in srgb,#f0a36b 16%,transparent);color:#ffc79f}
+#npModal .nprv .rtl .t{font:400 13px/20px var(--font);color:var(--text)}
+#npModal .nprv .rtl .br{display:flex;flex-direction:column;gap:3px;margin-top:6px;padding:8px 10px;border-radius:8px;background:var(--panel);font:400 12px/18px var(--font);color:var(--text-2)}
+#npModal .nprv .rtl .br>div{display:flex;gap:6px} #npModal .nprv .rtl .br .if{min-width:42px;color:#ffc79f;font-weight:600} #npModal .nprv .rtl .br .ot{color:var(--text)} #npModal .nprv .rtl .br .ar{color:var(--text-3)}
+#npModal .nprv .ren{display:flex;flex-direction:column;gap:10px}
+#npModal .nprv .ren>div{display:flex;gap:10px} #npModal .nprv .ren i{flex:none;width:8px;height:8px;margin-top:6px;border-radius:50%;background:var(--text-3)} #npModal .nprv .ren i.ok{background:#7cc04f}
+#npModal .nprv .ren b{display:block;font:500 13px/20px var(--font)} #npModal .nprv .ren small{font:400 12px/18px var(--font);color:var(--text-3)}
+#npModal .nprv .xf{display:flex;flex-direction:column;gap:12px} #npModal .nprv .xf label{display:flex;flex-direction:column;gap:6px;font:500 12px/18px var(--font);color:var(--text-2)}
+#npModal .nprv .note{display:flex!important;flex-direction:row!important;justify-content:flex-start!important;gap:8px;align-items:center;padding:0!important;background:none!important;border:0!important;font:400 12px/18px var(--font);color:var(--text-3)}
+</style>
+<script>window.sparkI=()=>'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 2.5l1.9 5.1 5.1 1.9-5.1 1.9L10 16.5l-1.9-5.1L3 9.5l5.1-1.9zM18 13l.95 2.55L21.5 16.5l-2.55.95L18 20l-.95-2.55L14.5 16.5l2.55-.95z"/></svg>';</script>
+<style>
+/* FB94 · code references open in the editor; one-line descriptions */
+.npx .sthd p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ich2 button.irc{width:100%;text-align:left;border-radius:6px;padding:8px 6px!important;margin:0 -6px;width:calc(100% + 12px)} .ich2 button.irc:hover{background:var(--surface)} .ich2 button.irc:hover code{color:var(--accent-on)}
+#ncBack{position:absolute;z-index:40;right:24px;top:72px;display:flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;background:var(--panel);border:1px solid var(--border-strong);box-shadow:var(--shadow);font:500 13px/18px var(--font);color:var(--text)}
+#ncBack[hidden]{display:none} #ncBack:hover{border-color:var(--accent-hover)}
+</style>
+<script>
+/* FB94 */
+(function(){
+const host=document.getElementById('vCodona'); const b=document.createElement('button'); b.id='ncBack'; b.hidden=true; b.dataset.act='ncback'; host.appendChild(b);
+const repoOf=f=>/^nextjs-starter-medusa\//.test(f)?'ns':/^acme\/|shipping-rates/.test(f)?'sr':'md';
+ACT.dbcode=function(f){ const v=(window.__dbFiles||{})[f]; try{ buildFS(); const r=repoOf(f); const p=normPath(f); if(!findFile(f,r)&&v&&v.b){ const text=(v.b.lines||[]).join('\n')||'// '+f; FS[r][p]={path:p, repo:r, lang:(typeof LANG_OF==='function'?LANG_OF(p):'typescript'), text, orig:text, evLines:(v.b.hl||[]).map(n=>n+1), uc:1, card:{chip:v.b.kind||'Code', title:v.b.name||p.split('/').pop(), text:`Changes if these APIs move. Used by ${v.u.size} use case${v.u.size===1?'':'s'}.`, acts:[]}}; } S.ncHold=S.nc; S.ncView={side:S.side, stack:S.stack.slice(), level:S.level}; S.nc=null; renderNC(); ideOpen(f, null, findFile(f,r)?r:null); }catch(e){ console.error(e); toast('This file is not in the scanned code.'); } };
+ACT.ncback=function(){ if(!S.ncHold) return; S.nc=S.ncHold; S.ncHold=null; if(S.ncView){ S.side=S.ncView.side; S.stack=S.ncView.stack; S.level=S.ncView.level; S.ncView=null; } render(); renderNC(); };
+{ const _r=render; render=function(){ _r(); b.hidden=!S.ncHold||!!S.nc; if(!b.hidden) b.innerHTML=`${I('arrow-left',14)}Back to ${S.ncHold.mode==='add'?'the move':'New bounded context'}`; }; }
+})();
+</script>
+<style>body:not(.light) #csDoc .udg-live,body:not(.light) #vSpecs .sd-bd,body:not(.light) #lStage,body:not(.light) .lstage{background-image:radial-gradient(circle at 1px 1px,#626b83 1.2px,transparent 1.4px)!important;background-size:18px 18px!important}</style>
 </body>
 </html>

@@ -485,12 +485,12 @@ function modalHTML(){ const M=S.modal; if(!M) return ''; const B=TB();
       ${M.to!==t.parent&&B[M.to]&&B[M.to].inherit&&t.inherit?`<div class="note">${I('info',16)}<span>Admins of ${esc(B[M.to].name)} will be able to manage ${esc(t.name)}.</span></div>`:''}
       <div class="mf"><button class="btn" data-a="close">Cancel</button><button class="btn primary" data-a="msave" ${M.to===t.parent?'disabled':''}>Move here</button></div></div></div>`; }
   if(M.k==='del'){ const t=B[M.id]; const ks=kids(t.id); const par=t.parent&&B[t.parent];
-    return `<div class="ov" data-a="close"><div class="md sm" role="alertdialog" aria-modal="true" aria-label="Delete team" data-a="noop">
-      <div class="mh"><span><b>Delete ${esc(t.name)}?</b></span><span class="sp"></span><button class="ib" data-a="close" aria-label="Close">${I('x',18)}</button></div>
+    return `<div class="ov" data-a="close"><div class="md sm" role="alertdialog" aria-modal="true" aria-label="Archive team" data-a="noop">
+      <div class="mh"><span><b>Archive ${esc(t.name)}?</b></span><span class="sp"></span><button class="ib" data-a="close" aria-label="Close">${I('x',18)}</button></div>
       ${ks.length?`<div style="display:flex;flex-direction:column;gap:8px"><span style="font:500 12px/18px var(--font)">It has ${pl(ks.length,'sub-team')}. What should happen to ${ks.length===1?'it':'them'}?</span>
         <button class="radio ${M.mode==='lift'?'on':''}" data-a="dmode" data-v="lift"><span class="dot"></span><span><b>Move ${ks.length===1?'it':'them'} up to ${par?esc(par.name):'the top level'}</b></span></button>
-        <button class="radio ${M.mode==='all'?'on':''}" data-a="dmode" data-v="all"><span class="dot"></span><span><b>Delete ${ks.length===1?'it':'them'} too</b><small>${pl(desc(t.id).length+1,'team')} in total will be deleted.</small></span></button></div>`:''}
-      <div class="mf"><button class="btn" data-a="close">Cancel</button><button class="btn danger" data-a="dsave">Delete</button></div></div></div>`; }
+        <button class="radio ${M.mode==='all'?'on':''}" data-a="dmode" data-v="all"><span class="dot"></span><span><b>Archive ${ks.length===1?'it':'them'} too</b><small>${pl(desc(t.id).length+1,'team')} in total will be archived. You can restore them later.</small></span></button></div>`:''}
+      <div class="mf"><button class="btn" data-a="close">Cancel</button><button class="btn danger" data-a="dsave">Archive</button></div></div></div>`; }
   if(M.k==='assign'){ const p=PB[M.id]; const out=[]; const walk=(q,d)=>kids(q).forEach(k=>{ out.push([k,d]); walk(k.id,d+1); }); walk(null,0);
     return `<div class="ov" data-a="close"><div class="md sm" role="dialog" aria-modal="true" aria-label="Assign teams" data-a="noop">
       <div class="mh"><span><b>Assign ${esc(p.n)} to teams</b></span><span class="sp"></span><button class="ib" data-a="close" aria-label="Close">${I('x',18)}</button></div>
@@ -792,7 +792,7 @@ render();
 </style>
 <script>
 /* ===== Org chart only ===== */
-S.view='chart'; S.panel=null; S.adding=null; S.zoom=.7; S.open=new Set(T.filter(t=>!t.parent).map(t=>t.id));
+S.view='chart'; S.panel=null; S.adding=null; S.zoom=.7; S.open=new Set([...T.filter(t=>!t.parent).map(t=>t.id),'eng','plat','checkout','design'].filter(id=>T.some(t=>t.id===id)));
 const roleOf=(t,p)=>(t.m.find(x=>x[0]===p)||[])[1]||'';
 chartHTML=function(){ const q=(S.q||'').trim().toLowerCase();
   const people=t=>{ const L=t.m; if(!L.length) return ''; const show=L.slice(0,2);
@@ -800,18 +800,18 @@ chartHTML=function(){ const q=(S.q||'').trim().toLowerCase();
       +(L.length>2?`<li class="pli"><div class="ocard more" data-a="panel" data-v="${t.id}">+${L.length-2} people</div></li>`:''); };
   const adding=id=>S.adding===id?`<li><div class="ocard nw"><input id="ocNew" placeholder="Team name" aria-label="New team name" autocomplete="off"><small>Enter to add · Esc to cancel</small></div></li>`:'';
   const node=t=>{ const ks=kids(t.id); const open=S.open.has(t.id); const all=allMembers(t.id); const hit=q&&t.name.toLowerCase().includes(q);
-    const kidsHTML=open?people(t)+ks.map(node).join('')+adding(t.id):adding(t.id);
+    const kidsHTML=open?pnodes(t)+ks.map(node).join('')+adding(t.id):adding(t.id);
     return `<li><div class="ocard ${S.panel===t.id?'on':''}" draggable="true" data-id="${t.id}" data-a="panel" data-v="${t.id}" role="button" tabindex="0" style="${q&&!hit?'opacity:.35':''}">
       <div class="r">${tAv(t,'sm')}<b>${q?mark(t.name):esc(t.name)}</b></div>
       <span class="meta"><span>${pl(all.length,'member')}</span>${ks.length?`<span>${pl(ks.length,'sub-team')}</span>`:''}</span>
       ${S.panel===t.id?expandHTML(t):t.m.length?`<span class="avs">${t.m.slice(0,4).map(([p])=>pAv(p,'sm')).join('')}${t.m.length>4?`<em>+${t.m.length-4}</em>`:''}</span>`:''}
-      ${ks.length||t.m.length?`<button class="ex ${open?'exo':''}" data-a="tog" data-v="${t.id}" aria-label="${open?'Collapse':'Expand'}">${open?I('cd',12)+(ks.length?' '+ks.length+' sub-team'+(ks.length===1?'':'s'):''):I('cr',12)+' '+(ks.length+t.m.length)}</button>`:''}
+      ${ks.length||t.m.length?`<button class="ex ${open?'exo':''}" data-a="tog" data-v="${t.id}" aria-label="${open?'Hide':'Show'} what is in ${esc(t.name)}">${I(open?'cd':'cr',12)} ${[ks.length?pl(ks.length,'sub-team'):'',t.m.length?pl(t.m.length,'member'):''].filter(Boolean).join(' · ')}</button>`:''}
       <button class="add" data-a="addsub" data-v="${t.id}" aria-label="Add a team under ${esc(t.name)}" title="Add a team under ${esc(t.name)}">${I('plus',14)}</button></div>
       ${kidsHTML?`<ul>${kidsHTML}</ul>`:''}</li>`; };
   const top=kids(null);
   return `<div class="ocw"><div class="chart"><div class="oc"><ul><li class="root"><div class="ocard" data-id="__root"><div class="r"><span class="av t sm" style="background:#fff">${logo(14)}</span><b>Syntroper’s Org</b></div><span class="meta"><span>${pl(top.length,'top-level team')}</span><span>${pl(new Set(T.flatMap(t=>t.m.map(x=>x[0]))).size,'member')}</span></span>
       <button class="add" data-a="addsub" data-v="__root" aria-label="Add a top-level team">${I('plus',14)}</button></div>
-    <ul>${top.map(node).join('')}${adding('__root')}</ul></li></ul></div></div>
+    <ul>${orgOnly()}${top.map(node).join('')}${adding('__root')}</ul></li></ul></div></div>
     <div class="zm"><button data-a="zoom" data-v="out" aria-label="Zoom out">−</button><span>${Math.round((S.zoom||1)*100)}%</span><button data-a="zoom" data-v="in" aria-label="Zoom in">+</button><button data-a="zoom" data-v="fit" aria-label="Reset">⤢</button></div>
     <div class="hint">Hover a team and press + to add one under it · pinch or ⌘ scroll to zoom · drag the canvas to pan</div>
     </div>`; };
@@ -827,10 +827,10 @@ function panelHTML(){ const B=TB(); const t=B[S.panel]; if(!t) return ''; const 
         ${ks.map(k=>`<button class="srow" data-a="panel" data-v="${k.id}">${tAv(k,'sm')}<b>${esc(k.name)}</b><small>${pl(allMembers(k.id).length,'member')}</small>${I('cr',14)}</button>`).join('')||'<div class="empty" style="padding:16px">No sub-teams yet.</div>'}</div>
       <div class="sw"><div class="t"><b>Inherit roles from parent teams</b></div><button class="tog ${t.inherit?'on':''}" role="switch" aria-checked="${t.inherit}" data-a="inherit" data-v="${t.id}" aria-label="Inherit roles from parent teams"></button></div>
     </div>
-    <div class="pf"><button class="btn" style="color:var(--danger-text)" data-a="del" data-v="${t.id}">${I('trash',14)}Delete team</button><span class="sp"></span><button class="btn" data-a="roles">${I('info',14)}Roles</button></div></aside>`; }
+    <div class="pf"><button class="btn" style="color:var(--danger-text)" data-a="del" data-v="${t.id}">${I('trash',14)}Archive team</button><span class="sp"></span><button class="btn" data-a="roles">${I('info',14)}Roles</button></div></aside>`; }
 teamsHTML=function(){ S._nd=false;
   return `<div class="hd"><h2>${pl(T.length,'Team')}</h2><span class="sp"></span><label class="search" style="width:260px">${I('search',16)}<input id="tq" value="${esc(S.q)}" placeholder="Search teams" aria-label="Search teams"></label>
-      <button class="btn" data-a="roles">${I('info',14)}Roles</button><button class="btn primary" data-a="addsub" data-v="__root">${I('plus',16)}Create Team</button></div>
+      <button class="btn" data-a="roles">${I('info',14)}Roles</button><button class="btn primary" data-a="addsub" data-v="${S.panel&&TB()[S.panel]?S.panel:'__root'}">${I('plus',16)}${S.panel&&TB()[S.panel]?'Create team in '+esc(TB()[S.panel].name):'Create Team'}</button></div>
     ${chartHTML()}`; };
 Object.assign(A,{
   panel(v){ S.panel=S.panel===v?null:v; S.adding=null; render(); },
@@ -897,10 +897,10 @@ body.light .ocw{background-image:radial-gradient(circle at 1px 1px,#c1bdda 1.1px
 function expandHTML(t){ const ks=kids(t.id);
   return `<div class="xp" data-a="noop">
     <input class="nm" value="${esc(t.name)}" data-a="rename" data-v="${t.id}" aria-label="Team name">
-    <h5>Members · ${t.m.length}<span class="sp"></span>${S.invOpen===t.id?'':`<button class="btn sm" data-a="invo" data-v="${t.id}">${I('plus',12)}Invite</button>`}</h5>
-    <div class="mlist">${t.m.map(([p,r])=>`<div class="mr2 ${S.justAdded===p?'nw':''}">${pAv(p,'sm')}<b>${esc(PB[p].n)}</b><button class="role" data-a="role" data-v="${t.id}|${p}">${r}${I('cd',12)}</button><button class="ib" data-a="rmm" data-v="${t.id}|${p}" aria-label="Remove ${esc(PB[p].n)}">${I('x',12)}</button></div>`).join('')||'<span class="none">No members yet. Invite people to this team.</span>'}</div>
-    ${S.invOpen===t.id?`<div class="inv2"><input class="ie" data-v="${t.id}" type="text" placeholder="Name or email" aria-label="Invite by name or email" autocomplete="off"><button class="btn primary sm" data-a="invin" data-v="${t.id}">Invite</button><button class="ib" data-a="invc" aria-label="Cancel invite">${I('x',12)}</button></div>`:''}
-    <div class="acts2"><button class="btn" data-a="addsub" data-v="${t.id}">${I('plus',12)}Sub-team</button><button class="btn" data-a="move" data-v="${t.id}">Move</button><button class="btn" style="color:var(--danger-text)" data-a="del" data-v="${t.id}">${I('trash',12)}Delete</button><span style="flex:1"></span><button class="ib" data-a="panelx" aria-label="Close">${I('x',14)}</button></div></div>`; }
+    <h5>Members · ${t.m.length}<span class="sp"></span>${S.addm&&S.addm.tid===t.id?'':`<button class="btn sm" data-a="addm" data-v="${t.id}">${I('plus',12)}Add members</button>`}</h5>
+    <span class="xhint">${t.m.length?`${pl(t.m.length,'member')} below the card. Change a role or remove someone on their card.`:'No members yet.'}</span>
+    ${S.addm&&S.addm.tid===t.id?addmHTML(t):''}
+    <div class="acts2"><button class="btn" data-a="addsub" data-v="${t.id}">${I('plus',12)}Sub-team</button><button class="btn" data-a="move" data-v="${t.id}">Move</button><button class="btn" style="color:var(--danger-text)" data-a="del" data-v="${t.id}">Archive</button><span style="flex:1"></span><button class="ib" data-a="panelx" aria-label="Close">${I('x',14)}</button></div></div>`; }
 /* the expanded card is part of the chart: mark it, and open a new team straight away */
 { const _c=chartHTML; chartHTML=function(){ let h=_c(); if(S.panel) h=h.replace(`class="ocard on" draggable="true" data-id="${S.panel}"`,`class="ocard on open" draggable="false" data-id="${S.panel}"`); return h; }; }
 </script>
@@ -983,5 +983,62 @@ document.addEventListener('click',e=>{ if(!down) return; const moved=Math.hypot(
   if(S.adding||S.panel){ S.adding=null; S.panel=null; S.invOpen=null; render(); } },true);
 })();
 </script>
+<style>
+.ocard .xp .am{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:10px;background:var(--canvas);border:1px solid var(--border-strong);animation:rowIn .22s ease both}
+.ocard .xp .am .q{height:32px;padding:0 10px;border-radius:7px;background:var(--panel);border:1px solid var(--border-strong);color:var(--text);font:400 13px/18px var(--font);outline:0;width:100%;box-sizing:border-box}
+.ocard .xp .am .q:focus{border-color:var(--accent-hover)}
+.ocard .xp .am .ls{max-height:208px;overflow:auto;display:flex;flex-direction:column}
+.ocard .xp .am .pr{display:flex;align-items:center;gap:8px;min-height:36px;padding:0 6px;border-radius:7px;text-align:left;font:400 13px/18px var(--font);color:var(--text)} .ocard .xp .am .pr:hover{background:var(--surface)}
+.ocard .xp .am .pr .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .ocard .xp .am .pr .nm small{display:block;font-size:11px;color:var(--text-3)}
+.ocard .xp .am .cb{width:16px;height:16px;border-radius:4px;flex:none;display:grid;place-items:center;box-shadow:inset 0 0 0 1.5px var(--border-strong)} .ocard .xp .am .cb.on{background:var(--accent);box-shadow:none;color:#fff}
+.ocard .xp .am .ft{display:flex;align-items:center;gap:6px} .ocard .xp .am .ft .sp{flex:1}
+.ocard .xp .am .inv{font:500 12px/18px var(--font);color:var(--accent-on)} .ocard .xp .am .inv:hover{text-decoration:underline}
+.ocard .xp .am .none{font:400 12px/18px var(--font);color:var(--text-3);padding:6px}
+.ex{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+</style>
+<script>
+/* add org members to a team: search, tick several, add in one go. Invitations happen at org level. */
+(function(){
+window.addmHTML=t=>{ const M=S.addm; const q=(M.q||'').toLowerCase(); const have=new Set(t.m.map(x=>x[0]));
+  const L=PEOPLE.map(x=>PB[x[0]]).filter(p=>!have.has(p.id)&&(!q||p.n.toLowerCase().includes(q)||p.e.toLowerCase().includes(q)));
+  return `<div class="am" data-a="noop"><input class="q" id="amQ" value="${esc(M.q||'')}" placeholder="Search people in Syntroper’s Org" autocomplete="off">
+    <div class="ls">${L.map(p=>{ const on=M.sel.has(p.id); return `<button class="pr" data-a="ampick" data-v="${p.id}" role="checkbox" aria-checked="${on}"><span class="cb ${on?'on':''}">${on?I('check',11):''}</span>${pAv(p.id,'sm')}<span class="nm" title="${esc(p.e)}">${esc(p.n)}</span></button>`; }).join('')||`<span class="none">${q?'Nobody in the org matches.':'Everyone in the org is already in this team.'}</span>`}</div>
+    <div class="ft"><button class="inv" data-a="amorg">Invite to org</button><span class="sp"></span><button class="btn sm" data-a="amx">Cancel</button><button class="btn primary sm" data-a="amgo" data-v="${t.id}" ${M.sel.size?'':'disabled'}>Add${M.sel.size?' '+M.sel.size:''}</button></div></div>`; };
+A.addm=v=>{ S.addm={tid:v,sel:new Set(),q:''}; render(); setTimeout(()=>{ const i=document.getElementById('amQ'); if(i) i.focus(); },0); };
+A.amx=()=>{ S.addm=null; render(); };
+A.ampick=v=>{ const s=S.addm.sel; s.has(v)?s.delete(v):s.add(v); const sc=document.querySelector('.am .ls'); const top=sc?sc.scrollTop:0; render(); const n=document.querySelector('.am .ls'); if(n) n.scrollTop=top; };
+A.amgo=v=>{ const t=TB()[v]; const ids=[...S.addm.sel]; S.open.add(v); ids.forEach(id=>t.m.push([id,'Contributor'])); S.justAdded=ids[ids.length-1]; S.addm=null; toast(`Added ${ids.length===1?PB[ids[0]].n:ids.length+' people'} to ${t.name} as Contributor`); render(); };
+A.amorg=()=>{ S.addm=null; toast('Invite people from Users. Once they join the org you can add them to any team.'); try{ A.go('users'); }catch(e){ render(); } };
+document.addEventListener('input',e=>{ if(e.target.id==='amQ'){ S.addm.q=e.target.value; const p=e.target.selectionStart; render(); const i=document.getElementById('amQ'); if(i){ i.focus(); i.setSelectionRange(p,p); } } });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&S.addm){ S.addm=null; render(); } });
+/* the open card follows the panel; the add list closes with it */
+const _r=render; render=function(){ if(S.addm&&S.addm.tid!==S.panel) S.addm=null; _r(); };
+})();
+</script>
+<style>.ocw{background-image:radial-gradient(circle at 1px 1px,#626b83 1.2px,transparent 1.4px)!important}</style>
+<style>
+/* members as tree nodes */
+.ocard.pn{flex-direction:row;align-items:center;gap:10px;padding:10px 12px;cursor:default;background:var(--canvas)}
+.ocard.pn .av{width:32px;height:32px;font-size:12px;flex:none}
+.ocard.pn .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.ocard.pn .tx b{font:500 13px/18px var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocard.pn .tx small{font:400 12px/16px var(--font);color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocard.pn .role{margin-top:4px;align-self:flex-start;height:22px;padding:0 6px 0 8px;border-radius:6px;background:var(--surface);font:500 11px/16px var(--font);color:var(--text-2);display:inline-flex;align-items:center;gap:4px}
+.ocard.pn .role:hover{color:var(--text)}
+.ocard.pn .rm{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;color:var(--text-3);opacity:0;transition:opacity .15s}
+.ocard.pn:hover .rm{opacity:1} .ocard.pn .rm:hover{color:var(--danger-text);background:var(--surface)}
+.ocard.pn.nw{animation:ocIn .24s cubic-bezier(.2,.8,.2,1) both}
+.ocard .xp .xhint{font:400 12px/18px var(--font);color:var(--text-3)}
+</style>
+<script>
+window.orgOnly=()=>{ const inT=new Set(T.flatMap(t=>t.m.map(x=>x[0]))); const L=PEOPLE.map(x=>PB[x[0]]).filter(p=>!inT.has(p.id)); return !L.length?'':'<li class="pli mli"><div class="mstack">'+L.map(P=>`<div class="ocard pn">${pAv(P.id)}<span class="tx"><b>${esc(P.n)}</b><small>${esc(P.e)}</small><span class="role" style="cursor:default">Org member · no team</span></span></div>`).join('')+'</div></li>'; };
+window.pnodes=t=>!t.m.length?'':'<li class="pli mli"><div class="mstack">'+t.m.map(([p,r])=>{ const P=PB[p]; return `<div class="ocard pn ${S.justAdded===p?'nw':''}" data-pid="${p}">${pAv(p)}<span class="tx"><b>${esc(P.n)}</b><small>${esc(P.e)}</small><button class="role" data-a="role" data-v="${t.id}|${p}" aria-label="Role of ${esc(P.n)}">${esc(r)}${I('cd',12)}</button></span><button class="rm" data-a="rmm" data-v="${t.id}|${p}" aria-label="Remove ${esc(P.n)} from ${esc(t.name)}">${I('x',12)}</button></div>`; }).join('')+'</div></li>';
+</script>
+<style>
+/* members: one column under the team, cards stacked and joined by a line; sub-teams to the right */
+.oc li.mli>.mstack{display:flex;flex-direction:column;align-items:center;gap:14px}
+.oc li.mli .ocard.pn{position:relative}
+.oc li.mli .ocard.pn+.ocard.pn::before{content:"";position:absolute;left:50%;top:-15px;height:14px;width:0;border-left:1px solid var(--line,var(--border-strong))}
+</style>
 </body>
 </html>
