@@ -4397,7 +4397,7 @@ function scansHTML(){
 function reposHTML(){
   const on=S.side.id;
   return `<section class="card fill"><div class="ch">${back()}<div class="ch-row"><h2>Repositories</h2></div><p class="ch-sub">3 repositories make up Commerce platform.</p></div>
-    <div class="scroll">${REPOS.map(r=>`<button class="srow ${on===r.id?'on':''}" data-act="repo" data-arg="${r.id}"><span class="tx"><b><span class="rk">${r.short}</span>${esc(r.name)}${r.behind?`<span class="tag warn">${r.behind} new commits</span>`:''}</b><small>${esc(r.branch)}, ${esc(r.lang)}, ${r.commit}</small></span></button>`).join('')}
+    <div class="scroll">${REPOS.map(r=>`<button class="srow rrow ${on===r.id?'on':''}" data-act="repo" data-arg="${r.id}"><span class="rgh">${I('github',20)}</span><span class="tx"><b>${esc(r.name)}${r.behind?`<span class="tag warn">${r.behind} new commits</span>`:''}</b><small>${esc(r.branch)}, ${esc(r.lang)}, ${r.commit}</small></span></button>`).join('')}
       <div class="sfoot" style="border:0"><div class="acts" style="margin:0"><button class="btn" data-act="toast" data-arg="Pick more repositories from your connected GitHub accounts. Adding one starts a scan.">Add repository</button></div></div></div></section>`;
 }
 
@@ -7199,7 +7199,7 @@ render();
 const P_IN = '<path d="M6.25 0.625C6.25 0.279822 5.97018 1.50882e-08 5.625 0C5.27982 -1.50882e-08 5 0.279822 5 0.625L5.625 0.625L6.25 0.625ZM5.625 0.625L5 0.625L5 8.625L5.625 8.625L6.25 8.625L6.25 0.625L5.625 0.625ZM5.18306 9.06694C5.42714 9.31102 5.82286 9.31102 6.06694 9.06694L10.0444 5.08947C10.2885 4.84539 10.2885 4.44966 10.0444 4.20558C9.80034 3.96151 9.40461 3.96151 9.16053 4.20558L5.625 7.74112L2.08947 4.20558C1.84539 3.9615 1.44966 3.9615 1.20558 4.20558C0.961505 4.44966 0.961505 4.84539 1.20558 5.08947L5.18306 9.06694Z" fill="currentColor"/><path d="M0.625 10.625H10.625" stroke-width="1.25" stroke-linecap="round" stroke="currentColor"/>';
 const P_OUT = '<path d="M6.25 8.625C6.25 8.97018 5.97018 9.25 5.625 9.25C5.27982 9.25 5 8.97018 5 8.625L5.625 8.625L6.25 8.625ZM5.625 8.625L5 8.625L5 0.625L5.625 0.625L6.25 0.625L6.25 8.625L5.625 8.625ZM5.18306 0.183058C5.42714 -0.0610189 5.82286 -0.061019 6.06694 0.183058L10.0444 4.16053C10.2885 4.40461 10.2885 4.80034 10.0444 5.04442C9.80034 5.28849 9.40461 5.28849 9.16053 5.04442L5.625 1.50888L2.08947 5.04442C1.84539 5.2885 1.44966 5.2885 1.20558 5.04442C0.961505 4.80034 0.961505 4.40461 1.20558 4.16053L5.18306 0.183058Z" fill="currentColor"/><path d="M0.625 10.625H10.625" stroke-width="1.25" stroke-linecap="round" stroke="currentColor"/>';
 const svg12 = (p,s=12) => `<svg class="dio" width="${s}" height="${s}" viewBox="0 0 12 12" fill="none" aria-hidden="true">${p}</svg>`;
-const dirIc = (d,s=12) => d==='in' ? svg12(P_IN,s) : d==='both' ? `<span class="dio2">${svg12(P_IN,s)}${svg12(P_OUT,s)}</span>` : svg12(P_OUT,s);
+const dirIc = (d,s=12) => window.dirIcT ? window.dirIcT(d,s) : d==='in' ? svg12(P_IN,s) : d==='both' ? `<span class="dio2">${svg12(P_IN,s)}${svg12(P_OUT,s)}</span>` : svg12(P_OUT,s);
 window.dirIc = dirIc;
 const DIR_LBL = {in:'Inbound', out:'Outbound', both:'Both ways', one:'One way'};
 const LKIND = {1:'channel',2:'usecase',3:'api',4:'context',5:'point',6:'integration'};
@@ -8560,7 +8560,7 @@ function npHTML(){ const M=S.np; if(!M) return ''; if(window.npHTML2){ const h2=
       <input class="npAT" data-i="${k}" value="${esc(a.t)}" placeholder="What happens, for example Card is declined"><div class="selw sm"><select class="npAS" data-i="${k}" aria-label="At step"><option value="0">Any step</option>${M.pick.map((r,i)=>`<option value="${i+1}" ${a.at===i+1?'selected':''}>Step ${i+1}</option>`).join('')}</select>${I('chevron-down',14)}</div>
       <button class="ib" data-act="npaltrm" data-arg="${k}" aria-label="Remove">${I('x',14)}</button></div>`).join('');
   const sel = (id, opts) => `<div class="selw"><select id="${id}">${opts}</select>${I('chevron-down',16)}</div>`;
-  const stepper = `<div class="npsteps"><button class="${st===1?'on':'done'}" data-act="npstage" data-arg="1"><span class="k">${st>1?I('check',12,'',2.4):'1'}</span>Details</button><span class="ln"></span><button class="${st===2?'on':''}" data-act="npstage" data-arg="2" ${M.name.trim()&&M.per.length?'':'disabled'}><span class="k">${st>2?I('check',12,'',2.4):'2'}</span>Steps</button><span class="ln"></span><button class="${st===3?'on':''}" data-act="npstage" data-arg="3" ${M.pick.length?'':'disabled'}><span class="k">3</span>Dependencies</button></div>`;
+  const stepper = `<div class="npsteps"><button class="${st===1?'on':'done'}" data-act="npstage" data-arg="1"><span class="k">${st>1?I('check',12,'',2.4):'1'}</span>Details</button><span class="ln"></span><button class="${st===2?'on':''}" data-act="npstage" data-arg="2" ${M.name.trim()&&M.per.length?'':'disabled'}><span class="k">${st>2?I('check',12,'',2.4):'2'}</span>Steps</button><span class="ln"></span><button class="${st===3?'on':''}" data-act="npstage" data-arg="3" ${M.pick.length?'':'disabled'}><span class="k">3</span>Review</button></div>`;
   const body1 = `<div class="npb npb1"><div class="npc">
         <div class="fld"><label class="nl" for="npName">Name <span class="req" aria-hidden="true">*</span></label><label class="field"><input id="npName" type="text" autocomplete="off" required aria-required="true" value="${esc(M.name)}" placeholder="What the user gets done, for example Reorder a past order"></label></div>
         ${window.perFieldHTML?perFieldHTML(M):""}
@@ -8753,7 +8753,7 @@ function focusStep(L){ const hl=S.ucx.hl; if(!hl) return; const n=L.N[hl.i-1]; i
 window.renderFlowCanvas=function(focus){ const id=S.ucx.flow; const on=!!id && S.tab==='codona'; box.hidden=!on; $('#ucLeg').hidden=!on; $('#vCodona').classList.toggle('flowing',on);
   if(!on){ shownId=null; return; } const L=build(id); if(shownId!==id){ shownId=id; requestAnimationFrame(()=>fit(L,false)); } else if(focus) focusStep(L); };
 /* the flowchart belongs to the selected use case, on the Galaxy level */
-{ const _r=render; render=function(){ const sd=S.side; if(S.ucx.flow && !(S.tab==='codona' && S.level===0 && sd.v==='item' && sd.sel && sd.sel.t==='uc' && sd.sel.id===S.ucx.flow)) S.ucx.flow=null; _r(); renderFlowCanvas(); }; }
+{ const _r=render; render=function(){ const sd=S.side; if(S.ucx.flow && S.ucx.flow!=='__np' && !(S.tab==='codona' && S.level===0 && sd.v==='item' && sd.sel && sd.sel.t==='uc' && sd.sel.id===S.ucx.flow)) S.ucx.flow=null; _r(); renderFlowCanvas(); }; }
 { const _rc=renderChrome; renderChrome=function(){ _rc(); if(S.ucx.flow){ $('#cTop').insertAdjacentHTML('afterbegin',`<button class="btn fx-close float" data-act="ucview" data-arg="${esc(S.ucx.flow)}|text">${I('x',16)}Close diagram</button>`); } }; }
 { const _c=crumbHTML; crumbHTML=function(){ const h=_c(); if(!S.ucx.flow) return h; return h.replace(/<span class="ci cur">([^<]*)<\/span>$/, (m,t)=>`${crumbBtn(t,'ucview',S.ucx.flow+'|text')}${SEP}<span class="ci cur">${S.ucx.fv==='seq'?'Sequence diagram':'Flowchart'}</span>`); }; }
 { const _z=ACT.zoom; ACT.zoom=function(a){ if(S.ucx.flow && S.tab==='codona'){ if(a==='fit') fit(layout(S.ucx.flow),true); else d3.select(box).transition().duration(200).call(zoom.scaleBy,a==='in'?1.25:.8); return; } return _z.call(this,a); }; }
@@ -9541,7 +9541,7 @@ function build(id, MH){ if(S.ucx.fv==='seq') return buildSeq(id); const L=layout
   fw.innerHTML=`<svg class="fe" width="${L.Wd}" height="${L.H}">${p}${lb}</svg>`+[...L.N,...L.A].map(n=>nodeHTML(id,n,L)).join('');
   if(!MH){ const M={}; let diff=false; fw.querySelectorAll('.fn[data-ni]').forEach(el=>{ const i=+el.dataset.ni; const h=el.offsetHeight; const n=L.N.find(x=>x.k==='proc'&&x.i===i); M[i]=h; if(n&&h&&Math.abs(h-n.h)>2) diff=true; }); if(diff) return build(id, M); }
   lastL=L; return L; }
-function area(){ const v=$('#vCodona'); const right=(!$('#cxItem').hidden?404:24); return {x:404, y:64, w:Math.max(200,v.clientWidth-404-right), h:Math.max(200,v.clientHeight-64-84)}; }
+function area(){ if(window.npArea){ const r=npArea(); if(r) return r; } const v=$('#vCodona'); const right=(!$('#cxItem').hidden?404:24); return {x:404, y:64, w:Math.max(200,v.clientWidth-404-right), h:Math.max(200,v.clientHeight-64-84)}; }
 function fit(L, anim){ const a=area(); const k=Math.min(1, a.w/(L.Wd+20), a.h/(L.H+20)); const t=d3.zoomIdentity.translate(a.x+Math.max(0,(a.w-L.Wd*k)/2), a.y+Math.max(0,(a.h-L.H*k)/2)).scale(k);
   (anim?d3.select(box).transition().duration(250):d3.select(box)).call(zoom.transform,t); }
 function legend(){ const lg=$('#ucLeg'); if(!lg) return; lg.classList.add('fx-leg2');
@@ -10417,12 +10417,12 @@ const RX = [[/\bRescanning\b/g,'Resyncing'],[/\bRescanned\b/g,'Resynced'],[/\bRe
   [/\bScanned\b/g,'Synced'],[/\bscanned\b/g,'synced'],[/\bScan now\b/g,'Sync now'],[/\bScans\b/g,'Syncs'],[/\bscans\b/g,'syncs'],[/\bScan\b/g,'Sync'],[/\bscan\b/g,'sync']];
 const fix = t => { if(!/[Ss]can/.test(t)) return t; let o=t; RX.forEach(([a,b])=>o=o.replace(a,b)); return o; };
 const SKIP = /^(PRE|CODE|SCRIPT|STYLE|TEXTAREA|INPUT)$/;
-function pass(root){ if(!root) return; if(root.nodeType===3){ const p=root.parentNode; if(p&&!SKIP.test(p.nodeName)&&!(p.closest&&p.closest('pre,code'))){ const n=fix(root.nodeValue); if(n!==root.nodeValue) root.nodeValue=(n.trim()==='Syncs'?n.replace('Syncs','Sync history'):n); } return; }
+function pass(root){ if(!root) return; if(root.nodeType===3){ const p=root.parentNode; if(p&&!SKIP.test(p.nodeName)&&!(p.closest&&p.closest('pre,code,.norx'))){ const n=fix(root.nodeValue); if(n!==root.nodeValue) root.nodeValue=(n.trim()==='Syncs'?n.replace('Syncs','Sync history'):n); } return; }
   if(root.nodeType!==1||SKIP.test(root.nodeName)) return;
   ['title','aria-label','placeholder','data-tip'].forEach(a=>{ const v=root.getAttribute&&root.getAttribute(a); if(v){ const n=fix(v); if(n!==v) root.setAttribute(a,n); } });
   if(root.closest&&root.closest('pre')) return;
   const w=document.createTreeWalker(root, NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT); let n; while((n=w.nextNode())) pass1(n); }
-function pass1(n){ if(n.nodeType===3){ const p=n.parentNode; if(!p||SKIP.test(p.nodeName)||(p.closest&&p.closest('pre,code'))) return; const v=fix(n.nodeValue); if(v!==n.nodeValue) n.nodeValue=(v.trim()==='Syncs'?v.replace('Syncs','Sync history'):v); return; }
+function pass1(n){ if(n.nodeType===3){ const p=n.parentNode; if(!p||SKIP.test(p.nodeName)||(p.closest&&p.closest('pre,code,.norx'))) return; const v=fix(n.nodeValue); if(v!==n.nodeValue) n.nodeValue=(v.trim()==='Syncs'?v.replace('Syncs','Sync history'):v); return; }
   ['title','aria-label','placeholder','data-tip'].forEach(a=>{ const v=n.getAttribute&&n.getAttribute(a); if(v){ const x=fix(v); if(x!==v) n.setAttribute(a,x); } }); }
 window.syncWords = () => pass(document.body);
 try{ const ob=new MutationObserver(ms=>{ ob.disconnect(); try{ ms.forEach(m=>{ if(m.type==='characterData') pass(m.target); else m.addedNodes.forEach(pass); }); } finally { ob.observe(document.body,{childList:true,subtree:true,characterData:true}); } });
@@ -10843,7 +10843,6 @@ function leftHTML(D){ const M=D.M; const q=(M.q||'').trim().toLowerCase();
   const nameErr=!D.add && M.name.trim() && CTX.some(c=>c.name.toLowerCase()===M.name.trim().toLowerCase());
   return `<div class="db-side db-l"><div class="db-h"><span class="ic">${fbI(D.add?'swap':'cubedash',16)}</span><b>${D.add?`Move to ${esc(D.tName)}`:'New bounded context'}</b><button class="ib" data-act="ncclose" aria-label="Close">${I('x',16)}</button></div>
     <div class="db-sc">
-      ${D.add?'':`<div class="db-sec"><label class="db-sh" for="ncName">Name <span class="req" aria-hidden="true">*</span></label><label class="field ${nameErr?'err':''}"><input id="ncName" type="text" autocomplete="off" value="${esc(M.name)}" placeholder="For example, Returns"></label>${nameErr?`<div class="nerr">A context called “${esc(M.name.trim())}” already exists.</div>`:''}</div>`}
       <div class="db-sec db-grow"><div class="db-sh">Use cases and APIs${D.sel.size?`<span class="db-selc">${D.sel.size} selected<button data-act="ncclear" aria-label="Clear all ${D.sel.size} selected APIs" title="Clear all">${I('x',12)}</button></span>`:''}</div>${D.sel.size?'':'<div class="db-selrow"><span class="none">Tick APIs or whole use cases, or drag them onto the canvas</span></div>'}
         <label class="field">${I('search',16)}<input id="ncQ" type="text" autocomplete="off" value="${esc(M.q||'')}" placeholder="Search use cases or routes"></label><div class="db-list">${rows}</div></div>
     </div></div>`; }
@@ -11150,16 +11149,16 @@ try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); }catch
 /* FB42 · personas as a multi-select dropdown, with custom personas */
 (function(){
 window.perFieldHTML = M => { const sel=M.per; const open=!!M.pmenu;
-  const chips = sel.length ? sel.map(id=>{ const p=PERSONAS.find(x=>x.id===id); return p?`<span class="pc">${esc(p.name)}<span class="x" role="button" data-act="npper" data-arg="${p.id}" aria-label="Remove ${esc(p.name)}">${I('x',12)}</span></span>`:''; }).join('') : '<span class="ph">Pick who this use case is for</span>';
-  const menu = open ? `<div class="pfs-m" role="listbox" aria-multiselectable="true">${PERSONAS.map(p=>{ const on=sel.includes(p.id); return `<button class="cx-opt" data-act="npper" data-arg="${p.id}" role="option" aria-selected="${on}"><span class="cx-cb ${on?'on':''}">${on?I('check',12,'',2.2):''}</span><span class="l">${esc(p.name)}</span><small>${esc(p.d)}</small></button>`; }).join('')}
+  const cp=sel.length&&PERSONAS.find(x=>x.id===sel[0]); const chips = cp ? `<span class="pv">${esc(cp.name)}</span>` : '<span class="ph">Pick who this use case is for</span>';
+  const menu = open ? `<div class="pfs-m" role="listbox">${PERSONAS.map(p=>{ const on=sel[0]===p.id; return `<button class="cx-opt" data-act="npper" data-arg="${p.id}" role="option" aria-selected="${on}"><span class="cx-rb ${on?'on':''}"></span><span class="l">${esc(p.name)}</span><small>${esc(p.d)}</small></button>`; }).join('')}
       ${M.pnew!=null?`<div class="pfs-new"><div class="pfs-nh"><b>New persona</b><button class="ib" data-act="nppx" aria-label="Cancel new persona" title="Cancel">${I('x',14)}</button></div><label class="pfs-l" for="npPn">Name <span class="req">*</span></label><input id="npPn" value="${esc(M.pnew)}" placeholder="For example, Wholesale buyer" autocomplete="off"><label class="pfs-l" for="npPd">Description</label><input id="npPd" value="${esc(M.pdesc||'')}" placeholder="Optional, for example Buys in bulk on account" autocomplete="off"><div class="pfs-nf"><button class="btn sm" data-act="nppx">Cancel</button><button class="btn primary sm" data-act="nppadd" ${M.pnew.trim()?'':'disabled'}>Add persona</button></div></div>`
         :`<button class="pfs-add" data-act="nppnew">${I('plus',14)}Create a persona</button>`}</div>` : '';
-  return `<div class="fld"><span class="nl">Persona <span class="req" aria-hidden="true">*</span></span><div class="pfs"><button class="pfs-b ${open?'open':''}" data-act="nppmenu" aria-expanded="${open}" aria-haspopup="listbox">${chips}${I(open?'chevron-up':'chevron-down',16)}</button>${menu}</div><small class="hint">Who this use case is for. Pick one or more, or create your own.</small></div>`; };
+  return `<div class="fld"><span class="nl">Persona <span class="req" aria-hidden="true">*</span></span><div class="pfs"><button class="pfs-b ${open?'open':''}" data-act="nppmenu" aria-expanded="${open}" aria-haspopup="listbox">${chips}${I(open?'chevron-up':'chevron-down',16)}</button>${menu}</div><small class="hint">Who this use case is for. Pick one, or create your own.</small></div>`; };
 Object.assign(ACT,{
   nppmenu(){ S.np.pmenu=!S.np.pmenu; if(!S.np.pmenu) S.np.pnew=null; renderNP(); },
   nppnew(){ S.np.pnew=''; S.np.pdesc=''; renderNP({id:'npPn'}); },
   nppx(){ S.np.pnew=null; renderNP(); },
-  nppadd(){ const M=S.np; const n=(M.pnew||'').trim(); if(!n) return; const id='p-'+n.toLowerCase().replace(/[^a-z0-9]+/g,'-'); if(!PERSONAS.some(p=>p.id===id)) PERSONAS.push({id, name:n, d:(M.pdesc||'').trim()||'Custom persona'}); if(!M.per.includes(id)) M.per.push(id); M.pnew=null; renderNP(); toast(`Added persona “${n}”. It can be used in any use case.`); }
+  nppadd(){ const M=S.np; const n=(M.pnew||'').trim(); if(!n) return; const id='p-'+n.toLowerCase().replace(/[^a-z0-9]+/g,'-'); if(!PERSONAS.some(p=>p.id===id)) PERSONAS.push({id, name:n, d:(M.pdesc||'').trim()||'Custom persona'}); M.per=[id]; M.pnew=null; M.pmenu=false; renderNP(); toast(`Added persona “${n}”. It can be used in any use case.`); }
 });
 document.addEventListener('input', e=>{ if(!S.np) return; if(e.target.id==='npPn'){ S.np.pnew=e.target.value; const b=document.querySelector('#npModal [data-act=nppadd]'); if(b) b.disabled=!e.target.value.trim(); } if(e.target.id==='npPd') S.np.pdesc=e.target.value; });
 document.addEventListener('keydown', e=>{ if(S.np && e.target.id==='npPn' && e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); ACT.nppadd(); } }, true);
@@ -11636,7 +11635,7 @@ try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); }catch
 let last=null;
 const reset=()=>{ S.fx.open={}; S.fx.int={}; S.fx.exp={}; S.ucx.hl=null; S.ucx.pop=null; if(S.uct&&S.uct.code) S.uct.code={}; };
 const _r=render; render=function(){ const sd=S.side; const cur=sd&&sd.v==='item'&&sd.sel&&sd.sel.t==='uc'?sd.sel.id:null;
-  if(S.ucx.flow && S.ucx.flow!==cur && S.tab==='codona' && !S.level){ S.ucx.flow=null; }
+  if(S.ucx.flow && S.ucx.flow!=='__np' && S.ucx.flow!==cur && S.tab==='codona' && !S.level){ S.ucx.flow=null; }
   const key=S.ucx.flow||null; if(key!==last){ reset(); last=key; }
   _r(); };
 const _v=ACT.ucview; ACT.ucview=function(a){ const [id,v]=a.split('|'); if(v==='flow'&&S.ucx.flow!==id) reset(); return _v.call(this,a); };
@@ -11768,10 +11767,12 @@ window.impactBind=function(D, first){ const root=H.el.querySelector('.imp'); if(
   svg.addEventListener('click',e=>{ const g=e.target.closest('.nd'); const n=g&&g.dataset.n||null; ACT.imsel(n); });
   if(S.nc.isel){ focus(S.nc.isel); const g=svg.querySelector(`[data-n="${S.nc.isel}"]`); if(g) g.classList.add('sel'); } };
 /* right panel: Summary / Connected */
-window.impactRight=function(D, html){ const M=D.M; const G=graph(D); const n=G.dep.size+G.pts.size;
-  html=html.replace('<b>Dependencies</b>','<b>Impact</b>').replace(/<span class="dbs (warn|ok)">[^<]*<\/span>/, D.sel.size?`<span class="dbs ${n?'warn':'ok'}">${n?n+' impacted':'Nothing impacted'}</span>`:'');
+window.impactRight=function(D, html){ const M=D.M; const G=graph(D); const n=G.dep.size;
+  html=html.replace('<b>Dependencies</b>',`<b class="imh">Impacted use cases${D.sel.size?`<span class="count">${n}</span>`:''}</b>`).replace(/<span class="dbs (warn|ok)">[^<]*<\/span>/,'');
   const a=html.indexOf('<div class="db-sc">'), b=html.indexOf('<div class="db-f">'); if(a<0||b<0) return html;
   let foot=html.slice(b); foot=foot.replace(/<span class="db-ns[\s\S]*?<\/span><\/span>/,`<span class="db-ns">${I('info',14)}<span>Saves a draft refactoring specification. Nothing changes in the code or the current architecture.</span></span>`).replace(/>Save and create</,'>Save as draft<').replace(/>Save</,'>Save as draft<');
+  if(!D.add){ const nm=(M.name||'').trim(); const dup=nm&&CTX.some(c=>c.name.toLowerCase()===nm.toLowerCase());
+    foot=foot.replace('<div class="db-fb">',`<div class="db-nm"><label class="db-sh" for="ncName">Name <span class="req" aria-hidden="true">*</span></label><label class="field ${dup?'err':''}"><input id="ncName" type="text" autocomplete="off" value="${esc(M.name||'')}" placeholder="For example, Returns"></label>${dup?`<div class="nerr">A context called “${esc(nm)}” already exists.</div>`:''}</div><div class="db-fb">`); }
   return html.slice(0,a)+'<div class="db-sc">'+window.impCon(D,G,M.isel,'')+'</div>'+foot; };
 Object.assign(ACT,{
   imtab(t){ S.nc.itab=t; renderNC(); },
@@ -11936,13 +11937,16 @@ window.impCon=function(D,G,sel,plan){ if(!D.sel.size) return '<div class="db-inf
   const mv=Object.entries(bySrc).map(([c,ids])=>`<div class="isub">From ${esc(H.cName(c))}</div>`+ids.map(id=>{ const A=movedApis(D,id); return row('u:'+id+':t',`<span class="l">${esc(UCB[id].name)}</span>${A.length?`<span class="aps">${A.map(api).join('')}</span>`:''}`); }).join('')).join('')
     + (alone.length?`<div class="isub">APIs on their own</div>`+alone.map(a=>row('c:'+G.tgt,`<span class="aps">${api(a)}</span>`)).join(''):'');
   const dep=[...G.dep.keys()].map(id=>{ const d=depInfo(D,id)[0]; const dc=d&&decided(D,d.x.key);
-    return row('u:'+id+':s',`<span class="l">${esc(UCB[id].name)}<em class="r">Impacted</em></span><small>${d&&d.x&&d.x.why?strip(d.x.why):`Stays in ${esc(H.cName(UCB[id].ctx))}`}</small>${d&&d.apis.length?`<span class="aps">${d.apis.map(api).join('')}</span>`:''}`); }).join('');
+    const nm=UCB[id].name; let why=d&&d.x&&d.x.why?strip(d.x.why):`Stays in ${H.cName(UCB[id].ctx)}`;
+    if(why.startsWith(nm+' ')){ const rest=why.slice(nm.length+1); if(!/^and\b/.test(rest)) why=rest.charAt(0).toUpperCase()+rest.slice(1); }
+    return row('u:'+id+':s',`<span class="l"><span class="iwi" aria-label="Impacted">${I('alert',14)}</span>${esc(nm)}</span><small>${esc(why)}</small>${d&&d.apis.length?`<span class="aps">${d.apis.map(api).join('')}</span>`:''}`); }).join('');
   const pts=[...G.pts.keys()].map(iid=>{ const P=ptInfo(D,G,iid); return row('p:'+iid,`<span class="l">${esc(P.it.label)}<em class="${P.st[0]}">${esc(P.st[1])}</em></span><small>${esc(H.cName(P.it.from))} → ${esc(ctxName(P.it.to))}</small>`); }).join('');
   const srcs=[...new Set([...G.moved].map(id=>UCB[id].ctx))];
   const ctxs=srcs.map(c=>{ const n=[...G.moved].filter(x=>UCB[x].ctx===c).length; const a=[...G.moved].filter(x=>UCB[x].ctx===c).reduce((s,id)=>s+movedApis(D,id).length,0); return row('c:'+c,`<span class="l">${esc(H.cName(c))}<em class="n">−${pl(n,'use case')} · −${pl(a,'API')}</em></span>`); }).join('')
     + row('c:'+G.tgt,`<span class="l">${esc(D.tName)}<em class="m">+${pl(G.moved.size,'use case')} · +${pl(D.routes.length,'API')}</em></span>`);
   const pl2=plan?plan.replace('<div class="db-plan">','<section class="iss iplan">').replace(/<div class="h">[\s\S]*?<\/div>/,'<h4>Refactoring plan</h4>').replace(/<\/ol><\/div>$/,'</ol></section>'):'';
-  return `<div class="ich2">${pl2}${sec(`Moves to ${esc(D.tName)}`,G.moved.size+alone.length,mv)}${sec('Impacted use cases',G.dep.size,dep)}${sec('Impacted integration points',G.pts.size,pts)}${sec('Contexts after the move',srcs.length+1,ctxs)}</div>`; };
+  const apis=D.routes.map(a=>`<div class="isa">${api(a)}</div>`).join('');
+  return `<div class="ich2">${pl2}${G.dep.size?`<section class="iss">${dep}</section>`:'<section class="iss"><div class="db-info">Nothing else is impacted.</div></section>'}${sec(`Selected APIs`,D.routes.length,`<div class="isal">${apis}</div>`)}${sec('Summary',srcs.length+1,ctxs)}</div>`; };
 try{ if(S.nc) renderNC(); }catch(e){}
 })();
 </script>
@@ -12013,7 +12017,19 @@ try{ render(); }catch(e){}
 .ich2 .iss:first-child{padding-top:4px}
 .ich2 .iss:last-child{border-bottom:0}
 .ich2 h4{display:flex;align-items:center;gap:8px;margin:0 0 6px;font:600 13px/18px var(--font);color:var(--text)}
-.ich2 h4 .count{margin-left:auto}
+.ich2 h4 .count{margin-left:0}
+.ich2 .isal{display:flex;flex-direction:column}
+.db-r .db-h .imh{display:inline-flex;align-items:center;gap:8px}
+.ich2 .iwi{display:inline-grid;place-items:center;flex:none;color:var(--danger,#ea4d44)}
+.ich2 .isr small{padding-left:22px} .ich2 .isr .aps{padding-left:22px}
+.ich2 .isa{display:flex;align-items:center;min-height:28px;padding:2px 0;border-bottom:1px solid var(--border)}
+.ich2 .isa:last-child{border-bottom:0}
+.ich2 .isa .iap{background:transparent;padding:0;height:auto;font-size:12px}
+.db-nm{display:flex;flex-direction:column;gap:6px}
+.db-r .db-f .db-ns{width:100%}
+.db-r .db-f .db-ns>svg{display:none}
+.db-r .db-f .db-ns>span{flex:1;min-width:0}
+.db-nm .db-sh{margin:0}
 .ich2 .isub{font:500 11px/16px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-3);margin:8px 0 2px}
 .ich2 .isr{display:flex;flex-direction:column;gap:4px;width:100%;padding:8px 6px;margin:0 -6px;width:calc(100% + 12px);border-radius:6px;text-align:left;border-bottom:1px solid var(--border)}
 .ich2 .isr:last-child{border-bottom:0}
@@ -13236,8 +13252,9 @@ body.light .ocw{background-image:radial-gradient(circle at 1px 1px,#c1bdda 1.1px
 function expandHTML(t){ const ks=kids(t.id);
   return `<div class="xp" data-a="noop">
     <input class="nm" value="${esc(t.name)}" data-a="rename" data-v="${t.id}" aria-label="Team name">
-    <h5>Members · ${t.m.length}<span class="sp"></span><button class="btn sm" data-a="invite" data-v="${t.id}">${I('plus',12)}Invite</button></h5>
+    <h5>Members · ${t.m.length}</h5>
     <div class="mlist">${t.m.map(([p,r])=>`<div class="mr2">${pAv(p,'sm')}<b>${esc(PB[p].n)}</b><button class="role" data-a="role" data-v="${t.id}|${p}">${r}${I('cd',12)}</button><button class="ib" data-a="rmm" data-v="${t.id}|${p}" aria-label="Remove ${esc(PB[p].n)}">${I('x',12)}</button></div>`).join('')||'<span class="none">No members yet. Invite people to this team.</span>'}</div>
+    <div class="inv2"><input class="ie" data-v="${t.id}" type="text" placeholder="Name or email" aria-label="Invite by name or email" autocomplete="off"><button class="btn primary sm" data-a="invin" data-v="${t.id}">Invite</button></div>
     <div class="acts2"><button class="btn" data-a="addsub" data-v="${t.id}">${I('plus',12)}Sub-team</button><button class="btn" data-a="move" data-v="${t.id}">Move</button><button class="btn" style="color:var(--danger-text)" data-a="del" data-v="${t.id}">${I('trash',12)}Delete</button><span style="flex:1"></span><button class="ib" data-a="panelx" aria-label="Close">${I('x',14)}</button></div></div>`; }
 /* the expanded card is part of the chart: mark it, and open a new team straight away */
 { const _c=chartHTML; chartHTML=function(){ let h=_c(); if(S.panel) h=h.replace(`class="ocard on" draggable="true" data-id="${S.panel}"`,`class="ocard on open" draggable="false" data-id="${S.panel}"`); return h; }; }
@@ -13267,6 +13284,25 @@ document.addEventListener('gestureend',()=>{ g=null; });
 const _z=A.zoom; A.zoom=function(v){ const c=document.querySelector('.ocw .chart'); if(!c||v==='fit') return _z(v); const r=c.getBoundingClientRect(); zoomAt(c,(S.zoom||1)*(v==='in'?1.2:1/1.2),r.left+r.width/2,r.top+r.height/2); };
 })();
 <\/script>
+<style>
+.ocard .xp .inv2{display:flex;gap:6px}
+.ocard .xp .inv2 .ie{flex:1;min-width:0;height:32px;padding:0 10px;border-radius:7px;background:var(--canvas);border:1px solid var(--border-strong);color:var(--text);font:400 13px/18px var(--font);outline:0}
+.ocard .xp .inv2 .ie:focus{border-color:var(--accent-hover)}
+.ocard .xp .inv2 .btn{height:32px}
+</style>
+<SCRIPT_START>
+/* invite inline inside the open card: name of an existing person, or any email */
+(function(){
+const add=(tid,el)=>{ const inp=el&&el.closest('.xp')?el.closest('.xp').querySelector('.ie'):document.querySelector(`.ie[data-v="${tid}"]`); if(!inp) return; const v=inp.value.trim(); if(!v) { inp.focus(); return; }
+  const t=TB()[tid]; const lc=v.toLowerCase(); let p=PEOPLE.map(x=>PB[x[0]]).find(x=>x.e.toLowerCase()===lc||x.n.toLowerCase()===lc);
+  if(!p){ if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){ toast('Type a name from your org or an email address'); inp.focus(); return; }
+    const id='u'+Date.now(); const n=v.split('@')[0].replace(/[._-]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase()); PEOPLE.push([id,n,v]); PB[id]={id,n,e:v,c:COLORS[PEOPLE.length%COLORS.length]}; p=PB[id]; }
+  if(t.m.some(x=>x[0]===p.id)){ toast(`${p.n} is already in ${t.name}`); return; }
+  t.m.push([p.id,'Contributor']); toast(`Invited ${p.n} to ${t.name} as Contributor`); render(); setTimeout(()=>{ const n=document.querySelector(`.ie[data-v="${tid}"]`); if(n) n.focus(); },0); };
+A.invin=(v)=>add(v,document.activeElement&&document.activeElement.classList.contains('ie')?document.activeElement:null);
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('ie')){ e.preventDefault(); add(e.target.dataset.v,e.target); } });
+})();
+<\/script>
 </body>
 </html>
 </script>
@@ -13283,7 +13319,7 @@ window.SPECS = window.SPECS || [
   {id:'cs3', type:'rf', title:'Move stock reservations to Fulfillment', status:'approved', by:'Zoe K.', when:'18 Nov', scope:'Inventory → Fulfillment', impact:{uc:3, pt:4}, link:{tool:'jira', key:'ENG-142'}, moves:['Reserve Stock','Release Reservation']},
   {id:'cs4', type:'uc', title:'Reorder a past order', status:'progress', by:'Amy N.', when:'15 Nov', scope:'Orders', persona:'Shopper', link:{tool:'jira', key:'ENG-131'}, steps:['Shopper opens a past order','Shopper presses Buy again','System adds the items to a new cart']},
   {id:'cs5', type:'rf', title:'Event for payment captured', status:'done', by:'Oliver F.', when:'2 Nov', scope:'Payments → Orders', impact:{uc:2, pt:1}, link:{tool:'jira', key:'ENG-118'}, moves:[]}];
-const TYPE={uc:['Use case specification','uc'],rf:['Refactoring specification','rf']};
+const TYPE={uc:['Use case','uc'],rf:['Bounded context','rf']};
 S.specs = S.specs || {q:'', open:null, closed:{}, menu:null};
 /* ---------- views ---------- */
 const host=document.getElementById('vSys')||document.getElementById('vOrg');
@@ -13439,6 +13475,7 @@ window.ucSpecSteps=function(id){ const F=ucFlowOf(id); const out=[]; F.steps.for
 /* ---------- new use case · steps editor and review ---------- */
 const PN=M=>{ const p=(window.PERSONAS||[]).find(x=>x.id===M.per[0]); return p?p.name:'User'; };
 const SYS=()=>(S.bs&&S.bs.name)||'Commerce platform';
+const clash=M=>/^system$/i.test(PN(M).trim()); const UL=M=>clash(M)?'Persona · System':PN(M); const SL=M=>clash(M)?SYS():'System';
 const ensure=M=>{ if(!M.steps) M.steps=[{id:'a1',who:'user',kind:'action',t:''},{id:'a2',who:'system',kind:'action',t:''}]; M.dv=M.dv||'seq'; return M; };
 const diag=(M,big)=>{ const st=M.steps.filter(x=>x.t.trim()||x.kind==='decision'); if(!st.length) return `<div class="npempty">${I('flow',24)}<b>The diagram draws itself</b><span>Write the first step on the left.</span></div>`;
   return M.dv==='swim'?specSwim(st,PN(M),SYS()):M.dv==='flow'?specFlow(st,PN(M)):specSeq(st,PN(M),SYS()); };
@@ -13446,14 +13483,14 @@ const tog=M=>`<div class="dvseg" role="tablist" aria-label="Diagram">${[['seq','
 window.npHTML2=function(M){ if(!M||(M.stage||1)===1) return null; ensure(M); const st=M.stage;
   const stepper=`<div class="npsteps"><button class="done" data-act="npstage" data-arg="1"><span class="k">${I('check',12,'',2.4)}</span>Details</button><span class="ln"></span><button class="${st===2?'on':'done'}" data-act="npstage" data-arg="2"><span class="k">${st>2?I('check',12,'',2.4):'2'}</span>Steps</button><span class="ln"></span><button class="${st===3?'on':''}" data-act="npstage" data-arg="3" ${M.steps.some(x=>x.t.trim())?'':'disabled'}><span class="k">3</span>Review</button></div>`;
   const idx=M.steps; const opt=(x,o,k)=>`<div class="op"><span>${k?'Else if':'If'}</span><input class="npO" data-s="${x.id}" data-k="${k}" value="${esc(o.t)}" placeholder="${k?'Something else happens':'It works'}"><select class="npOT" data-s="${x.id}" data-k="${k}" aria-label="Then go to"><option value="next" ${o.to==='next'?'selected':''}>Next step</option>${idx.filter(y=>y.id!==x.id).map(y=>`<option value="${y.id}" ${o.to===y.id?'selected':''}>Step ${idx.indexOf(y)+1}${y.t?' · '+esc(y.t.slice(0,24)):''}</option>`).join('')}<option value="end" ${o.to==='end'?'selected':''}>End</option></select><button class="ib" data-act="npOrm" data-arg="${x.id}|${k}" aria-label="Remove option">${I('x',14)}</button></div>`;
-  const rows=M.steps.map((x,i)=>`<div class="us ${x.kind==='decision'?'dec':''}"><div class="r1"><span class="n">${i+1}</span>
-      <span class="sg" role="radiogroup" aria-label="Who">${[['user',PN(M)],['system','System']].map(([k,l])=>`<button class="${x.who===k?'on':''}" data-act="npwho" data-arg="${x.id}|${k}" role="radio" aria-checked="${x.who===k}">${esc(l)}</button>`).join('')}</span>
+  const rows=M.steps.map((x,i)=>`<div class="us ${x.kind==='decision'?'dec':''}" data-si="${i}"><div class="r1"><span class="grip2" title="Drag to reorder · step ${i+1}" aria-label="Drag step ${i+1}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>
+      <span class="sg" role="radiogroup" aria-label="Who">${[['user',UL(M)],['system',SL(M)]].map(([k,l])=>`<button class="${x.who===k?'on':''}" data-act="npwho" data-arg="${x.id}|${k}" role="radio" aria-checked="${x.who===k}">${esc(l)}</button>`).join('')}</span>
       <span class="sg" role="radiogroup" aria-label="Type">${[['action','Action'],['decision','Decision']].map(([k,l])=>`<button class="${x.kind===k?'on':''}" data-act="npkind" data-arg="${x.id}|${k}" role="radio" aria-checked="${x.kind===k}">${l}</button>`).join('')}</span><span class="sp"></span>
       <button class="ib" data-act="npsmv" data-arg="${i}|-1" ${i?'':'disabled'} aria-label="Move up">${I('arrow-up',14)}</button><button class="ib" data-act="npsmv" data-arg="${i}|1" ${i<M.steps.length-1?'':'disabled'} aria-label="Move down">${I('arrow-down',14)}</button><button class="ib" data-act="npsrm" data-arg="${x.id}" aria-label="Remove step">${I('x',14)}</button></div>
     <input class="npS" data-s="${x.id}" value="${esc(x.t)}" placeholder="${x.kind==='decision'?'What is decided, for example Is the card accepted?':x.who==='user'?'What the '+esc(PN(M).toLowerCase())+' does':'What the system does'}">
     ${x.kind==='decision'?(x.opts||[]).map((o,k)=>opt(x,o,k)).join('')+`<button class="btn ghost sm" data-act="npOadd" data-arg="${x.id}" style="align-self:flex-start">${I('plus',14)}Add an option</button>`:''}</div>`).join('');
   const body2=`<div class="ue"><div class="ue-l"><h3>Steps<small>Each step is done by the ${esc(PN(M).toLowerCase())} or the system</small></h3>${rows}
-      <div class="uadd"><button class="btn sm" data-act="npadd" data-arg="user|action">${I('plus',14)}${esc(PN(M))} step</button><button class="btn sm" data-act="npadd" data-arg="system|action">${I('plus',14)}System step</button><button class="btn sm" data-act="npadd" data-arg="system|decision">${I('plus',14)}Decision</button></div></div>
+      <div class="uadd"><button class="btn sm" data-act="npadd" data-arg="user|action">${I('plus',14)}${esc(UL(M))} step</button><button class="btn sm" data-act="npadd" data-arg="system|action">${I('plus',14)}${esc(SL(M))} step</button><button class="btn sm" data-act="npadd" data-arg="system|decision">${I('plus',14)}Decision</button></div></div>
     <div class="ue-r"><div class="tb"><b style="font:600 13px/18px var(--font)">Live diagram</b><span style="flex:1"></span>${tog(M)}</div><div class="cv">${diag(M)}</div></div></div>`;
   const filled=M.steps.filter(x=>x.t.trim());
   const body3=`<div class="rv"><div class="rv-l"><div class="kv"><span>Name</span><span>${esc(M.name)}</span><span>Persona</span><span>${esc(PN(M))}</span><span>Saved as</span><span>Use case specification · Draft</span></div>
@@ -13477,7 +13514,8 @@ Object.assign(ACT,{
   npOadd(id){ find(id).opts.push({t:'',to:'end'}); R(); },
   npOrm(a){ const [id,k]=a.split('|'); find(id).opts.splice(+k,1); R(); },
   npsave(){ const M=S.np; const nm=M.name.trim(); const steps=M.steps.filter(x=>x.t.trim());
-    (window.SPECS=window.SPECS||[]).unshift({id:'cs'+Date.now(), type:'uc', title:nm.charAt(0).toUpperCase()+nm.slice(1), status:'draft', by:ME, when:'Just now', scope:'', persona:PN(M), steps:steps.map(x=>(x.who==='user'?PN(M):'System')+(x.kind==='decision'?' decides: ':': ')+x.t)});
+    (window.SPECS=window.SPECS||[]).unshift({id:'cs'+Date.now(), type:'uc', title:nm.charAt(0).toUpperCase()+nm.slice(1), status:'draft', by:ME, when:'Just now', scope:'', persona:PN(M), steps:steps.map(x=>(x.who==='user'?PN(M):'System')+(x.kind==='decision'?' decides: ':': ')+x.t),
+      flow:JSON.parse(JSON.stringify(steps)), ch:M.ch, ctxPick:M.ctx||'auto', who:M.who||'auto'});
     S.np=null; R(); toast('Saved as a draft use case specification. See it in Change specifications.'); }
 });
 document.addEventListener('input',e=>{ const t=e.target; if(!S.np||!S.np.steps) return;
@@ -13489,7 +13527,7 @@ ACT.npgo=function(){ const M=S.np; if(!M) return; if((M.stage||1)<3){ ACT.npstag
 window.swimBuild=function(id){ const fw=document.querySelector('#ucFlow .fw'); const u=UCB[id]; const per=((u.personas||[])[0]&&(window.PERSONAS||[]).find(p=>p.id===u.personas[0])||{name:'User'}).name;
   const html=specSwim(ucSpecSteps(id),per,(S.bs&&S.bs.name)||'Commerce platform'); fw.innerHTML=html; const sv=fw.querySelector('svg'); const W=+sv.getAttribute('width'), H=+sv.getAttribute('height'); return {N:[],A:[],Wd:W,H,seq:true}; };
 /* one persona per use case */
-{ const _p=ACT.npper; ACT.npper=function(id){ const M=S.np; M.per = M.per[0]===id ? [] : [id]; M.pmenu=false; R(); }; }
+{ const _p=ACT.npper; ACT.npper=function(id){ const M=S.np; M.per=[id]; M.pmenu=false; R(); }; }
 { const _a=ACT.nppadd; ACT.nppadd=function(){ _a(); if(S.np&&S.np.per.length>1) S.np.per=[S.np.per[S.np.per.length-1]]; R(); }; }
 })();
 </script>
@@ -13579,7 +13617,7 @@ const L=[
  ['Use case sidebar','History','Everything that happened, by day. Opens one level down.', UC('checkout',()=>ACT.actopen('checkout')), ['.act-f','.act-i']],
  ['Use case sidebar','Steps summary','About three sentences with API and integration point chips. A chip opens it in the flowchart. Sparkle icon and pink-purple gradient for AI.', UC('cancel-order'), ['.aisum']],
  ['Use case sidebar','Open sequence steps','Full-width button inside the summary opens the diagram. The diagram never opens by itself.', UC('cancel-order'), ['.aisb']],
- ['Use case sidebar','Connected layers as tabs','Channels, APIs, bounded contexts and more as sticky tabs, each with a search. The list scrolls under them.', UC('cancel-order',()=>{ const c=document.querySelector('#cxItem .cgtabs'); if(c) c.scrollIntoView({block:'start'}); }), ['.cgtabs']],
+ ['Use case sidebar','Connected layers as tabs','Underlined tabs with a search. The list keeps a steady height with room below, short or long.', UC('cancel-order',()=>{ const c=document.querySelector('#cxItem .cgtabs'); if(c) c.scrollIntoView({block:'start'}); }), ['.cgtabs']],
  ['Use case sidebar','API one level down, with Back','Clicking an API opens it inside the sidebar. Back returns to the use case.', UC('checkout',()=>ACT.ucapi('POST /store/carts/:id/complete')), ['#cxItem .rp-h .back']],
  ['Use case sidebar','Rejected use cases are hidden','Tabs in the use case list: All, To review, Accepted.', ()=>{ H0(); ACT.layer(2); }, ['.rvtabs']],
  ['Use case sidebar','Filter and group by persona','Group the use case list by bounded context or persona.', ()=>{ H0(); ACT.layer(2); }, ['.cx-filt']],
@@ -13597,20 +13635,37 @@ const L=[
  ['Swim lane','Swim lane as a third diagram','Sequence, Flowchart, Swim lane. One lane for the persona, one for the system. Lane switches drop straight down, loops back run between the lanes, branches that end the flow get their own End. Click a shape to see what it connects to.', FLOW('cancel-order','swim'), ['#ucFlow .spx']],
  ['All diagrams','Interaction rules','Hover is a dashed outline, selected is solid purple, related uses the secondary colour, the rest dims. Written in Syntroper_Interaction_Rules.md.', FLOW('cancel-order','cards'), ['#fxKey']],
  ['New bounded context','Impact on the Galaxy','Today’s integrations are drawn as they are. The ones the move touches turn red. No new lines. Impacted use cases turn red.', BOARD, ['#dbd .imp']],
- ['New bounded context','Impact list','Moves (grouped by source), impacted use cases, impacted integration points, contexts after the move. No decisions to make.', BOARD, ['#dbd .ich2']],
- ['New bounded context','Save as draft','Saves a refactoring specification. Nothing changes in the code or the current architecture.', BOARD, ['#dbd .db-f']],
- ['New use case','One persona','Pick one persona or create one: name and description.', NP(1), ['.pfs']],
+ ['New bounded context','Impact list','One title, Impacted use cases, with the count next to it. Each one has a red warning icon. Then the selected APIs as a slim list and a summary. No decisions to make.', BOARD, ['#dbd .ich2']],
+ ['New bounded context','Save as draft','The name field sits right above Save as draft. Saves a refactoring specification. Nothing changes in the code or the current architecture.', BOARD, ['#dbd .db-f']],
+ ['New use case','A screen, not a dialog','Details is a page. Steps and Review put the editor in a floating sidebar, with Details, Steps and Review at its top, on a full canvas.', NP(2), ['#npModal .npside']],
+ ['New use case','Same diagrams as Open sequence steps','Sequence, Flowchart and Swim lane are the real use case diagrams, drawn live as you write. Zoom and pan like any canvas.', NP(2), ['#npModal .ue-r .tb']],
+ ['New use case','One persona','Radio buttons, and the picked persona shows as plain text. Or create one: name and description.', NP(1), ['.pfs']],
  ['New use case','User or system steps, action or decision','Each step is done by the persona or the system. A decision lists options that go to a step or end. Numbering updates itself. No APIs here; they belong to solution design.', NP(2), ['#npModal .us']],
  ['New use case','Live diagram','Sequence, Flowchart or Swim lane draws as you type.', NP(2), ['#npModal .ue-r']],
  ['New use case','Review and save as draft','Saves a use case specification.', NP(3), ['#npModal .rv']],
+ ['Change specifications','Inside the business system','A card on the Commerce platform panel opens them. They are no longer in the left navigation.', ()=>{ H0(); }, ['.cspec-cta']],
+ ['Change specifications','List on the business system canvas','View all keeps the Commerce platform panel and the breadcrumbs, and shows every specification in a table next to them. Filter by status and by type (Use case, Bounded context). The tool row and the ticket column are gone.', ()=>{ H0(); ACT.tab('specs'); }, ['#csList']],
+ ['Change specifications','Use case proposal','Goal, then Persona · Channel · Business system, then the proposed flow: who does each step, and every decision branch with where it goes. Click a destination to jump to it. View diagram shows Flowchart, Sequence or Swim lane of the same flow. Outcomes list every ending. The rail shows context, channel and reviewer as picked.', ()=>{ H0(); ACT.spopen('cs4'); }, ['#vSpecs .usl']],
+ ['New use case','Two-column details, drag handles','Details fields sit in two columns. Steps have a drag handle instead of a number. When the persona is called System, the buttons read Persona · System and Commerce platform.', NP(2), ['#npModal .grip2']],
+ ['Teams','Invite inside the card','The open card has a name-or-email field and Invite. No dialog.', TAB('teams'), ['#vTeams']],
+ ['Change specifications','A document you can share','Share opens link, access and people with view, comment or edit. Publish and Share sit at the top.', ()=>{ H0(); ACT.tab('specs'); ACT.spopen('cs1'); ACT.sdshare(); }, ['#sdModal .sdm']],
+ ['Change specifications','Saved selection','Unique APIs, whole, partial and impacted use cases as separate counts. Grouped by source context; each use case shows selected / total. Partial ones open by default and list what stays. Shared routes are marked.', ()=>{ H0(); ACT.tab('specs'); ACT.spopen('cs1'); }, ['#sd-selection']],
+ ['Change specifications','Impact, boundary and decisions','Impacted use cases grouped by the shared dependency, a small source → target diagram, and decisions that point at what raised them.', ()=>{ H0(); ACT.tab('specs'); ACT.spopen('cs1'); }, ['#sd-impact']],
+ ['Change specifications','Review and publish','Add reviewers, then Request review on the revision. Preview publication shows the Jira, ClickUp or Notion payload before anything is sent; publishing again updates the same item.', ()=>{ H0(); ACT.tab('specs'); ACT.spopen('cs1'); ACT.sdpub(); }, ['#sdModal .sdm']],
+ ['Galaxy','Layer icons','Use cases are the oval again. Integration points use the direction triangles, also in the direction filters.', ()=>{ H0(); }, ['[data-act=layer][data-arg="2"]','[data-act=layer][data-arg="5"]']],
+ ['Galaxy','No context card removed','Every use case has a context, so the home panel no longer shows it.', ()=>{ H0(); }, []],
  ['Change specifications','List by status','Draft, In review, Approved, In progress, Done. Use case and refactoring specifications. Click one for the details.', TAB('specs'), ['#vSpecs .csg']],
  ['Change specifications','Push to Jira, ClickUp or Notion','Connect a tool, then Push to… on any specification. The ticket key shows on the row.', TAB('specs'), ['#vSpecs .csintg']],
  ['Teams','Org chart','Teams in the left navigation. Hover a team and press + to add one under it, click a team and it opens in place: rename, members, invite, sub-team, move, delete. A new team starts empty. Drag to move. Pinch or ⌘ scroll zooms at the cursor; scroll or drag the canvas to pan. People can sit at any level. Roles: Super admin, Admin, Team admin, Architect, Contributor, Viewer.', TAB('teams'), ['#vTeams']],
  ['APIs','Group APIs by use case','Toggle in the APIs layer.', ()=>{ H0(); ACT.layer(3); }, ['.cx-tool']],
  ['APIs','Every use case of an API','Open an API to see every use case that calls it.', ()=>{ H0(); ACT.layer(3); }, ['.apiu']],
+ ['Business system','Rescan with progress','The sync button opens Rescanning Commerce platform: five steps, one repository at a time. Run in background shows a progress bar in the Commerce platform card; View opens it again.', ()=>{ H0(); ACT.bssync(); }, ['#rscModal .rsc']],
+ ['Business system','Repositories','GitHub logo on the left, the name and branch, language and commit on the right.', ()=>{ H0(); ACT.repos&&ACT.repos(); }, ['.srow.rrow']],
+ ['Use case sidebar','Steps summary chips','API, file and integration point chips use a light white fill so they look the same.', UC('cancel-order'), ['.aisum']],
+ ['Comments','Comment pins','Pins on the canvas are the chat bubble again, with the count on top. Red count only when you’re mentioned.', ()=>{ H0(); }, ['#gxC .pin']],
  ['General','Light mode','Account menu › Dark Mode. White top bar, navigation and panels, grey dotted canvas, white diagram nodes.', ()=>{ H0(); S.nav.me=true; renderShell(); }, ['#appTop .tb-menu']],
  ['General','The URL keeps the view','Selection, open diagram and its type and level, chat room, history, specifications and Teams are in the URL. Back returns to the last view; a pasted link opens the same view.', UC('cancel-order'), []],
- ['Navigation','Syntroper Code and Syntroper Infra','Grouped navigation. Change specifications sits under Syntroper Code, Teams under Integrations.', ()=>{ H0(); S.nav.open=true; renderShell(); }, ['#rail .nv-g']]
+ ['Navigation','Syntroper Code and Syntroper Infra','Grouped navigation. Teams under Integrations. When collapsed, one line between groups.', ()=>{ H0(); S.nav.open=true; renderShell(); }, ['#rail .nv-g']]
 ].map(([a,n,how,go,sel])=>({a, n, how, go, sel, r:1, red:false}));
 WN.length=0; WN.push(...L); WN.forEach((f,i)=>f.i=i+1);
 ['#wnPanel','#wnBtn','#wnLayer'].forEach(q=>{ const e=document.querySelector(q); if(e) e.remove(); });
@@ -13635,8 +13690,9 @@ try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); const 
 .swx .n.t .sh{stroke:color-mix(in srgb,var(--fs-term,#7cc04f) 55%,var(--border-strong))}
 .swx .n.x .sh{stroke:color-mix(in srgb,var(--danger,#ea4d44) 55%,var(--border-strong))}
 .swx .n:not(.sel):hover .sh{stroke:var(--sel-hov,#8673f2);stroke-dasharray:4 3}
-.swx .n.sel .sh{stroke:var(--sel,#8673f2);stroke-width:2}
-.swx .n.rel .sh{stroke:var(--rel,#9a88f5)}
+.swx .n.sel .sh{stroke:var(--sel,#8673f2);stroke-width:3}
+.swx .n.rel .sh{stroke:var(--border-strong)!important}
+
 .swx .tx{font:500 12px var(--font);fill:var(--text);pointer-events:none}
 .swx .nbc{fill:var(--surface-strong)}
 .swx .nb{font:600 10px var(--font);fill:var(--text-2);pointer-events:none}
@@ -13648,7 +13704,10 @@ try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); const 
 .swx .mk{fill:context-stroke}
 .swx.has-sel .n:not(.sel):not(.rel){opacity:.35}
 .swx.has-sel .e:not(.rel){opacity:.2}
-.swx .e.rel path{stroke:var(--sel,#8673f2)}
+.swx .e.rel path{stroke:var(--rel,#3E4352);stroke-width:1.6}
+.swx .e:hover path{stroke:var(--sel-hov,#8673f2);stroke-width:3;stroke-dasharray:5 4}
+.swx .e.rel path{stroke-dasharray:none}
+.swx .n.rel .sh,.swx .n.sel .sh{stroke-dasharray:none}
 </style>
 <script>
 /* FB76 · swim lane engine.
@@ -13739,6 +13798,796 @@ document.addEventListener('click',e=>{ const g=e.target.closest&&e.target.closes
   sv.querySelectorAll('.was').forEach(x=>x.classList.remove('was'));
   const k=g.dataset.n; g.classList.add('sel','was'); sv.classList.add('has-sel');
   sv.querySelectorAll('.e').forEach(x=>{ if(x.dataset.a===k||x.dataset.b===k){ x.classList.add('rel'); const o=x.dataset.a===k?x.dataset.b:x.dataset.a; const m=sv.querySelector(`.n[data-n="${o}"]`); if(m) m.classList.add('rel'); } }); });
+})();
+</script>
+<script>
+/* FB77 · comment pins on the canvas are the chat bubble again (Figma “Comment 2/3”).
+   The older map-pin restyle could run after the bubble pass and win; this converts any map pin back. */
+(function(){
+  const pin=(n,isNew)=>`<g transform="translate(2,-6) scale(.85)"><path d="${BUBBLE}" class="pt"/><path d="M7.6 8.6h8.8M7.6 12.4h5.6" class="pl"/>`
+    +(n>1||isNew?`<circle cx="22" cy="3" r="${n>1?6.5:4}" class="pc ${isNew?'new':''}"/>${n>1?`<text x="22" y="3.3" class="pn">${n}</text>`:''}`:'')+'</g>';
+  let q=0;
+  const fix=()=>{ q=0; document.querySelectorAll('#gxC .pin,#gxL .pin').forEach(g=>{ if(!g.querySelector('.pb')&&g.querySelector('path.pt')) return;
+      const pn=g.querySelector('.pn'); const n=pn&&/^\d+$/.test(pn.textContent)?+pn.textContent:+((g.querySelector('text')||{}).textContent)||1;
+      const isNew=!!g.querySelector('.pc.new')||g.classList.contains('new'); g.innerHTML=pin(n,isNew); g.dataset.bub=1; g.dataset.arcus=1; g.dataset.w='24'; });
+    try{ fbPinMe(); }catch(e){} };
+  const later=()=>{ if(!q) q=requestAnimationFrame(()=>requestAnimationFrame(fix)); };
+  new MutationObserver(later).observe(document.body,{subtree:true,childList:true});
+  later();
+})();
+</script>
+<style>
+/* FB78 · change specifications live inside the business system: home card, list, document page, publish */
+#vSpecs .wrap{max-width:1180px}
+.csbc{display:flex;align-items:center;gap:6px;margin-bottom:14px;font:500 13px/20px var(--font);color:var(--text-2)}
+.csbc button{color:var(--text-2)} .csbc button:hover{color:var(--text)} .csbc .cur{color:var(--text)}
+.csdoc{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:32px;align-items:start}
+.csdoc .main{min-width:0}
+.csdoc .dh{display:flex;flex-direction:column;gap:10px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.csdoc .dh .r1{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font:500 12px/18px var(--font);color:var(--text-3)}
+.csdoc .dh h1{margin:0;font:600 24px/32px var(--font)}
+.csdoc .dh p{margin:0;font:400 14px/22px var(--font);color:var(--text-2)}
+.csdoc .toc{display:flex;gap:6px;flex-wrap:wrap;padding:14px 0 4px}
+.csdoc .toc a{height:26px;display:inline-flex;align-items:center;padding:0 10px;border-radius:999px;background:var(--surface);font:500 12px/18px var(--font);color:var(--text-2);text-decoration:none}
+.csdoc .toc a:hover{color:var(--text)}
+.csdoc section.ds{padding:22px 0;border-bottom:1px solid var(--border);scroll-margin-top:16px}
+.csdoc section.ds:last-child{border-bottom:0}
+.csdoc h2{display:flex;align-items:center;gap:8px;margin:0 0 4px;font:600 16px/24px var(--font)}
+.csdoc h2 .count{margin-left:0}
+.csdoc .hint{margin:0 0 12px;font:400 12px/18px var(--font);color:var(--text-3)}
+.csdoc .auto{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 7px;border-radius:999px;background:var(--selected);font:500 11px/16px var(--font);color:var(--accent-on)}
+.csdoc p.tx{margin:0;font:400 14px/22px var(--font);color:var(--text)}
+.csdoc p.ph{margin:0;padding:12px 14px;border:1px dashed var(--border-strong);border-radius:10px;font:400 13px/20px var(--font);color:var(--text-3)}
+.csdoc ul.bl,.csdoc ol.bl{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font:400 14px/22px var(--font);color:var(--text)}
+.csdoc .tb{width:100%;border-collapse:collapse;font:400 13px/20px var(--font)}
+.csdoc .tb th{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border-strong);font:600 11px/16px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-3)}
+.csdoc .tb td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text-2)}
+.csdoc .tb td:first-child{color:var(--text)}
+.csdoc .tb tr:last-child td{border-bottom:0}
+.csdoc .imp{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)} .csdoc .imp:last-child{border-bottom:0}
+.csdoc .imp .ic{color:var(--danger);flex:none;margin-top:2px}
+.csdoc .imp b{display:block;font:500 14px/20px var(--font)} .csdoc .imp small{font:400 13px/20px var(--font);color:var(--text-2)}
+.csdoc .ba{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.csdoc .ba .col{padding:12px 14px;border-radius:10px;background:var(--panel);border:1px solid var(--border)}
+.csdoc .ba h4{margin:0 0 8px;font:600 12px/18px var(--font);color:var(--text-3);text-transform:uppercase;letter-spacing:.04em}
+.csdoc .ba .cx{display:flex;align-items:center;gap:8px;padding:4px 0;font:500 13px/20px var(--font)} .csdoc .ba .cx small{margin-left:auto;color:var(--text-3);font-weight:400}
+.csdoc .ba .cx.new{color:var(--accent-on)}
+.csdoc .alt{padding:12px 14px;border-radius:10px;border:1px solid var(--border);margin-bottom:8px}
+.csdoc .alt.on{border-color:color-mix(in srgb,var(--accent) 60%,var(--border-strong))}
+.csdoc .alt b{display:flex;align-items:center;gap:8px;font:600 14px/20px var(--font);margin-bottom:6px}
+.csdoc .alt .pc{display:grid;grid-template-columns:1fr 1fr;gap:12px;font:400 13px/20px var(--font);color:var(--text-2)}
+.csdoc .alt .pc span{display:block} .csdoc .alt .pc i{font-style:normal;font-weight:600}
+.csdoc .alt .pc .g i{color:var(--ok-text)} .csdoc .alt .pc .b i{color:var(--danger-text)}
+.csdoc .step{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)} .csdoc .step:last-child{border-bottom:0}
+.csdoc .step .n{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--surface-strong);font:600 11px/1 var(--font)}
+.csdoc .step .t{flex:1;min-width:0;font:400 14px/22px var(--font)} .csdoc .step .t small{display:block;font:400 12px/18px var(--font);color:var(--text-3)}
+.csdoc .oq{display:flex;align-items:flex-start;gap:10px;padding:8px 0;font:400 14px/22px var(--font)} .csdoc .oq .cb{flex:none;width:16px;height:16px;margin-top:3px;border-radius:4px;box-shadow:inset 0 0 0 1px var(--border-strong)}
+.csdoc .oq small{color:var(--text-3)}
+.csdoc .uc ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font:400 14px/22px var(--font)}
+.csdoc .uc ol b{font-weight:600}
+.csdoc .uc .ext{margin-top:4px;padding-left:12px;border-left:2px solid color-mix(in srgb,var(--warn) 60%,var(--border-strong));font:400 13px/20px var(--font);color:var(--text-2)}
+.csdoc .side{position:sticky;top:0;display:flex;flex-direction:column;gap:12px}
+.csdoc .card2{padding:14px;border-radius:12px;background:var(--panel);border:1px solid var(--border)}
+.csdoc .card2 h3{margin:0 0 10px;display:flex;align-items:center;gap:8px;font:600 13px/18px var(--font)}
+.csdoc .kv{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px 10px;font:400 13px/20px var(--font)} .csdoc .kv>span:nth-child(odd){color:var(--text-3)}
+.csdoc .kv .who{display:flex;align-items:center;gap:6px}
+.csdoc .rv{display:flex;align-items:center;gap:8px;padding:5px 0;font:400 13px/20px var(--font)} .csdoc .rv em{margin-left:auto;font-style:normal;font-size:12px;color:var(--text-3)}
+.csdoc .rv em.ok{color:var(--ok-text)} .csdoc .rv em.ch{color:var(--warn-text)}
+.csdoc .lw{display:flex;align-items:center;gap:8px;padding:6px 0;font:400 13px/20px var(--font)} .csdoc .lw em{margin-left:auto;font-style:normal;font-size:12px;color:var(--text-3)}
+.csdoc .lw .lg,.csdoc .pbt .lg{width:18px;height:18px;border-radius:5px;display:inline-grid;place-items:center;font:700 10px/1 var(--font);color:#fff;flex:none}
+.csdoc .sync{display:flex;align-items:center;gap:6px;font:400 12px/18px var(--font);color:var(--text-3);margin-top:6px} .csdoc .sync i{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.csdoc .pbt{display:flex;flex-direction:column;gap:6px}
+.csdoc .pbt button{display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border-radius:8px;box-shadow:inset 0 0 0 1px var(--border-strong);font:500 13px/18px var(--font);color:var(--text);text-align:left}
+.csdoc .pbt button:hover{background:var(--surface)} .csdoc .pbt button small{margin-left:auto;color:var(--text-3);font-weight:400}
+.csdoc .tk{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 6px;border-radius:5px;background:var(--surface);font:500 11px/16px var(--mono);color:var(--text-2);flex:none}
+.csdoc .st2{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:999px;background:var(--surface);font:500 12px/16px var(--font);color:var(--text)} .csdoc .st2 i{width:8px;height:8px;border-radius:50%}
+.csdoc .actions{display:flex;gap:8px}
+/* home card */
+@media (max-width:1100px){.csdoc{grid-template-columns:minmax(0,1fr)}.csdoc .side{position:static;order:-1}}
+.csdoc .rv em{white-space:nowrap;border:0}
+.cspec-cta .tx small b{font-weight:500;color:var(--text-2)}
+</style>
+<script>
+/* FB78 */
+(function(){
+const TOOLS={jira:['Jira','#2684ff','J','Epic'],clickup:['ClickUp','#7b68ee','C','Task'],notion:['Notion','#3a3d46','N','Page']};
+const STATUS=[['draft','Draft','#a3a7b5'],['review','In review','#ffcc4d'],['approved','Approved','#7b97f0'],['progress','In progress','#9a84f2'],['done','Done','#34c759']];
+const SYS=()=>(S.bs&&S.bs.name)||'Commerce platform';
+const ST=k=>STATUS.find(s=>s[0]===k)||STATUS[0];
+const V=()=>document.getElementById('vSpecs');
+/* ---------- richer content for the sample specifications ---------- */
+const EXTRA={
+ cs1:{num:'RS-12', summary:'Move returns and exchanges out of Orders into a new Returns context.',
+   why:'Orders changes for two reasons: placing orders and handling what comes back. Returns work keeps breaking order tests, and the returns team waits on the orders team for every release.',
+   goals:['Returns and exchanges can ship without an Orders release','Orders keeps placing, editing and cancelling orders'], non:['No change to how refunds are paid out','No new APIs for shoppers'],
+   from:'Orders', to:'Returns', ucs:['Request Return','Create Exchange','Cancel Order'], apis:['POST /store/returns','POST /admin/returns/:id/receive','POST /admin/exchanges','POST /admin/orders/:id/cancel','GET /admin/returns','GET /admin/returns/:id'],
+   impacted:[['View Order','Reads return status from Orders in-process. After the move it needs to call Returns.'],['Reorder a Past Order','Imports a return helper from Orders. That import breaks.'],['Release Reservation','Calls deleteReservationsByLineItemsStep in Orders directly. If it moves, those calls break.'],['Complete Checkout','Subscribes to order.placed. Keeps working only if the event name and payload stay the same.']],
+   points:[['order.return_requested','Event · Orders → Returns','New consumer'],['refundPaymentsStep','Call · Returns → Payments','Becomes cross-context']],
+   teams:['Checkout team (owns Orders)','Fulfillment team (owns Inventory)'],
+   alts:[['Split Returns into its own context',1,['Returns ships on its own','Clear owner for returns'],['4 use cases need updates','2 new cross-context calls']],['Keep Returns inside Orders, as a module',0,['Nothing breaks','No new contracts'],['Same release coupling as today','Ownership stays unclear']],['Do nothing',0,['No work'],['The coupling keeps growing']]],
+   risks:[['Refunds fail during the switch','Medium','High','Keep the old refund path behind a flag until the new one is verified'],['Event payload changes break checkout','Low','High','Freeze the order.placed contract; add a test for it']],
+   plan:[['Create the Returns context and copy the return models','No behaviour change'],['Add an event for order.return_requested','Orders publishes, Returns listens'],['Move the 6 return APIs behind the new context','Old routes forward to the new ones'],['Switch View Order and Reorder to call Returns','Remove in-process imports'],['Remove the old return code from Orders','Undo: re-enable the forwarders']],
+   oq:[['Who owns exchanges: Returns or Orders?','Sarah R. · 28 Nov'],['Do refunds stay synchronous?','Zoe K. · 2 Dec']],
+   reviewers:[['Zoe K.','approved'],['Oliver F.','pending'],['Sarah R.','changes']]},
+ cs2:{num:'UC-31', summary:'Finance refunds a captured payment from the order page.', goal:'Refund a payment', level:'User goal', scope:'Payments',
+   trigger:'A shopper asks for their money back, or a return is received.', pre:['The payment is captured','Finance has the Refund permission'],
+   steps:['Finance opens the payment','Finance presses Refund','System checks the refundable amount','System refunds the payment','System shows the refund on the order'],
+   ext:[['3a','The amount is more than what was captured','System shows the maximum and asks again'],['4a','The provider declines the refund','System keeps the payment as it was and shows the reason']],
+   post:['Success: the refund is recorded on the payment and the order','Always: nothing is refunded twice'], rules:['Partial refunds are allowed','Refunds over 1,000 need a second approver'],
+   related:['Capture Payment','Request Return'], oq:[['Can a refund be cancelled once sent?','Amy N. · 30 Nov']], reviewers:[['Oliver F.','approved'],['Hamza M.','pending']]},
+ cs3:{num:'RS-9'}, cs4:{num:'UC-27'}, cs5:{num:'RS-4'}};
+const X=x=>Object.assign({num:(x.type==='uc'?'UC-':'RS-')+String(x.id).slice(-2)}, EXTRA[x.id]||{});
+const LINK=x=>{ if(!x.link) return null; const t=TOOLS[x.link.tool]; return Object.assign({name:t[0],c:t[1],l:t[2],kind:t[3]},x.link); };
+const lg=(t)=>`<span class="lg" style="background:${TOOLS[t][1]}">${TOOLS[t][2]}</span>`;
+/* ---------- list ---------- */
+const crumbs=(x)=>`<nav class="csbc" aria-label="Breadcrumb"><button data-act="cs2sys">${esc(SYS())}</button>${I('chevron-right',14)}${x?`<button data-act="spclose">Change specifications</button>${I('chevron-right',14)}<span class="cur">${esc(X(x).num)}</span>`:'<span class="cur">Change specifications</span>'}</nav>`;
+function listHTML(){ const h=V().innerHTML; return h; }
+/* ---------- document ---------- */
+function sec(id,title,inner,{hint='',auto=false,count=null}={}){ return `<section class="ds" id="cs-${id}"><h2>${title}${count!=null?`<span class="count">${count}</span>`:''}${auto?`<span class="auto">${sIcS()}From the code</span>`:''}</h2>${hint?`<p class="hint">${hint}</p>`:''}${inner}</section>`; }
+const sIcS=()=>{ try{ return sIc(12); }catch(e){ return ''; } };
+const ph=t=>`<p class="ph">${t}</p>`;
+const ul=a=>a&&a.length?`<ul class="bl">${a.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`:'';
+const apiRow=r=>{ const [m,...p]=r.split(' '); return `<span class="iap"><b class="meth ${m.toLowerCase()}">${m}</b>${esc(p.join(' '))}</span>`; };
+function rfDoc(x,E){ const T=[]; const ucs=E.ucs||x.moves||[]; const apis=E.apis||[];
+  T.push(['summary','Summary', `<p class="tx">${esc(E.summary||x.notes||`Move ${ucs.length} use case${ucs.length===1?'':'s'} into ${x.scope.split('→').pop().trim()}.`)}</p>`]);
+  T.push(['why','Context and problem', E.why?`<p class="tx">${esc(E.why)}</p>`:ph('Why change this now? What hurts today?')]);
+  T.push(['goals','Goals and non-goals', E.goals?`<div class="ba"><div class="col"><h4>Goals</h4>${ul(E.goals)}</div><div class="col"><h4>Non-goals</h4>${ul(E.non)}</div></div>`:ph('What does success look like, and what is out of scope?')]);
+  T.push(['change','Proposed change', `<table class="tb"><tr><th>Use case</th><th>From</th><th>To</th></tr>${ucs.map(u=>`<tr><td>${esc(u)}</td><td>${esc(E.from||x.scope.split('→')[0].trim())}</td><td>${esc(E.to||x.scope.split('→').pop().trim())}</td></tr>`).join('')||'<tr><td colspan="3">Only integrations change</td></tr>'}</table>${apis.length?`<p class="hint" style="margin:14px 0 6px">APIs that move · ${apis.length}</p><div style="display:flex;flex-wrap:wrap;gap:6px">${apis.map(apiRow).join('')}</div>`:''}`, {auto:true}]);
+  T.push(['ba','Before and after', `<div class="ba"><div class="col"><h4>Before</h4><div class="cx">${kindIc('context',14)}${esc(E.from||x.scope.split('→')[0].trim())}<small>${ucs.length+5} use cases</small></div></div><div class="col"><h4>After</h4><div class="cx">${kindIc('context',14)}${esc(E.from||x.scope.split('→')[0].trim())}<small>5 use cases</small></div><div class="cx new">${kindIc('context',14)}${esc(E.to||x.scope.split('→').pop().trim())}<small>${ucs.length} use cases</small></div></div></div>`, {auto:true}]);
+  const imp=E.impacted||[]; const nI=x.impact?x.impact.uc:imp.length;
+  T.push(['impact','Impact', `${imp.length?imp.map(([n,w])=>`<div class="imp"><span class="ic">${I('alert',16)}</span><span><b>${esc(n)}</b><small>${esc(w)}</small></span></div>`).join(''):`<p class="tx">${nI} use cases and ${x.impact?x.impact.pt:0} integration points are impacted.</p>`}
+    ${E.points?`<p class="hint" style="margin:16px 0 6px">Integration points</p><table class="tb"><tr><th>Point</th><th>Where</th><th>Change</th></tr>${E.points.map(p=>`<tr><td><code>${esc(p[0])}</code></td><td>${esc(p[1])}</td><td>${esc(p[2])}</td></tr>`).join('')}</table>`:''}
+    ${E.teams?`<p class="hint" style="margin:16px 0 6px">Teams to involve</p>${ul(E.teams)}`:''}`, {auto:true, count:nI}]);
+  T.push(['alts','Alternatives considered', E.alts?E.alts.map(([t,on,g,b])=>`<div class="alt ${on?'on':''}"><b>${esc(t)}${on?'<span class="auto">Proposed</span>':''}</b><div class="pc"><div class="g">${g.map(v=>`<span><i>+</i> ${esc(v)}</span>`).join('')}</div><div class="b">${b.map(v=>`<span><i>−</i> ${esc(v)}</span>`).join('')}</div></div></div>`).join(''):ph('List two or three options, including doing nothing, with their pros and cons.')]);
+  T.push(['risks','Risks', E.risks?`<table class="tb"><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr>${E.risks.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table>`:ph('What could go wrong, and how do we reduce it?')]);
+  const plan=E.plan||(x.moves||[]).map(m=>[`Move ${m}`,'']);
+  T.push(['plan','Migration plan', plan.length?plan.map(([t,s],i)=>{ const L=LINK(x); return `<div class="step"><span class="n">${i+1}</span><span class="t">${esc(t)}${s?`<small>${esc(s)}</small>`:''}</span>${L?`<span class="tk">${esc(L.key.replace(/\d+$/,d=>+d+i+1))}</span>`:''}</div>`; }).join(''):ph('Steps in order, each one safe to stop after.'), {hint:'Each step becomes a ticket when you publish.'}]);
+  T.push(['oq','Open questions', E.oq?E.oq.map(([q,w])=>`<div class="oq"><span class="cb"></span><span>${esc(q)} <small>· ${esc(w)}</small></span></div>`).join(''):ph('Anything still to decide before approval.'), {count:E.oq?E.oq.length:0}]);
+  T.push(['decision','Decision', x.status==='draft'||x.status==='review'?ph('Filled in when the specification is approved.'):`<p class="tx">Approved. We split as proposed.</p>`]);
+  return T; }
+function ucDoc(x,E){ const T=[]; const steps=E.steps||x.steps||[];
+  T.push(['summary','Summary', `<p class="tx">${esc(E.summary||x.title)}</p>`]);
+  T.push(['actor','Persona and scope', `<div class="kv"><span>Persona</span><span>${esc(x.persona||'')}</span><span>Goal</span><span>${esc(E.goal||x.title)}</span><span>Level</span><span>${esc(E.level||'User goal')}</span><span>Context</span><span>${esc(E.scope||x.scope||'Not set')}</span></div>`]);
+  T.push(['trigger','Trigger and preconditions', E.trigger?`<p class="tx">${esc(E.trigger)}</p><p class="hint" style="margin:12px 0 6px">Preconditions</p>${ul(E.pre)}`:ph('What starts it, and what must already be true?')]);
+  T.push(['main','Main flow', `<div class="uc"><ol>${steps.map(t=>{ const m=t.match(/^(System|[^:]+?)( decides)?:\s*(.*)$/); return `<li>${m?`<b>${esc(m[1])}</b> ${esc(m[3])}`:esc(t)}</li>`; }).join('')}</ol></div>`, {count:steps.length}]);
+  T.push(['ext','Other paths', E.ext?`<div class="uc">${E.ext.map(([n,c,r])=>`<div class="ext"><b>${esc(n)}</b> If ${esc(c.charAt(0).toLowerCase()+c.slice(1))}: ${esc(r.charAt(0).toLowerCase()+r.slice(1))}</div>`).join('')}</div>`:ph('What happens when a step fails or the persona picks something else?')]);
+  T.push(['post','Outcome', E.post?ul(E.post):ph('What is true when it ends, on success and on failure?')]);
+  T.push(['rules','Business rules', E.rules?ul(E.rules):ph('Limits, permissions, amounts.')]);
+  T.push(['related','Related use cases', E.related?ul(E.related):ph('None yet.'), {auto:true}]);
+  T.push(['oq','Open questions', E.oq?E.oq.map(([q,w])=>`<div class="oq"><span class="cb"></span><span>${esc(q)} <small>· ${esc(w)}</small></span></div>`).join(''):ph('Anything still to decide.'), {count:E.oq?E.oq.length:0}]);
+  T.push(['solution','Solution design', ph('APIs and code changes come later, in a refactoring specification or the solution design.')]);
+  return T; }
+function sideHTML(x,E){ const s=ST(x.status); const L=LINK(x); const rv=E.reviewers||[];
+  const next=STATUS.findIndex(q=>q[0]===x.status)+1;
+  return `<aside class="side">
+    <div class="card2"><div class="kv"><span>Status</span><span><span class="st2"><i style="background:${s[2]}"></i>${s[1]}</span></span><span>Type</span><span>${x.type==='uc'?'Use case specification':'Refactoring specification'}</span><span>Author</span><span class="who">${pAv(x.by,18)}${esc(x.by)}</span><span>Created</span><span>${esc(x.when)}</span><span>Contexts</span><span>${esc(x.scope||'Not set')}</span><span>System</span><span>${esc(SYS())}</span></div>
+      ${next<STATUS.length?`<div class="actions" style="margin-top:12px"><button class="btn sm" data-act="spnext2" data-arg="${x.id}">Move to ${STATUS[next][1]}</button></div>`:''}</div>
+    <div class="card2"><h3>Reviewers<span class="count">${rv.length}</span></h3>${rv.length?rv.map(([n,st])=>`<div class="rv">${pAv(n,20)}${esc(n)}<em class="${st==='approved'?'ok':st==='changes'?'ch':''}">${st==='approved'?'Approved':st==='changes'?'Changes requested':'Waiting'}</em></div>`).join(''):'<div class="rv" style="color:var(--text-3)">No reviewers yet</div>'}<button class="btn ghost sm" style="margin-top:6px" data-act="csrev">${I('plus',14)}Add reviewer</button></div>
+    <div class="card2"><h3>Publish</h3>${L?`<div class="lw">${lg(L.tool)}<span>${L.kind} <b class="tk">${esc(L.key)}</b></span><em>${s[1]}</em></div>${x.type==='rf'?`<div class="lw" style="color:var(--text-3)">${I('chevron-right',14)}<span>${(E.plan||x.moves||[]).length} child tickets, one per step</span></div>`:''}<div class="sync"><i></i>Synced 2 min ago · status comes back from ${L.name}</div>`
+      :`<div class="pbt">${Object.entries(TOOLS).map(([k,[n,c,l,kind]])=>`<button data-act="cspub" data-arg="${x.id}|${k}" ${SPEC_TOOLS[k]?'':'aria-disabled="true"'}>${lg(k)}Publish to ${n}<small>${SPEC_TOOLS[k]?`as ${kind.toLowerCase()}`:'Connect first'}</small></button>`).join('')}</div><p class="hint" style="margin:8px 0 0">${x.type==='rf'?'Creates an epic with one ticket per migration step.':'Creates one story with the steps.'} The specification stays the source of truth; status comes back.</p>`}</div>
+  </aside>`; }
+function docHTML(x){ const E=X(x); const T=x.type==='uc'?ucDoc(x,E):rfDoc(x,E); const s=ST(x.status);
+  return `<div class="wrap">${crumbs(x)}<div class="csdoc"><div class="main">
+    <header class="dh"><div class="r1">${x.type==='uc'?kindIc('usecase',14):kindIc('context',14)}<span>${x.type==='uc'?'Use case specification':'Refactoring specification'}</span><span>·</span><span>${esc(E.num)}</span><span>·</span><span>Updated ${esc(x.when)}</span></div><h1>${esc(x.title)}</h1></header>
+    <nav class="toc" aria-label="Sections">${T.map(t=>`<a href="#" data-act="csjump" data-arg="cs-${t[0]}">${t[1]}</a>`).join('')}</nav>
+    ${T.map(t=>sec(t[0],t[1],t[2],t[3]||{})).join('')}</div>${sideHTML(x,E)}</div></div>`; }
+/* ---------- paint ---------- */
+function paint2(){ const v=V(); if(!v||S.tab!=='specs') return; const dr=document.getElementById('specDrawer'); if(dr){ dr.hidden=true; dr.innerHTML=''; }
+  const x=S.specs.open&&SPECS.find(s=>s.id===S.specs.open);
+  if(x){ const st=v.scrollTop; v.innerHTML=docHTML(x); if(paint2.last===x.id) v.scrollTop=st; else v.scrollTop=0; paint2.last=x.id; return; }
+  paint2.last=null; const w=v.querySelector('.wrap'); if(w&&!w.querySelector('.csbc')) w.insertAdjacentHTML('afterbegin',crumbs(null));
+  v.querySelectorAll('.csrow.on').forEach(r=>r.classList.remove('on')); }
+{ const _r=render; render=function(){ _r(); try{ paint2(); }catch(e){ console.error(e); } }; }
+const R=()=>render();
+Object.assign(ACT,{
+  cs2sys(){ S.specs.open=null; S.tab='codona'; render(); },
+  csjump(id){ const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },
+  cspub(a){ const [id,k]=a.split('|'); if(!SPEC_TOOLS[k]){ toast(`Connect ${TOOLS[k][0]} first, on the Change specifications page.`); return; } ACT.sppushto(id+'|'+k); },
+  spnext2(id){ const x=SPECS.find(s=>s.id===id); const i=STATUS.findIndex(s=>s[0]===x.status); if(i<STATUS.length-1) x.status=STATUS[i+1][0]; R(); },
+  csrev(){ toast('Pick a reviewer from your teams.'); }
+});
+['spopen','spclose','spgrp','spconn','sppushto','spnext'].forEach(k=>{ const f=ACT[k]; ACT[k]=function(){ const r=f.apply(this,arguments); R(); return r; }; });
+{ const f=ACT.spopen; ACT.spopen=function(id){ S.specs.open=id; R(); }; }
+document.addEventListener('click',e=>{ const a=e.target.closest&&e.target.closest('[data-act=csjump]'); if(a) e.preventDefault(); },true);
+/* ---------- nav: no Change specifications item; collapsed rail has one line between groups ---------- */
+{ const _rh=railHTML; railHTML=function(){ let h=_rh(); h=h.replace(/<button class="nv2[^"]*"[^>]*data-arg="specs"[\s\S]*?<\/button>/,'');
+    h=h.replace(/(<div class="nv-sep"><\/div>\s*){2,}/g,'<div class="nv-sep"></div>'); return h; }; }
+/* ---------- home: Change specifications card; no "No context" card ---------- */
+{ const _h=homeHTML; homeHTML=function(){ let h=_h();
+    h=h.replace(/<section class="card"><div class="cta unas-cta">[\s\S]*?<\/section>/,'');
+    const L=window.SPECS||[]; const d=L.filter(x=>x.status==='draft').length, r=L.filter(x=>x.status==='review').length;
+    const card=`<section class="card"><div class="cta cspec-cta"><div class="tx"><b>Change specifications</b><small>${L.length?[d?`${d} draft${d===1?'':'s'}`:'',r?`${r} in review`:''].filter(Boolean).join(' · ')||`${L.length} in total`:'None yet'}</small></div><button class="btn" data-act="tab" data-arg="specs"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6M9 4a1 1 0 0 0-1 1v1h8V5a1 1 0 0 0-1-1M8 5H6.5A1.5 1.5 0 0 0 5 6.5v13A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 17.5 5H16M9 12h6M9 16h4"/></svg>View all</button></div></section>`;
+    const i=h.indexOf('<div class="cta ucrv-cta">'); if(i>=0){ const j=h.indexOf('</section>',i)+10; h=h.slice(0,j)+card+h.slice(j); } else h+=card;
+    return h; }; }
+try{ render(); }catch(e){}
+})();
+</script>
+<script>
+/* FB79 · icons: use case is the oval again; integration points use the direction triangles */
+(function(){
+const OVAL='<path transform="translate(3 6)" d="M 18 6 C 18 9.3 14 12 9 12 C 4 12 0 9.3 0 6 C 0 2.7 4 0 9 0 C 14 0 18 2.7 18 6 Z"/>';
+const PT='<path d="M8 12h8"/><path d="M2.5 12 8 7.5v9z"/><path d="M21.5 12 16 7.5v9z"/>';
+FBI.oval=OVAL; FBI.cursorclick=OVAL; FBI.ptdir=PT;
+if(typeof KICON!=='undefined'){ KICON.oval=OVAL; KICON.cursorclick=OVAL; KICON.ptdir=PT; }
+KINDS.usecase[1]='oval'; KINDS.point[1]='ptdir';
+/* direction icons in lists and filters: triangles, same meaning as before */
+const tri=(p,s)=>`<svg class="dio" width="${s}" height="${s}" viewBox="0 0 12 12" aria-hidden="true"><path d="${p}" fill="currentColor"/></svg>`;
+const T_IN='M10 2.5 3 6l7 3.5z', T_OUT='M2 2.5 9 6 2 9.5z';
+window.dirIcT=window.dirIc=(d,s=12)=>d==='in'?tri(T_IN,s):d==='both'?`<span class="dio2">${tri(T_IN,s)}${tri(T_OUT,s)}</span>`:tri(T_OUT,s);
+try{ render(); }catch(e){}
+})();
+</script>
+<style>
+/* FB80 · form controls match the Arcus sizes used across the app: fields 36px in dialogs, 32px elsewhere, buttons 32px */
+.ncm .mbd .field,.ncm .field{height:36px!important;min-height:36px!important}
+.ncm .mbd .field input,.ncm .field input{font-size:14px}
+.npm select{height:36px!important}
+.npm .useg{height:36px!important;padding:2px!important} .npm .useg button{height:30px!important}
+.npm .npr{min-height:36px!important}
+.npx .us input{height:36px!important}
+.npx .us .op input,.npx .us .op select{height:32px!important}
+.ncm .mft .btn,.npm .mft .btn,.db-f .btn{height:32px!important}
+.pfs-b{min-height:36px!important;padding-top:3px!important;padding-bottom:3px!important} .pfs-b .pc{height:26px!important}
+.db-nm .field{height:36px!important}
+</style>
+<style>
+/* FB81 · New use case is a screen, not a modal. Steps and Review draw on the same canvas as "Open sequence steps". */
+body.npscr #npModal .ncm-bg{display:none}
+body.npscr #npModal .ncm.npm{left:var(--npL,60px);top:var(--npT,52px);right:0;bottom:0;transform:none;width:auto!important;max-height:none!important;border-radius:0;border:0;border-left:1px solid var(--border);box-shadow:none;background:var(--canvas);z-index:40}
+body.npscr #npModal .mhd{background:var(--panel);border-bottom:1px solid var(--border);padding-left:24px;padding-right:24px}
+body.npscr #npModal .mft{background:var(--panel);border-top:1px solid var(--border);padding-left:24px;padding-right:24px}
+body.npscr #npModal .mbd{width:100%;max-width:640px;margin:0 auto;padding-top:32px;padding-bottom:48px}
+/* Steps and Review: the canvas fills the screen, the editor floats on it as a sidebar */
+body.npscr.npcv #npModal .ncm.npm{background:transparent;pointer-events:none;border-left:0}
+body.npscr.npcv #npModal .npside{position:absolute;left:16px;top:16px;bottom:16px;width:480px;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;pointer-events:auto;z-index:2}
+body.npscr.npcv #npModal .npside .mhd{flex-wrap:wrap;row-gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);background:transparent}
+body.npscr.npcv #npModal .npside .mhd .npsteps{order:3;flex-basis:100%;margin:0;justify-content:flex-start}
+body.npscr.npcv #npModal .npside .mhd b{flex:1}
+body.npscr.npcv #npModal .npside .ue-l,body.npscr.npcv #npModal .npside .rv-l{flex:1;min-height:0;overflow:auto;border-right:0;background:transparent;padding:16px 20px}
+body.npscr.npcv #npModal .npside .mft{background:transparent;padding:12px 20px;border-top:1px solid var(--border)}
+body.npscr.npcv #npModal .ue,body.npscr.npcv #npModal .rv{display:block;position:absolute;inset:0;pointer-events:none}
+body.npscr.npcv #npModal .ue-r,body.npscr.npcv #npModal .rv-r{position:absolute;left:520px;top:16px;right:16px;bottom:16px;display:block;background:transparent!important;background-image:none!important;pointer-events:none}
+body.npscr.npcv #npModal .rv-r .ue-r{position:static}
+body.npscr.npcv #npModal .ue-r .cv{display:none}
+body.npscr.npcv #npModal .ue-r .tb{display:inline-flex;margin:0;padding:0;background:transparent;pointer-events:auto}
+body.npscr.npcv #npModal .ue-r .tb>b,body.npscr.npcv #npModal .ue-r .tb>span{display:none}
+body.npscr #cTop,body.npscr.npcv #cPanel{visibility:hidden}
+body.npscr #cCrumb,body.npscr #cDock,body.npscr #cStatus,body.npscr #cxBar,body.npscr #cPlay,body.npscr .fvt,body.npscr .sql,body.npscr #fxKey{display:none!important}
+body.npscr #cxItem,body.npscr #cTop .fvt,body.npscr #cTop .fx-close,body.npscr #dock,body.npscr .dock{visibility:hidden}
+body.npscr #ucLeg{z-index:41}
+/* connected layers: underlined tabs, a steady list height */
+.cgtabs{gap:10px!important;padding:6px 0 10px!important}
+.cgtabs .tr{gap:18px!important;border-bottom:1px solid var(--border);overflow-x:auto}
+.cgtabs .tr button{height:36px!important;padding:0 0 0!important;border-radius:0!important;background:transparent!important;color:var(--text-2)!important;box-shadow:inset 0 -2px 0 transparent;margin-bottom:-1px}
+.cgtabs .tr button:hover{color:var(--text)!important}
+.cgtabs .tr button.on{color:var(--text)!important;box-shadow:inset 0 -2px 0 var(--text)}
+.cgtabs .tr button .count{background:var(--surface)!important}
+.cgtabs .tr button.on .count{background:var(--surface-strong)!important;color:var(--text)}
+.cgtabs{border-bottom:0!important}
+.conn .cg:not(.cg-hide){min-height:42vh;padding-bottom:32px}
+</style>
+<style>.aisum p>:not(b):not(br){background:rgba(255,255,255,.08)!important;box-shadow:none!important}.aisum p>* .meth{background:rgba(255,255,255,.08)!important}body.light .aisum p>:not(b):not(br),body.light .aisum p>* .meth{background:rgba(20,24,33,.06)!important}
+.srow.rrow{display:flex;align-items:center;gap:12px}.srow.rrow .rgh{flex:none;width:32px;height:32px;border-radius:8px;display:grid;place-items:center;background:var(--surface);color:var(--text)}.srow.rrow .tx{min-width:0;display:flex;flex-direction:column;gap:2px}.srow.rrow .tx b{display:flex;align-items:center;gap:8px}
+.pfs-b .pv{padding:0 4px;font:400 14px/20px var(--font);color:var(--text)}</style>
+<script>
+/* FB81 */
+(function(){
+const ID='__np';
+const scr=()=>!!S.np;
+const cv=()=>!!S.np&&(S.np.stage||1)>=2;
+window.npArea=function(){ if(!document.body.classList.contains('npcv')) return null; const sd=document.querySelector('#npModal .npside'); const v=document.getElementById('vCodona'); if(!sd||!v) return null;
+  const r=sd.getBoundingClientRect(), b=v.getBoundingClientRect(); const x=r.right-b.left+32; return {x, y:72, w:Math.max(200,b.width-x-32), h:Math.max(200,b.height-72-32)}; };
+function dock(){ const n=document.querySelector('#npModal .ncm.npm'); if(!n||n.querySelector(':scope > .npside')||!cv()) return; const a=document.activeElement, pos=a&&a.selectionStart;
+  const sd=document.createElement('div'); sd.className='npside'; const hd=n.querySelector(':scope > .mhd'), ft=n.querySelector(':scope > .mft'), ed=n.querySelector('.ue-l')||n.querySelector('.rv-l');
+  [hd,ed,ft].forEach(x=>{ if(x) sd.appendChild(x); }); n.prepend(sd); if(a&&n.contains(a)&&document.activeElement!==a){ a.focus(); try{ if(pos!=null) a.setSelectionRange(pos,pos); }catch(e){} } }
+const per=M=>{ const p=(window.PERSONAS||[]).find(x=>x.id===(M.per||[])[0]); return p?p.name:'User'; };
+function toFlow(M){ const steps=[], alts=[], idx={}; let cur=null;
+  (M.steps||[]).forEach(x=>{ const t=(x.t||'').trim();
+    if(x.kind==='decision'){ if(!cur){ cur={t:'Start',sc:null,apis:[]}; steps.push(cur); } const at=steps.length; idx[x.id]=at;
+      (x.opts||[]).forEach((o,k)=>{ if(k===0&&(o.to==='next'||!o.to)) return; const a={t:o.t||'Other option', kind:o.to==='end'?'cancel':'validation', at, steps:t?[t]:[]};
+        if(o.to==='end') a.end='Ends'; else if(o.to==='next'||!o.to) a.end='Continues'; else a._to=o.to; alts.push(a); }); cur._after=1; return; }
+    if(!t) return;
+    if(x.who==='user'||!cur||cur._sys||cur._after){ cur={t, sc:null, apis:[]}; if(x.who!=='user') cur._sys=1; steps.push(cur); }
+    else cur.r=cur.r?cur.r+'. '+t:t;
+    idx[x.id]=steps.length; });
+  alts.forEach(a=>{ if(a._to){ a.back=idx[a._to]||1; delete a._to; } });
+  steps.forEach(s=>{ if(!s.r) s.r=' '; delete s._sys; delete s._after; });
+  if(!steps.length) steps.push({t:'Write the first step on the left', sc:null, apis:[], r:' '});
+  return {start:`${per(M)} starts`, result:(M.name||'').trim()||'Done', steps, alts}; }
+function sync(){ const M=S.np; if(!M) return; const ctx=M.ctx&&M.ctx!=='auto'&&window.CTB&&CTB[M.ctx]?M.ctx:'orders';
+  const u=UCB[ID]||{}; Object.assign(u,{id:ID, name:(M.name||'').trim()||'New use case', ch:M.ch||'store', ctx, personas:(M.per||[]).slice(0,1), apis:[], i:[], ext:[], m:{rpd:0}, _draft:1}); UCB[ID]=u;
+  FLOW[ID]=toFlow(M); }
+window.npSync=()=>sync();
+let last='';
+function apply(refit){ const on=scr(), c=cv(); document.body.classList.toggle('npscr',on); document.body.classList.toggle('npcv',c);
+  const rail=document.getElementById('rail'), top=document.getElementById('appTop')||document.querySelector('header');
+  if(rail) document.body.style.setProperty('--npL',Math.round(rail.getBoundingClientRect().right)+'px'); if(top) document.body.style.setProperty('--npT',Math.round(top.getBoundingClientRect().bottom)+'px');
+  if(c){ sync(); if(S.tab!=='codona') S.tab='codona'; const M=S.np; S.ucx.fv=M.dv==='flow'?'cards':(M.dv||'seq'); S.ucx.sl='sys'; const was=S.ucx.flow; S.ucx.flow=ID; S.ucx.hl=null;
+    const key=M.stage+'|'+S.ucx.fv; try{ renderFlowCanvas(); }catch(e){ console.error(e); }
+    if(refit||was!==ID||key!==last){ last=key; requestAnimationFrame(()=>{ try{ ACT.zoom('fit'); }catch(e){} }); } }
+  else if(S.ucx.flow===ID){ S.ucx.flow=null; delete UCB[ID]; last=''; try{ renderFlowCanvas(); }catch(e){} } }
+{ const el=document.getElementById('npModal'); let w=0; if(el) new MutationObserver(()=>{ document.body.classList.toggle('npcv',cv()); try{ dock(); }catch(e){} if(w) return; w=requestAnimationFrame(()=>{ w=0; try{ apply(); }catch(e){ console.error(e); } }); }).observe(el,{childList:true}); }
+{ const _r=render; render=function(){ _r(); if(cv()&&S.ucx.flow!==ID) try{ apply(true); }catch(e){} }; }
+/* diagram toggle on the screen drives the real canvas */
+{ const _d=ACT.npdv; ACT.npdv=function(v){ S.np.dv=v; renderNP(); }; }
+let q=0; document.addEventListener('input',e=>{ if(!cv()) return; const t=e.target; if(!t.classList||!(t.classList.contains('npS')||t.classList.contains('npO')||t.id==='npName')) return; if(q) return; q=requestAnimationFrame(()=>{ q=0; sync(); try{ renderFlowCanvas(); }catch(e){} }); });
+addEventListener('resize',()=>{ if(cv()) try{ ACT.zoom('fit'); }catch(e){} });
+/* the address bar shows the screen */
+{ const _h=hashOf; hashOf=function(){ return S.np ? '#/codona/new-use-case' : _h(); }; }
+})();
+</script>
+<style>
+/* FB82 · rescan: progress dialog, then a progress bar in the Commerce platform card */
+.rsc-bg{position:fixed;inset:0;z-index:120;background:rgba(3,6,12,.62)}
+.rsc{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:121;width:min(640px,calc(100vw - 32px));max-height:92vh;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--border-strong);border-radius:14px;box-shadow:var(--shadow)}
+.rsc .hd{padding:24px 28px 18px;border-bottom:1px solid var(--border)}
+.rsc .hd h2{margin:0 0 6px;font:600 18px/26px var(--font)}
+.rsc .hd p{margin:0;font:400 13px/20px var(--font);color:var(--text-2)}
+.rsc .bd{padding:20px 28px;overflow:auto}
+.rsc .st{display:grid;grid-template-columns:24px minmax(0,1fr);column-gap:14px;position:relative;padding-bottom:20px}
+.rsc .st:last-child{padding-bottom:0}
+.rsc .st::before{content:"";position:absolute;left:11px;top:26px;bottom:2px;width:2px;background:var(--border-strong)}
+.rsc .st:last-child::before{display:none}
+.rsc .st.done::before{background:var(--ok)}
+.rsc .st .ic{width:24px;height:24px;display:grid;place-items:center;color:var(--text-3)}
+.rsc .st .ic i{width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--text-3)}
+.rsc .st.done .ic{color:var(--ok)} .rsc .st.on .ic{color:var(--accent-on)}
+.rsc .st b{display:block;font:500 15px/24px var(--font);color:var(--text)}
+.rsc .st.wait b{color:var(--text-2)}
+.rsc .st small{display:block;font:400 13px/20px var(--font);color:var(--text-2)}
+.rsc .st .meta{margin-top:4px;color:var(--text-3)}
+.rsc .pb{height:4px;border-radius:2px;background:var(--surface-strong);margin:10px 0 12px;overflow:hidden}
+.rsc .pb i{display:block;height:100%;background:var(--accent-hover);border-radius:2px;transition:width .4s ease}
+.rsc .rp{display:flex;align-items:center;gap:10px;padding:7px 0;font:500 14px/20px var(--font)}
+.rsc .rp .s{margin-left:auto;font:400 13px/20px var(--font);color:var(--text-3);white-space:nowrap}
+.rsc .rp.on .s{color:var(--accent-on)}
+.rsc .rp .ri{width:18px;height:18px;display:grid;place-items:center;color:var(--text-3);flex:none} .rsc .rp.done .ri{color:var(--ok)} .rsc .rp.on .ri{color:var(--accent-on)}
+.rsc .ft{display:flex;justify-content:flex-end;gap:8px;padding:16px 28px;border-top:1px solid var(--border)}
+.rsc .spin,.rsc-bar .spin{animation:spin 1.2s linear infinite}
+.sys .rsc-sub{display:flex;gap:6px;font:500 12px/18px var(--font);color:var(--text-2)}
+.sys .rsc-bar{margin:10px 0 0;padding:12px 14px;border-radius:10px;background:color-mix(in srgb,var(--accent) 32%,var(--panel))}
+.sys .rsc-bar .r{display:flex;align-items:center;gap:8px;font:500 13px/18px var(--font);color:var(--accent-on)}
+.sys .rsc-bar .r button{margin-left:auto;font:600 13px/18px var(--font);color:#fff}
+.sys .rsc-bar .pb{height:4px;border-radius:2px;background:rgba(255,255,255,.9);margin-top:10px;overflow:hidden}
+.sys .rsc-bar .pb i{display:block;height:100%;background:var(--accent-on);transition:width .4s ease}
+body.light .sys .rsc-bar{background:var(--selected)} body.light .sys .rsc-bar .r button{color:var(--accent-on)} body.light .sys .rsc-bar .pb{background:var(--surface-strong)}
+</style>
+<script>
+/* FB82 */
+(function(){
+const REP=[['medusajs/medusa','251 routes, 106 workflows','f4e5d6a'],['medusajs/nextjs-starter-medusa','41 routes, 6 workflows','8c1d2e3'],['acme/shipping-rates','5 packages',null]];
+const STEPS=[['Fetching latest commits','Pulling 3 repositories read-only and pinning the new commits'],['Analyzing repositories','Reading routes, workflows and contracts, one repository at a time.'],['Mapping dependencies','Resolving calls, events and config references between repositories'],['Comparing with scan #47','Finding what changed since 18 Oct'],['Ready','Saving scan #48. The previous scan stays in history.']];
+const R={on:false, open:false, t:0, timer:null};
+const SPIN='<svg class="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>';
+const OK='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="m8 12.5 2.6 2.6L16 9.6"/></svg>';
+/* timeline, in ticks of 0.5 s */
+const T1=4, TR=[10,16,24], T3=30, T4=36, T5=40;
+const step=()=>R.t<T1?0:R.t<TR[2]?1:R.t<T3?2:R.t<T4?3:4;
+const repoState=i=>{ const s=i?TR[i-1]:T1; return R.t>=TR[i]?'done':R.t>=s?'on':'wait'; };
+const pct=()=>Math.min(100,Math.round(R.t/T5*100));
+function modalHTML(){ const k=step(); const done=R.t>=T5; const doneRepos=[0,1,2].filter(i=>repoState(i)==='done').length;
+  const left=Math.max(1,Math.ceil((T5-R.t)/2/60*6));
+  return `<div class="rsc-bg" data-act="rscbg"></div><div class="rsc norx" role="dialog" aria-modal="true" aria-labelledby="rscT">
+    <div class="hd"><h2 id="rscT">${done?'Commerce platform is up to date':'Rescanning Commerce platform'}</h2><p>${done?'Scan #48 is ready. The Galaxy now shows the latest commits.':`3 repositories, rescanned together from their latest commits. About ${left} minute${left===1?'':'s'} left. You can close this; it keeps running.`}</p></div>
+    <div class="bd">${STEPS.map(([t,d],i)=>{ const st=done||i<k?'done':i===k?'on':'wait';
+      let extra='';
+      if(i===0&&st==='done') extra=`<small class="meta">medusa → f4e5d6a, storefront → 8c1d2e3, shipping-rates unchanged</small>`;
+      if(i===1&&st!=='wait') extra=`<div class="pb"><i style="width:${Math.round(doneRepos/3*100+(repoState(Math.min(2,doneRepos))==='on'&&doneRepos<3?18:0))}%"></i></div>`+REP.map(([n,res],j)=>{ const s=repoState(j); return `<div class="rp ${s}"><span class="ri">${s==='done'?OK:s==='on'?SPIN:'<i style="width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 1.5px currentColor"></i>'}</span>${esc(n)}<span class="s">${s==='done'?`Analyzed · ${res}`:s==='on'?`Analyzing${j===2?' · 3 of 5 packages':''}`:'Waiting'}</span></div>`; }).join('');
+      const desc=i===1&&st!=='wait'?`${d} ${doneRepos} of 3 done.`:d;
+      return `<div class="st ${st}"><span class="ic">${st==='done'?OK:st==='on'?SPIN:'<i></i>'}</span><div><b>${t}</b><small>${desc}</small>${extra}</div></div>`; }).join('')}</div>
+    <div class="ft">${done?`<button class="btn primary" data-act="rscclose">Done</button>`:`<button class="btn ghost" data-act="rsccancel">Cancel rescan</button><button class="btn" data-act="rscbgrun">Run in background</button>`}</div></div>`; }
+let host=null;
+function paint(){ if(!host){ host=document.createElement('div'); host.id='rscModal'; document.body.appendChild(host); }
+  host.innerHTML=R.open?modalHTML():'';
+  const card=document.querySelector('#cPanel .sys'); if(!card) return; const h=card.querySelector('.sys-h'), l=card.querySelector('.lnks');
+  let sub=card.querySelector('.rsc-sub'), bar=card.querySelector('.rsc-bar');
+  if(R.on){ if(l) l.style.display='none'; if(!sub&&h){ h.querySelector('.tx').insertAdjacentHTML('beforeend','<small class="rsc-sub norx"><span>3 repositories</span><span>·</span><span>Scanning now</span></small>'); }
+    const k=step(); const html=`<div class="r">Scanning, step ${k+1} of 5: ${STEPS[k][0]}<button data-act="rscview">View</button></div><div class="pb"><i style="width:${pct()}%"></i></div>`;
+    if(!bar&&h){ h.insertAdjacentHTML('afterend','<div class="rsc-bar norx"></div>'); bar=card.querySelector('.rsc-bar'); } if(bar) bar.innerHTML=html; }
+  else { if(l) l.style.display=''; if(sub) sub.remove(); if(bar) bar.remove(); } }
+function tick(){ R.t++; if(R.t>=T5){ clearInterval(R.timer); R.timer=null; R.on=false; const l=document.querySelector('#cPanel .sys .lnks button[data-act=scans]'); if(l) l.textContent='Last scan just now'; const nc=document.querySelector('#cPanel .cx-newc'); if(nc) nc.remove(); if(!R.open) toast('Scan #48 is ready. The Galaxy shows the latest commits.'); }
+  paint(); }
+function start(){ if(R.on){ R.open=true; paint(); return; } R.on=true; R.open=true; R.t=0; clearInterval(R.timer); R.timer=setInterval(tick,500); paint(); }
+Object.assign(ACT,{
+  cxrescan:start,
+  bssync(){ start(); },
+  rscview(){ R.open=true; paint(); },
+  rscbgrun(){ R.open=false; paint(); },
+  rscbg(){ R.open=false; paint(); },
+  rscclose(){ R.open=false; paint(); },
+  rsccancel(){ clearInterval(R.timer); R.timer=null; R.on=false; R.open=false; paint(); toast('Rescan canceled. The Galaxy still shows scan #47.'); }
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&R.open){ e.stopPropagation(); R.open=false; paint(); } },true);
+{ const _r=render; render=function(){ _r(); if(R.on) paint(); }; }
+window.__rsc=R;
+})();
+</script>
+<style>
+/* FB83 · change specification as a shareable document: saved selection, impact by cause, boundary, decisions, review, publish */
+.lgo{display:inline-grid;place-items:center;flex:none;border-radius:6px;background:var(--surface)}
+.lgo svg{display:block}
+#vSpecs .lg{background:transparent!important;color:transparent!important;font-size:0!important}
+.sd{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:48px;max-width:1180px;margin:0 auto;padding:0 56px 96px}
+.sd-bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;max-width:1180px;margin:0 auto;padding:14px 56px;background:var(--canvas);border-bottom:1px solid var(--border)}
+.sd-bar .csbc{margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden}
+.sd-bar .btn{height:32px}
+.sd-doc{min-width:0;max-width:760px;width:100%;margin:0 auto;padding-top:40px}
+.sd-k{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font:500 12px/18px var(--font);color:var(--text-3)}
+.sd-doc h1{margin:10px 0 12px;font:600 28px/36px var(--font);letter-spacing:-.01em}
+.sd-meta{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font:400 13px/20px var(--font);color:var(--text-2)}
+.sd-meta>span{display:inline-flex;align-items:center;gap:6px}
+.sd-meta .warn{color:var(--warn-text)}
+.sd-st{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:999px;background:var(--surface);font:500 12px/16px var(--font);color:var(--text)} .sd-st i{width:8px;height:8px;border-radius:50%}
+.sd-intro{margin:18px 0 0;font:400 15px/24px var(--font);color:var(--text)}
+.sd-intro.ph{color:var(--text-3);font-style:italic}
+.sd-stats{display:grid;grid-template-columns:repeat(4,1fr);margin:28px 0 0;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.sd-stats div{padding:14px 16px;border-left:1px solid var(--border)} .sd-stats div:first-child{border-left:0}
+.sd-stats b{display:block;font:600 22px/28px var(--font)} .sd-stats small{font:400 12px/18px var(--font);color:var(--text-3)}
+.sd-stats .r b{color:var(--danger-text)}
+.sd-sec{padding:36px 0;border-top:1px solid var(--border);margin-top:36px}
+.sd-sec+.sd-sec{margin-top:0}
+.sd-sec h2{display:flex;align-items:center;gap:10px;margin:0 0 4px;font:600 18px/26px var(--font)}
+.sd-sec h2 .n{font:500 13px/18px var(--font);color:var(--text-3)}
+.sd-sec h2 .count{margin-left:0}
+.sd-sub{margin:0 0 16px;font:400 13px/20px var(--font);color:var(--text-3)}
+.sd-auto{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 7px;border-radius:999px;background:var(--selected);font:500 11px/16px var(--font);color:var(--accent-on)}
+.sd-flow{display:flex;align-items:center;gap:8px;margin:0 0 14px;font:500 13px/20px var(--font)}
+.sd-g{margin-top:14px} .sd-g:first-of-type{margin-top:0}
+.sd-gh{display:flex;align-items:center;gap:8px;padding:8px 0;font:600 12px/18px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-3);border-bottom:1px solid var(--border)}
+.sd-row{border-bottom:1px solid var(--border)}
+.sd-rh{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:8px 0;text-align:left;font:500 14px/20px var(--font);color:var(--text)}
+.sd-rh:hover{color:#fff} .sd-rh .sp{flex:1}
+.sd-rh .frac{font:500 13px/18px var(--mono);color:var(--text-2)}
+.sd-tag{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:999px;font:500 11px/16px var(--font);background:var(--surface);color:var(--text-2)}
+.sd-tag.part{background:rgba(255,204,77,.14);color:var(--warn-text)}
+.sd-tag.whole{background:var(--selected);color:var(--accent-on)}
+.sd-tag.sh{background:var(--surface-strong);color:var(--text)}
+.sd-rb{padding:0 0 14px 26px;display:flex;flex-direction:column;gap:6px}
+.sd-rb h5{margin:6px 0 2px;font:600 11px/16px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-3)}
+.sd-ap{display:flex;align-items:center;gap:8px;font:400 13px/20px var(--mono);color:var(--text)}
+.sd-ap .meth{font:600 10px/16px var(--mono);min-width:44px}
+.sd-ap.keep{color:var(--text-3)}
+.sd-ap .sd-tag{font-family:var(--font)}
+.sd-f{display:flex;gap:12px;padding:16px 0;border-bottom:1px solid var(--border)} .sd-f:first-child{padding-top:4px}
+.sd-f .ic{flex:none;color:var(--danger);margin-top:2px}
+.sd-f b{font:600 14px/20px var(--font)} .sd-f .cx{font:400 12px/18px var(--font);color:var(--text-3)}
+.sd-f p{margin:4px 0 0;font:400 14px/22px var(--font);color:var(--text-2)}
+.sd-f .why{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;font:400 12px/18px var(--font);color:var(--text-3)}
+.sd-f code,.sd-q code{font:500 12px/18px var(--mono);color:var(--text);background:var(--surface);padding:1px 6px;border-radius:4px}
+.sd-none{padding:14px 16px;border:1px dashed var(--border-strong);border-radius:10px;font:400 13px/20px var(--font);color:var(--text-3)}
+.sd-bd{display:grid;grid-template-columns:1fr 160px 1fr;align-items:center;gap:0;padding:24px;border:1px solid var(--border);border-radius:12px;background-color:var(--panel);background-image:radial-gradient(circle at 1px 1px,var(--surface) 1px,transparent 1.2px);background-size:16px 16px}
+.sd-bd .src{display:flex;flex-direction:column;gap:10px}
+.sd-bx{padding:10px 12px;border-radius:10px;background:var(--panel);border:1px solid var(--border-strong);font:500 13px/18px var(--font)} .sd-bx small{display:block;font:400 12px/16px var(--font);color:var(--text-3)}
+.sd-bx.t{border:1.5px dashed color-mix(in srgb,var(--accent-hover) 70%,var(--border-strong));color:var(--accent-on)}
+.sd-ar{position:relative;height:2px;margin:0 10px;background:var(--accent-hover)} .sd-ar::after{content:"";position:absolute;right:-1px;top:-4px;border-left:8px solid var(--accent-hover);border-top:5px solid transparent;border-bottom:5px solid transparent}
+.sd-ar span{position:absolute;left:50%;top:-24px;transform:translateX(-50%);white-space:nowrap;font:500 11px/16px var(--font);color:var(--text-2)}
+.sd-q{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;padding:14px 0;border-bottom:1px solid var(--border)}
+.sd-q b{font:500 14px/20px var(--font)} .sd-q small{grid-column:1;font:400 12px/18px var(--font);color:var(--text-3)}
+.sd-q .who{grid-row:1/3;grid-column:2;display:flex;align-items:center;gap:6px;font:400 12px/18px var(--font);color:var(--text-2)}
+.sd-alt{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sd-alt>div{padding:14px 16px;border-radius:10px;border:1px solid var(--border)} .sd-alt>div.on{border-color:color-mix(in srgb,var(--accent) 60%,var(--border-strong))}
+.sd-alt b{display:flex;align-items:center;gap:8px;font:600 13px/20px var(--font);margin-bottom:6px}
+.sd-alt p{margin:0;font:400 13px/20px var(--font);color:var(--text-2)}
+.sd-plan{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font:400 14px/22px var(--font)} .sd-plan small{display:block;color:var(--text-3);font-size:12px}
+.sd-rail{position:sticky;top:76px;align-self:start;display:flex;flex-direction:column;gap:12px;padding-top:40px}
+.sd-c{padding:16px;border-radius:12px;background:var(--panel);border:1px solid var(--border)}
+.sd-c h3{display:flex;align-items:center;gap:8px;margin:0 0 10px;font:600 13px/18px var(--font)} .sd-c h3 .sp{flex:1}
+.sd-c .hint{margin:8px 0 0;font:400 12px/18px var(--font);color:var(--text-3)}
+.sd-rv{display:flex;align-items:center;gap:8px;padding:6px 0;font:400 13px/20px var(--font)} .sd-rv em{margin-left:auto;font-style:normal;font-size:12px;color:var(--text-3);white-space:nowrap}
+.sd-rv em.ok{color:var(--ok-text)} .sd-rv em.ch{color:var(--warn-text)} .sd-rv em.wt{color:var(--text-2)}
+.sd-c .btn{width:100%;margin-top:8px}
+.sd-tl{display:flex;align-items:center;gap:10px;padding:7px 0;font:500 13px/20px var(--font)} .sd-tl em{margin-left:auto;font-style:normal;font:400 12px/18px var(--font);color:var(--text-3)} .sd-tl em.ok{color:var(--ok-text)}
+.sd-tl .k{font:500 12px/18px var(--mono);color:var(--text-2)}
+/* dialogs */
+.sdm-bg{position:fixed;inset:0;z-index:130;background:rgba(3,6,12,.62)}
+.sdm{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:131;width:min(520px,calc(100vw - 32px));max-height:88vh;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--border-strong);border-radius:14px;box-shadow:var(--shadow)}
+.sdm .h{display:flex;align-items:center;gap:10px;padding:18px 20px;border-bottom:1px solid var(--border)} .sdm .h b{flex:1;font:600 16px/22px var(--font)}
+.sdm .b{padding:18px 20px;overflow:auto;display:flex;flex-direction:column;gap:14px}
+.sdm .f{display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--border)}
+.sdm label.l{font:500 12px/18px var(--font);color:var(--text-2)}
+.sdm .row{display:flex;align-items:center;gap:8px}
+.sdm .row .field{flex:1}
+.sdm .field{height:36px}
+.sdm select{height:36px;width:100%;padding:0 10px;border-radius:8px;background:var(--canvas);border:1px solid var(--border-strong);color:var(--text);font:400 13px/20px var(--font)}
+.sdm .ppl{display:flex;flex-direction:column}
+.sdm .pp{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font:400 13px/20px var(--font)} .sdm .pp:last-child{border-bottom:0}
+.sdm .pp small{color:var(--text-3)} .sdm .pp select{width:auto;height:30px;margin-left:auto}
+.sdm .tools{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sdm .tools button{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:12px;border-radius:10px;box-shadow:inset 0 0 0 1px var(--border-strong);text-align:left;font:500 13px/18px var(--font)}
+.sdm .tools button.on{box-shadow:inset 0 0 0 1.5px var(--accent-hover);background:var(--selected)}
+.sdm .tools small{font:400 12px/16px var(--font);color:var(--text-3)}
+.sdm .pv{padding:14px;border-radius:10px;background:var(--canvas);border:1px solid var(--border);font:400 13px/20px var(--font);color:var(--text-2)}
+.sdm .pv b{display:block;color:var(--text);margin-bottom:6px} .sdm .pv ul{margin:6px 0 0;padding-left:18px}
+.sdm .ck{display:flex;align-items:center;gap:8px;font:400 13px/20px var(--font)}
+.sdm .opt{display:flex;flex-direction:column;max-height:220px;overflow:auto}
+.sdm .opt button{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;text-align:left;font:400 13px/20px var(--font)} .sdm .opt button:hover{background:var(--surface)} .sdm .opt small{margin-left:auto;color:var(--text-3)}
+@media (max-width:1100px){.sd{grid-template-columns:minmax(0,1fr);padding:0 32px 64px}.sd-bar{padding:14px 32px}.sd-rail{position:static;padding-top:0;order:2}.sd-stats{grid-template-columns:repeat(2,1fr)}.sd-stats div:nth-child(3){border-left:0}.sd-stats div:nth-child(n+3){border-top:1px solid var(--border)}}
+</style>
+<script>
+/* FB83 */
+(function(){
+document.body.insertAdjacentHTML('afterbegin', "<svg width=\"0\" height=\"0\" style=\"position:absolute;width:0;height:0;overflow:hidden\" aria-hidden=\"true\"><defs><linearGradient x1=\"98.0308675%\" y1=\"0.160599572%\" x2=\"58.8877062%\" y2=\"40.7655246%\" id=\"lgJ1\"> <stop stop-color=\"#0052CC\" offset=\"18%\"> <\/stop> <stop stop-color=\"#2684FF\" offset=\"100%\"> <\/stop> <\/linearGradient><linearGradient x1=\"100.665247%\" y1=\"0.45503212%\" x2=\"55.4018095%\" y2=\"44.7269807%\" id=\"lgJ2\"> <stop stop-color=\"#0052CC\" offset=\"18%\"> <\/stop> <stop stop-color=\"#2684FF\" offset=\"100%\"> <\/stop> <\/linearGradient><linearGradient id=\"lgC1\" gradientUnits=\"userSpaceOnUse\" x1=\"0\" y1=\"15.0492\" x2=\"54.8446\" y2=\"15.0492\" gradientTransform=\"matrix(1 0 0 -1 0 69.3604)\"> <stop offset=\"0\" style=\"stop-color:#8930FD\"> <\/stop> <stop offset=\"1\" style=\"stop-color:#49CCF9\"> <\/stop> <\/linearGradient><linearGradient id=\"lgC2\" gradientUnits=\"userSpaceOnUse\" x1=\"1.1953\" y1=\"53.166\" x2=\"53.7447\" y2=\"53.166\" gradientTransform=\"matrix(1 0 0 -1 0 69.3604)\"> <stop offset=\"0\" style=\"stop-color:#FF02F0\"> <\/stop> <stop offset=\"1\" style=\"stop-color:#FFC800\"> <\/stop> <\/linearGradient><\/defs><symbol id=\"lg-jira\" viewBox=\"0 0 256 256\">     <g> <path d=\"M244.657778,0 L121.706667,0 C121.706667,14.7201046 127.554205,28.837312 137.962891,39.2459977 C148.371577,49.6546835 162.488784,55.5022222 177.208889,55.5022222 L199.857778,55.5022222 L199.857778,77.3688889 C199.877391,107.994155 224.699178,132.815943 255.324444,132.835556 L255.324444,10.6666667 C255.324444,4.77562934 250.548815,3.60722001e-16 244.657778,0 Z\" fill=\"#2684FF\"> <\/path> <path d=\"M183.822222,61.2622222 L60.8711111,61.2622222 C60.8907238,91.8874888 85.7125112,116.709276 116.337778,116.728889 L138.986667,116.728889 L138.986667,138.666667 C139.025905,169.291923 163.863607,194.097803 194.488889,194.097778 L194.488889,71.9288889 C194.488889,66.0378516 189.71326,61.2622222 183.822222,61.2622222 Z\" fill=\"url(#lgJ1)\"> <\/path> <path d=\"M122.951111,122.488889 L0,122.488889 C3.75391362e-15,153.14192 24.8491913,177.991111 55.5022222,177.991111 L78.2222222,177.991111 L78.2222222,199.857778 C78.241767,230.45532 103.020285,255.265647 133.617778,255.324444 L133.617778,133.155556 C133.617778,127.264518 128.842148,122.488889 122.951111,122.488889 Z\" fill=\"url(#lgJ2)\"> <\/path> <\/g> <\/symbol><symbol id=\"lg-clickup\" viewBox=\"0 0 54.8 65.8\">  <g>  <path fill=\"url(#lgC1)\" fill-rule=\"evenodd\" d=\"M0,50.6l10.1-7.8c5.4,7,11.1,10.3,17.4,10.3c6.3,0,11.9-3.2,17-10.2l10.3,7.6c-7.4,10-16.6,15.3-27.3,15.3   C16.9,65.8,7.6,60.5,0,50.6z\"> <\/path>  <path fill=\"url(#lgC2)\" fill-rule=\"evenodd\" d=\"M27.5,16.9l-18,15.5l-8.3-9.7L27.6,0l26.2,22.7l-8.4,9.6L27.5,16.9z\"> <\/path> <\/g> <\/symbol><symbol id=\"lg-notion\" viewBox=\"0 0 32 32\"> <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M5.716 29.2178L2.27664 24.9331C1.44913 23.9023 1 22.6346 1 21.3299V5.81499C1 3.86064 2.56359 2.23897 4.58071 2.10125L20.5321 1.01218C21.691 0.933062 22.8428 1.24109 23.7948 1.8847L29.3992 5.67391C30.4025 6.35219 31 7.46099 31 8.64426V26.2832C31 28.1958 29.4626 29.7793 27.4876 29.9009L9.78333 30.9907C8.20733 31.0877 6.68399 30.4237 5.716 29.2178Z\" fill=\"white\"/> <path d=\"M11.2481 13.5787V13.3756C11.2481 12.8607 11.6605 12.4337 12.192 12.3982L16.0633 12.1397L21.417 20.0235V13.1041L20.039 12.9204V12.824C20.039 12.303 20.4608 11.8732 20.9991 11.8456L24.5216 11.6652V12.1721C24.5216 12.41 24.3446 12.6136 24.1021 12.6546L23.2544 12.798V24.0037L22.1906 24.3695C21.3018 24.6752 20.3124 24.348 19.8036 23.5803L14.6061 15.7372V23.223L16.2058 23.5291L16.1836 23.6775C16.1137 24.1423 15.7124 24.4939 15.227 24.5155L11.2481 24.6926C11.1955 24.1927 11.5701 23.7456 12.0869 23.6913L12.6103 23.6363V13.6552L11.2481 13.5787Z\" fill=\"#000000\"/> <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M20.6749 2.96678L4.72347 4.05585C3.76799 4.12109 3.02734 4.88925 3.02734 5.81499V21.3299C3.02734 22.1997 3.32676 23.0448 3.87843 23.7321L7.3178 28.0167C7.87388 28.7094 8.74899 29.0909 9.65435 29.0352L27.3586 27.9454C28.266 27.8895 28.9724 27.1619 28.9724 26.2832V8.64426C28.9724 8.10059 28.6979 7.59115 28.2369 7.27951L22.6325 3.49029C22.0613 3.10413 21.3702 2.91931 20.6749 2.96678ZM5.51447 6.057C5.29261 5.89274 5.3982 5.55055 5.6769 5.53056L20.7822 4.44711C21.2635 4.41259 21.7417 4.54512 22.1309 4.82088L25.1617 6.96813C25.2767 7.04965 25.2228 7.22563 25.0803 7.23338L9.08387 8.10336C8.59977 8.12969 8.12193 7.98747 7.73701 7.7025L5.51447 6.057ZM8.33357 10.8307C8.33357 10.311 8.75341 9.88177 9.29027 9.85253L26.203 8.93145C26.7263 8.90296 27.1667 9.30534 27.1667 9.81182V25.0853C27.1667 25.604 26.7484 26.0328 26.2126 26.0633L9.40688 27.0195C8.8246 27.0527 8.33357 26.6052 8.33357 26.0415V10.8307Z\" fill=\"#000000\"/> <\/symbol><\/svg>");
+const LOGO=(k,s=18)=>`<span class="lgo" style="width:${s+6}px;height:${s+6}px"><svg width="${s}" height="${s}"><use href="#lg-${k}"/></svg></span>`;
+window.toolLogo=LOGO;
+const TOOLS={jira:['Jira','Epic','Commerce project'],clickup:['ClickUp','Task','Commerce list'],notion:['Notion','Page','Architecture space']};
+const STATUS=[['draft','Draft','#a3a7b5'],['review','In review','#ffcc4d'],['approved','Approved','#7b97f0'],['progress','In progress','#9a84f2'],['done','Done','#34c759']];
+const ST=k=>STATUS.find(s=>s[0]===k)||STATUS[0];
+const SYS=()=>(S.bs&&S.bs.name)||'Commerce platform';
+const DIR=['Zoe K.','Oliver F.','Sarah R.','Amy N.','Tomás G.','Hamza M.'];
+const V=()=>document.getElementById('vSpecs');
+const strip=h=>String(h||'').replace(/<[^>]+>/g,'');
+const meth=r=>{ const [m,...p]=r.split(' '); return `<span class="meth ${m.toLowerCase()}">${m}</span><span>${esc(p.join(' '))}</span>`; };
+const cxN=c=>c==='unassigned'?'No context':(typeof CTB!=='undefined'&&CTB[c]?CTB[c].name:(typeof ctxName==='function'?ctxName(c):c));
+/* ---------- sample data: the saved selection for RS-12 ---------- */
+const seed={cs1:{num:'RS-12', rev:2, owner:null, target:'Returns',
+   why:'Return and exchange work changes for different reasons than placing orders. Today a returns change can break order tests and has to wait for an Orders release.',
+   sel:()=>[...UCB['request-return'].apis, ...UCB['create-exchange'].apis, 'POST /admin/orders/:id/cancel'],
+   oq:[['Who owns exchanges, Returns or Orders?','Sarah R.']],
+   alts:[['Own context for Returns',1,'Returns ships on its own and gets a clear owner. Two calls become cross-context.'],['Returns module inside Orders',0,'Nothing breaks and calls stay in-process, but releases stay coupled.']],
+   plan:[['Create the Returns context with its own models','No behaviour change'],['Move the return and exchange APIs; old routes forward','Undo by turning the forwarders off'],['Switch callers to Returns, then remove the old code','']],
+   reviewers:[['Zoe K.','approved'],['Oliver F.','pending'],['Sarah R.','changes']]},
+  cs3:{num:'RS-9', rev:1, target:'Fulfillment', owner:'Fulfillment team', why:'Reservations are made and released by fulfillment work, so they should live with it.', sel:()=>['reserve-stock','release-reservation'].filter(id=>UCB[id]).flatMap(id=>UCB[id].apis), reviewers:[['Oliver F.','approved'],['Zoe K.','approved']]},
+  cs5:{num:'RS-4', rev:3, target:'Orders', owner:'Checkout team', why:'Orders reacts to a captured payment through an event instead of a direct call.', sel:()=>['capture-payment'].filter(id=>UCB[id]).flatMap(id=>UCB[id].apis).slice(0,1), reviewers:[['Zoe K.','approved']]}};
+const E=x=>{ const s=seed[x.id]||{}; x.num=x.num||s.num||(x.type==='uc'?'UC-':'RS-')+String(x.id).replace(/\D/g,'').slice(-2); x.rev=x.rev||s.rev||1; if(!x.sel&&s.sel) try{ x.sel=s.sel(); }catch(e){} ['why','oq','alts','plan','owner','target'].forEach(k=>{ if(x[k]===undefined&&s[k]!==undefined) x[k]=s[k]; }); if(!x.reviewers) x.reviewers=(s.reviewers||[]).map(r=>r.slice()); if(!x.share) x.share={access:'org', people:[[x.by||ME,'Owner']]}; return x; };
+/* impact snapshot, frozen per revision: same analysis as the creation board */
+function snap(x){ if(x._snap&&x._snap.rev===x.rev) return x._snap; const sel=x.sel||[]; let D=null; const keep=S.nc;
+  try{ S.nc={mode:'new', name:x.target||'New context', pick:[], q:'', sel:sel.slice()}; D=dbModel(); }catch(e){ D=null; } S.nc=keep;
+  const set=new Set(sel); const groups={}; const ucs=UC.filter(u=>u.apis.some(a=>set.has(a)));
+  ucs.forEach(u=>{ const n=u.apis.filter(a=>set.has(a)).length; (groups[u.ctx]=groups[u.ctx]||[]).push({u, n, whole:n===u.apis.length}); });
+  const shared=new Set(sel.filter(a=>ucs.filter(u=>u.apis.includes(a)).length>1));
+  const find=[]; if(D) D.issues.forEach(i=>{ if(i.type==='api') find.push({ucs:i.st, cause:i.api, kind:'Calls an API that moves', why:strip(i.why)}); else if(i.type==='pt') find.push({ucs:i.stay, cause:i.it.label, kind:i.it.type||'Integration', why:strip(i.why), from:i.it.from}); });
+  const imp=new Set(find.flatMap(f=>f.ucs));
+  x._snap={rev:x.rev, groups, shared, ucs, find, imp, whole:ucs.filter(u=>u.apis.every(a=>set.has(a))).length, part:ucs.filter(u=>!u.apis.every(a=>set.has(a))).length, ok:!!D};
+  return x._snap; }
+/* ---------- document ---------- */
+const crumbs=x=>`<nav class="csbc" aria-label="Breadcrumb"><button data-act="cs2sys">${esc(SYS())}</button>${I('chevron-right',14)}<button data-act="spclose">Change specifications</button>${I('chevron-right',14)}<span class="cur">${esc(x.num)}</span></nav>`;
+const sec=(id,t,sub,inner,o={})=>`<section class="sd-sec" id="sd-${id}"><h2>${t}${o.count!=null?`<span class="count">${o.count}</span>`:''}${o.auto?`<span class="sd-auto">From the code</span>`:''}</h2>${sub?`<p class="sd-sub">${sub}</p>`:''}${inner}</section>`;
+function selection(x,P){ const set=new Set(x.sel||[]); S.sdx=S.sdx||{};
+  const body=Object.entries(P.groups).map(([c,rows])=>`<div class="sd-g"><div class="sd-gh">${kindIc('context',14)}From ${esc(cxN(c))}</div>${rows.map(({u,n,whole})=>{ const k=x.id+'|'+u.id; const open=S.sdx[k]!=null?S.sdx[k]:!whole;
+      const mv=u.apis.filter(a=>set.has(a)), st=u.apis.filter(a=>!set.has(a));
+      const also=a=>{ const o=P.ucs.filter(v=>v.id!==u.id&&v.apis.includes(a)); return o.length?`<span class="sd-tag sh" title="Also selected through ${esc(o.map(v=>v.name).join(', '))}">Shared · ${esc(o[0].name)}${o.length>1?' +'+(o.length-1):''}</span>`:''; };
+      return `<div class="sd-row"><button class="sd-rh" data-act="sdrow" data-arg="${esc(k)}" aria-expanded="${open}">${I(open?'chevron-down':'chevron-right',14)}${kindIc('usecase',14)}<span>${esc(u.name)}</span><span class="sd-tag ${whole?'whole':'part'}">${whole?'Whole':'Partial'}</span>${P.imp.has(u.id)?'<span class="sd-tag" style="color:var(--danger-text)">Also impacted</span>':''}<span class="sp"></span><span class="frac">${n} / ${u.apis.length}</span></button>
+        ${open?`<div class="sd-rb"><h5>Moves</h5>${mv.map(a=>`<div class="sd-ap">${meth(a)}${also(a)}</div>`).join('')}${st.length?`<h5>Stays in ${esc(cxN(u.ctx))}</h5>${st.map(a=>`<div class="sd-ap keep">${meth(a)}</div>`).join('')}`:''}</div>`:''}</div>`; }).join('')}</div>`).join('');
+  return body||'<div class="sd-none">No APIs were saved with this specification.</div>'; }
+function impact(P){ if(!P.ok) return '<div class="sd-none">Impact analysis is not available for this revision.</div>'; if(!P.find.length) return '<div class="sd-none">No impact detected in this scan.</div>';
+  return P.find.map(f=>{ const names=f.ucs.map(id=>UCB[id]?UCB[id].name:id); const ctx=[...new Set(f.ucs.map(id=>UCB[id]&&cxN(UCB[id].ctx)))].filter(Boolean).join(', ');
+    let w=f.why; names.forEach(n=>{ if(w.startsWith(n+' ')&&!/^and\b/.test(w.slice(n.length+1))) w=w.slice(n.length+1).replace(/^./,c=>c.toUpperCase()); });
+    return `<div class="sd-f"><span class="ic">${I('alert',16)}</span><div><b>${esc(names.join(', '))}</b> <span class="cx">· ${esc(ctx)}</span><p>${esc(w||'Depends on what moves.')}</p><div class="why">Shared dependency <code>${esc(f.cause)}</code></div></div></div>`; }).join(''); }
+function boundary(x,P){ const set=new Set(x.sel||[]); const src=Object.entries(P.groups);
+  const ar=src.map(([c,rows])=>{ const apis=new Set(rows.flatMap(r=>r.u.apis.filter(a=>set.has(a)))).size; return {c, uc:rows.length, apis}; });
+  return `<div class="sd-bd"><div class="src">${ar.map(a=>`<div class="sd-bx">${esc(cxN(a.c))}<small>${a.uc} use case${a.uc===1?'':'s'} · ${a.apis} API${a.apis===1?'':'s'}</small></div>`).join('')||'<div class="sd-bx">—</div>'}</div>
+    <div class="sd-ar"><span>moves ${set.size} API${set.size===1?'':'s'}</span></div><div class="sd-bx t">${esc(x.target||(x.scope||'').split('→').pop().trim()||'New context')}<small>Proposed context</small></div></div>`; }
+function decisions(x,P){ const Q=[];
+  P.ucs.filter(u=>!u.apis.every(a=>(x.sel||[]).includes(a))).forEach(u=>Q.push([esc(`${u.name} is split. Does the rest stay in ${cxN(u.ctx)}?`), `Raised by the partial selection of ${u.name}`, null]));
+  [...P.shared].forEach(a=>Q.push([`Who owns <code>${esc(a)}</code>?`, 'Raised by a route shared by more than one use case', null]));
+  if(!x.owner) Q.push([esc('Which team owns the new context?'),'Raised by the proposal: no owning team yet', null]);
+  (x.oq||[]).forEach(([q,w])=>Q.push([esc(q),'Raised by a reviewer',w]));
+  return Q.length?Q.map(([q,s,w])=>`<div class="sd-q"><b>${q}</b><small>${esc(s)}</small><span class="who">${w?pAv(w,18)+esc(w):'<span style="color:var(--warn-text)">Owner to confirm</span>'} · Open</span></div>`).join(''):'<div class="sd-none">Nothing to decide.</div>'; }
+function rfDoc(x){ const P=snap(x); const s=ST(x.status); const nApi=(x.sel||[]).length;
+  const T=[];
+  T.push(sec('selection','Saved selection',`Everything the author picked, grouped by where it lives today. A shared route counts once in the total.`,`<div class="sd-flow">${[...new Set(Object.keys(P.groups).map(cxN))].map(esc).join(', ')||'—'} ${I('arrow-right',14)} <span style="color:var(--accent-on)">${esc(x.target||'New context')}</span></div>${selection(x,P)}`));
+  T.push(sec('impact','Impacted use cases',`Use cases that stay where they are but depend on what moves. Grouped by the shared dependency.`,impact(P),{count:P.imp.size, auto:true}));
+  T.push(sec('boundary','Boundary',`Where the proposed context gets its APIs from.`,boundary(x,P)));
+  T.push(sec('decisions','Decisions needed',`Each one points at what raised it.`,decisions(x,P)));
+  if(x.alts) T.push(sec('alts','Alternatives',``,`<div class="sd-alt">${x.alts.map(([t,on,d])=>`<div class="${on?'on':''}"><b>${esc(t)}${on?'<span class="sd-auto">Proposed</span>':''}</b><p>${esc(d)}</p></div>`).join('')}</div>`));
+  if(x.plan) T.push(sec('plan','Delivery plan',`Each step becomes a ticket when you publish.`,`<ol class="sd-plan">${x.plan.map(([t,d])=>`<li>${esc(t)}${d?`<small>${esc(d)}</small>`:''}</li>`).join('')}</ol>`));
+  return `<div class="sd-k">${kindIc('context',14)}<span>Refactoring specification</span><span>·</span><span>${esc(x.num)}</span><span>·</span><span>Revision ${x.rev}</span><span>·</span><span>Updated ${esc(x.when)}</span></div>
+    <h1>${esc(x.title)}</h1>
+    <div class="sd-meta"><span class="sd-st"><i style="background:${s[2]}"></i>${s[1]}</span><span>${pAv(x.by,18)}Proposed by ${esc(x.by)}</span><span>Owning team <b class="${x.owner?'':'warn'}" style="font-weight:500">${esc(x.owner||'To confirm')}</b></span></div>
+    <p class="sd-intro ${x.why?'':'ph'}">${esc(x.why||'Add one or two sentences: what this context will own, and why these use cases belong together.')}</p>
+    <div class="sd-stats"><div><b>${nApi}</b><small>Unique APIs</small></div><div><b>${P.whole}</b><small>Whole use cases</small></div><div><b>${P.part}</b><small>Partial use cases</small></div><div class="r"><b>${P.imp.size}</b><small>Impacted use cases</small></div></div>
+    ${T.join('')}`; }
+/* use case proposal: who does what, in order, with every branch and where it goes */
+const UCX={cs2:{goal:'Finance gives a customer their money back for a captured payment.', ch:'admin', ctxPick:'payments', who:'auto', trigger:'A customer asks for a refund, or a return is received.',
+   flow:[{id:'s1',who:'user',kind:'action',t:'Opens the payment on the order'},{id:'s2',who:'user',kind:'action',t:'Enters the amount and presses Refund'},{id:'s3',who:'system',kind:'decision',t:'Is the amount within what was captured?',opts:[{t:'Yes',to:'next'},{t:'No',to:'s2',note:'Shows the maximum refundable amount'}]},{id:'s4',who:'system',kind:'action',t:'Sends the refund to the payment provider'},{id:'s5',who:'system',kind:'decision',t:'Does the provider accept it?',opts:[{t:'Accepted',to:'next'},{t:'Declined',to:'end',note:'Payment stays as it was, with the reason shown'}]},{id:'s6',who:'system',kind:'action',t:'Shows the refund on the order'}],
+   result:'The refund is recorded on the payment and the order.', rules:[['s2','Refunds over 1,000 need a second approver']], oq:[['Can a refund be cancelled once sent?','Amy N.','s4']]},
+ cs4:{goal:'A shopper buys the items of an earlier order again in one step.', ch:'store', ctxPick:'orders', who:'auto',
+   flow:[{id:'r1',who:'user',kind:'action',t:'Opens a past order'},{id:'r2',who:'user',kind:'action',t:'Presses Buy again'},{id:'r3',who:'system',kind:'decision',t:'Are the items still available?',opts:[{t:'All available',to:'next'},{t:'Some available',to:'r5'},{t:'None available',to:'end',note:'Cart stays as it was'}]},{id:'r4',who:'system',kind:'action',t:'Adds every item to a new cart'},{id:'r5',who:'user',kind:'action',t:'Reviews which items can be added'},{id:'r6',who:'system',kind:'action',t:'Opens the cart'}],
+   result:'The cart has the items from the past order at today’s prices.', oq:[['Do we keep the old price if it went up?','Sarah R.','r4']]}};
+function ucData(x){ const u=UCX[x.id]||{}; ['goal','ch','ctxPick','who','trigger','result','rules'].forEach(k=>{ if(x[k]===undefined&&u[k]!==undefined) x[k]=u[k]; }); if(!x.flow&&u.flow) x.flow=u.flow; if(!x.oq&&u.oq) x.oq=u.oq;
+  if(!x.flow) x.flow=(x.steps||[]).map((t,i)=>{ const mm=String(t).match(/^(System|[^:]+?)( decides)?:\s*(.*)$/); return {id:'p'+i, who:mm&&mm[1]==='System'?'system':'user', kind:mm&&mm[2]?'decision':'action', t:mm?mm[3]:t, opts:mm&&mm[2]?[{t:'Yes',to:'next'},{t:'No',to:'end'}]:undefined}; });
+  return x; }
+const chName=c=>{ try{ return c&&CHANNELS[c]?(c==='none'?'Background jobs':CHANNELS[c].name):'Not set'; }catch(e){ return 'Not set'; } };
+function ucDoc(x){ ucData(x); const s=ST(x.status); const F=x.flow||[]; const per=x.persona||'User'; const clash=/^system$/i.test(per); const who=w=>w==='user'?(clash?'Persona · System':per):(clash?SYS():'System');
+  const ix={}; F.forEach((z,i)=>ix[z.id]=i);
+  const dest=(o,i)=>{ if(o.to==='end') return `<span class="ud end">End${o.note?` · ${esc(o.note)}`:''}</span>`; const j=o.to==='next'||!o.to?i+1:ix[o.to]; if(j==null||j>=F.length) return `<span class="ud end">End · ${esc(x.result||'Done')}</span>`;
+    return `<button class="ud" data-act="ucjump" data-arg="${x.id}|${j}">${o.to==='next'||!o.to?'Next · ':''}Step ${j+1} · ${esc(F[j].t.slice(0,40))}</button>${o.note?`<small class="un">${esc(o.note)}</small>`:''}`; };
+  const notes=i=>{ const id=F[i].id; const r=(x.rules||[]).filter(z=>z[0]===id).map(z=>`<div class="unote r">${I('info',12)}Rule · ${esc(z[1])}</div>`); const q=(x.oq||[]).filter(z=>z[2]===id).map(z=>`<div class="unote q">${I('help',12)}Open question · ${esc(z[0])} <small>· ${esc(z[1])}</small></div>`); return r.join('')+q.join(''); };
+  const steps=F.map((z,i)=>`<li class="ust ${z.kind==='decision'?'dec':''}" id="ust-${x.id}-${i}"><span class="un2">${i+1}</span><div class="ub"><div class="uw"><span class="uwho ${z.who}">${esc(who(z.who))}</span>${z.kind==='decision'?'<span class="uk">Decision</span>':''}</div><div class="ut">${esc(z.t)}</div>
+     ${z.kind==='decision'?`<div class="ubr">${(z.opts||[]).map((o,k)=>`<div class="ubo"><span class="uif">${k?'Else if':'If'}</span><span class="uc">${esc(o.t||'…')}</span><span class="uar">→</span><span>${dest(o,i)}</span></div>`).join('')}</div>`:''}${notes(i)}</div></li>`).join('');
+  const ends=[]; F.forEach((z,i)=>(z.opts||[]).forEach(o=>{ if(o.to==='end') ends.push([`${z.t} ${o.t}`,o.note||'The flow stops here']); })); ends.unshift([ 'Main flow completes', x.result||'Done' ]);
+  const dv=(S.ucdv&&S.ucdv[x.id])||null; const diag=dv?(()=>{ try{ return dv==='swim'?specSwim(F,per,SYS()):dv==='seq'?specSeq(F,per,SYS()):specFlow(F,per); }catch(e){ return ''; } })():'';
+  const T=[];
+  T.push(sec('flow','Proposed flow',x.trigger?`Starts when ${esc(x.trigger.charAt(0).toLowerCase()+x.trigger.slice(1))}`:'',
+    `<div class="udbar"><span class="sp"></span>${dv?`<div class="dvseg">${[['flow','Flowchart'],['seq','Sequence'],['swim','Swim lane']].map(([k,l])=>`<button class="${dv===k?'on':''}" data-act="ucdv" data-arg="${x.id}|${k}">${l}</button>`).join('')}</div><button class="btn sm" data-act="ucdv" data-arg="${x.id}|">Hide diagram</button>`:`<button class="btn sm" data-act="ucdv" data-arg="${x.id}|flow">View diagram</button>`}</div>
+     ${dv?`<div class="udg">${diag}</div>`:''}<ol class="usl">${steps}</ol>`,{count:F.length}));
+  T.push(sec('outcomes','Outcomes','What the persona sees at each ending.',`${ends.map(([a,b],k)=>`<div class="uo"><span class="uod ${k?'x':''}"></span><div><b>${esc(a)}</b><small>${esc(b)}</small></div></div>`).join('')}`));
+  const unplaced=(x.oq||[]).filter(z=>!z[2]);
+  if(unplaced.length) T.push(sec('decisions','Open questions','',unplaced.map(([q,w])=>`<div class="sd-q"><b>${esc(q)}</b><small>Raised by a reviewer</small><span class="who">${pAv(w,18)}${esc(w)} · Open</span></div>`).join('')));
+  T.push(sec('solution','Solution design','',`<div class="sd-none">APIs, contexts and code are attached to each step later, in the solution design.</div>`));
+  return `<div class="sd-k">${kindIc('usecase',14)}<span>Use case specification</span><span>·</span><span>${esc(x.num)}</span><span>·</span><span>Revision ${x.rev}</span><span>·</span><span>Updated ${esc(x.when)}</span></div>
+    <h1>${esc(x.title)}</h1>
+    <div class="sd-meta"><span class="sd-st"><i style="background:${s[2]}"></i>${s[1]}</span><span>${pAv(x.by,18)}Proposed by ${esc(x.by)}</span></div>
+    <p class="sd-intro ${x.goal?'':'ph'}">${esc(x.goal||'Add one sentence: what the persona gets done.')}</p>
+    <div class="ucl2">${kindIc('person',14)}<b>${esc(per)}</b><span>·</span>${kindIc('channel',14)}<span>${esc(chName(x.ch))}</span><span>·</span>${kindIc('system',14)}<span>${esc(SYS())}</span></div>
+    ${T.join('')}`; }
+function ucDetails(x){ const c=x.ctxPick; const st=!c||c==='auto'?(x.scope?['Suggested','sg']:['Awaiting suggestion','aw']):['Selected by author','ok'];
+  const cn=c&&c!=='auto'?cxN(c):(x.scope||'—'); const owner=(()=>{ try{ const k=c&&c!=='auto'?c:null; const o=k&&window.ctxOwner?ctxOwner(k):null; return o?o:null; }catch(e){ return null; } })();
+  return `<div class="sd-c"><h3>Details</h3><div class="ukv"><span>Context</span><span>${esc(cn)}<em class="${st[1]}">${st[0]}</em></span><span>Persona</span><span>${esc(x.persona||'—')}</span><span>Channel</span><span>${esc(chName(x.ch))}</span><span>Reviewer</span><span>${x.who&&x.who!=='auto'?esc(x.who):'Owner of the context'}${owner?` · ${esc(owner)}`:''}</span></div></div>`; }
+function rail(x){ const rv=x.reviewers||[]; const L=x.link; const draft=x.status==='draft';
+  return `<aside class="sd-rail">${x.type==='uc'?ucDetails(x):''}
+    <div class="sd-c"><h3>Review<span class="count">${rv.length}</span></h3>${rv.length?rv.map(([n,st])=>`<div class="sd-rv">${pAv(n,20)}${esc(n)}<em class="${st==='approved'?'ok':st==='changes'?'ch':draft?'':'wt'}">${st==='approved'?'Approved':st==='changes'?'Changes requested':draft?'Selected':'Waiting'}</em></div>`).join(''):'<div class="sd-rv" style="color:var(--text-3)">No reviewers yet</div>'}
+      <button class="btn ghost sm" data-act="sdadd" style="justify-content:flex-start">${I('plus',14)}Add reviewer</button>
+      ${draft?`<button class="btn primary" data-act="sdreq" ${rv.length?'':'disabled'}>Request review</button>`:''}
+      <p class="hint">Reviews belong to revision ${x.rev}. A new revision asks reviewers to look again.</p></div>
+    <div class="sd-c"><h3>Publish</h3>${Object.entries(TOOLS).map(([k,[n]])=>{ const on=SPEC_TOOLS[k]; const here=L&&L.tool===k; return `<div class="sd-tl">${LOGO(k,16)}${n}${here?`<span class="k">${esc(L.key)}</span>`:''}<em class="${on?'ok':''}">${here?`Rev ${L.rev||x.rev}`:on?'Connected':'Not connected'}</em></div>`; }).join('')}
+      <button class="btn" data-act="sdpub">${L?'Update publication':'Preview publication'}</button></div>
+  </aside>`; }
+function docHTML(x){ E(x); return `<div class="sd-bar">${crumbs(x)}<button class="btn" data-act="sdshare">${I('users',14)}Share</button><button class="btn" data-act="sdpub">${L(x)}</button></div>
+  <div class="sd"><article class="sd-doc">${x.type==='uc'?ucDoc(x):rfDoc(x)}</article>${rail(x)}</div>`; }
+const L=x=>x.link?'Update publication':'Publish';
+/* ---------- dialogs ---------- */
+let M=null; const mhost=()=>{ let h=document.getElementById('sdModal'); if(!h){ h=document.createElement('div'); h.id='sdModal'; document.body.appendChild(h); } return h; };
+const close=()=>{ M=null; mhost().innerHTML=''; };
+function dlg(title,body,foot){ mhost().innerHTML=`<div class="sdm-bg" data-act="sdx"></div><div class="sdm" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="h"><b>${title}</b><button class="ib" data-act="sdx" aria-label="Close">${I('x',16)}</button></div><div class="b">${body}</div><div class="f">${foot}</div></div>`; }
+const cur=()=>SPECS.find(s=>s.id===S.specs.open);
+function shareDlg(){ const x=cur(); const sh=x.share; const url=`https://app.syntroper.com/commerce-platform/specs/${x.num.toLowerCase()}`;
+  dlg(`Share ${esc(x.num)}`,`<div class="row"><label class="field">${I('link',14)}<input readonly value="${url}" aria-label="Link"></label><button class="btn" data-act="sdcopy">Copy link</button></div>
+    <div><label class="l" for="sdAcc">General access</label><select id="sdAcc"><option value="org" ${sh.access==='org'?'selected':''}>Anyone in Syntroper’s Org can view</option><option value="team" ${sh.access==='team'?'selected':''}>Only the teams that own Orders and Returns</option><option value="invited" ${sh.access==='invited'?'selected':''}>Only people added below</option></select></div>
+    <div><label class="l">People</label><div class="ppl">${sh.people.map(([n,r],i)=>`<div class="pp">${pAv(n,22)}${esc(n)}${r==='Owner'?'<small style="margin-left:auto">Owner</small>':`<select data-sdrole="${i}"><option ${r==='Can view'?'selected':''}>Can view</option><option ${r==='Can comment'?'selected':''}>Can comment</option><option ${r==='Can edit'?'selected':''}>Can edit</option></select>`}</div>`).join('')}</div></div>
+    <div><label class="l">Add people</label><div class="opt">${DIR.filter(n=>!sh.people.some(p=>p[0]===n)).map(n=>`<button data-act="sdinv" data-arg="${esc(n)}">${pAv(n,20)}${esc(n)}<small>Can view</small></button>`).join('')||'<small style="color:var(--text-3)">Everyone is added.</small>'}</div></div>`,
+    `<button class="btn primary" data-act="sdx">Done</button>`); }
+function revDlg(){ const x=cur(); const have=new Set(x.reviewers.map(r=>r[0]));
+  dlg('Add reviewer',`<div class="opt">${DIR.filter(n=>!have.has(n)&&n!==x.by).map(n=>`<button data-act="sdpick" data-arg="${esc(n)}">${pAv(n,20)}${esc(n)}</button>`).join('')||'<small style="color:var(--text-3)">Everyone in the workspace is a reviewer.</small>'}</div>`,`<button class="btn" data-act="sdx">Close</button>`); }
+function pubDlg(t){ const x=cur(); const P=x.type==='rf'?snap(x):null; t=t||(x.link&&x.link.tool)||Object.keys(TOOLS).find(k=>SPEC_TOOLS[k])||'jira'; M={t}; const on=SPEC_TOOLS[t]; const [n,kind,dest]=TOOLS[t];
+  dlg(x.link?'Update publication':'Publish specification',`<div class="tools">${Object.entries(TOOLS).map(([k,[nm,kd]])=>`<button class="${k===t?'on':''}" data-act="sdtool" data-arg="${k}">${LOGO(k,18)}<span>${nm}<br><small>${SPEC_TOOLS[k]?'Connected':'Not connected'}</small></span></button>`).join('')}</div>
+    ${on?`<div><label class="l">Destination</label><select><option>${dest}</option></select></div>
+    <div class="pv"><b>${esc(x.num)} · ${esc(x.title)}</b>${kind} · ${ST(x.status)[1]} · revision ${x.rev} · link back to this specification<ul>${P?`<li>${P.ucs.length} use cases, ${(x.sel||[]).length} APIs: ${esc(Object.keys(P.groups).map(cxN).join(', '))} → ${esc(x.target||'new context')}</li><li>${P.imp.size} impacted use cases</li><li>Decisions still open</li>`:`<li>${(x.steps||[]).length} steps</li>`}</ul></div>
+    ${x.plan?`<label class="ck"><input type="checkbox" checked> Create a child ${t==='notion'?'page':'ticket'} for each of the ${x.plan.length} delivery steps</label>`:''}`:`<div class="sd-none">Connect ${n} to publish. Nothing is sent until you confirm.</div>`}`,
+    `<button class="btn" data-act="sdx">Cancel</button>${on?`<button class="btn primary" data-act="sdgo">${x.link&&x.link.tool===t?`Update ${kind.toLowerCase()}`:`Publish to ${n}`}</button>`:`<button class="btn primary" data-act="sdconn" data-arg="${t}">Connect ${n}</button>`}`); }
+/* ---------- paint ---------- */
+function paint(){ const v=V(); if(!v||S.tab!=='specs') return; const x=S.specs.open&&SPECS.find(s=>s.id===S.specs.open);
+  if(x){ const st=v.scrollTop; v.innerHTML=docHTML(x); if(paint.last===x.id) v.scrollTop=st; else v.scrollTop=0; paint.last=x.id; return; } paint.last=null;
+  v.querySelectorAll('.lg').forEach(e=>{ const t=e.textContent.trim(); const k=t==='J'?'jira':t==='C'?'clickup':t==='N'?'notion':null; if(k&&!e.querySelector('svg')){ e.innerHTML=`<svg width="${parseInt(e.style.width)||18}" height="${parseInt(e.style.height)||18}"><use href="#lg-${k}"/></svg>`; } }); }
+{ const _r=render; render=function(){ _r(); try{ paint(); }catch(e){ console.error(e); } }; }
+const R=()=>render();
+document.addEventListener('change',e=>{ const x=cur(); if(!x) return; if(e.target.id==='sdAcc'){ x.share.access=e.target.value; } if(e.target.dataset&&e.target.dataset.sdrole!=null){ x.share.people[+e.target.dataset.sdrole][1]=e.target.value; } });
+Object.assign(ACT,{
+  sdrow(k){ S.sdx=S.sdx||{}; const [id]=k.split('|'); const x=SPECS.find(s=>s.id===id); const P=snap(x); const ucId=k.split('|')[1]; const u=UCB[ucId]; const whole=u&&u.apis.every(a=>(x.sel||[]).includes(a)); const was=S.sdx[k]!=null?S.sdx[k]:!whole; S.sdx[k]=!was; R(); },
+  sdshare(){ shareDlg(); }, sdx(){ close(); },
+  ucdv(a){ const [id,k]=a.split('|'); S.ucdv=S.ucdv||{}; S.ucdv[id]=k||null; R(); },
+  ucjump(a){ const [id,j]=a.split('|'); const el=document.getElementById(`ust-${id}-${j}`); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'),1200); } },
+  sdcopy(){ toast('Link copied. People with access can open it.'); },
+  sdinv(n){ cur().share.people.push([n,'Can view']); shareDlg(); toast(`Shared with ${n}.`); },
+  sdadd(){ revDlg(); }, sdpick(n){ const x=cur(); x.reviewers.push([n,'pending']); close(); R(); },
+  sdreq(){ const x=cur(); x.status='review'; x.reviewers.forEach(r=>{ if(r[1]!=='approved'&&r[1]!=='changes') r[1]='pending'; }); toast(`Review requested from ${x.reviewers.length} reviewer${x.reviewers.length===1?'':'s'} on revision ${x.rev}.`); R(); },
+  sdpub(){ pubDlg(); }, sdtool(k){ pubDlg(k); },
+  sdconn(k){ SPEC_TOOLS[k]=true; pubDlg(k); },
+  sdgo(){ const x=cur(); const t=M.t; const again=x.link&&x.link.tool===t; const key=again?x.link.key:((t==='jira'?'ENG-':t==='clickup'?'CU-':'NT-')+(140+SPECS.filter(s=>s.link).length*3)); x.link={tool:t,key,rev:x.rev}; close(); toast(`${again?'Updated':'Published to'} ${TOOLS[t][0]} as ${key}.`); R(); }
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&document.querySelector('#sdModal .sdm')){ e.stopPropagation(); close(); } },true);
+/* saving from the creation board keeps the exact selection */
+{ const _g=ACT.ncgo; ACT.ncgo=function(){ const M0=S.nc; let sel=null, name=''; try{ const D=dbModel(); sel=[...D.sel]; name=D.add?D.tName:(M0.name||'').trim(); }catch(e){} const n=SPECS.length; const r=_g.apply(this,arguments); if(SPECS.length>n&&sel){ const x=SPECS[0]; x.sel=sel; x.target=name; x.rev=1; } return r; }; }
+try{ render(); }catch(e){}
+})();
+</script>
+<style>
+/* FB84 · use case proposal layout, step editor grip, two-column details, select arrows */
+.ucl2{display:flex;flex-direction:row;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;padding:10px 14px;border-radius:10px;background:var(--panel);border:1px solid var(--border);font:400 13px/20px var(--font);color:var(--text-2)} .ucl2 b{font-weight:500;color:var(--text)} .ucl2 .kic2{display:inline-grid}
+.udbar{display:flex;align-items:center;gap:8px;margin:-4px 0 12px} .udbar .sp{flex:1}
+.udg{overflow:auto;margin-bottom:16px;padding:16px;border:1px solid var(--border);border-radius:12px;background-color:var(--canvas);background-image:radial-gradient(circle at 1px 1px,var(--surface) 1px,transparent 1.2px);background-size:16px 16px}
+.usl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.ust{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;padding:14px 0;border-bottom:1px solid var(--border);border-radius:8px;transition:background .3s}
+.ust.flash{background:var(--selected)}
+.ust .un2{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--surface-strong);font:600 11px/1 var(--font)}
+.ust.dec .un2{background:color-mix(in srgb,#f0a36b 22%,var(--panel));color:#ffc79f}
+.ust .uw{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+.uwho{font:600 11px/16px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-3)} .uwho.user{color:#9fb4f5}
+.uk{height:18px;padding:0 6px;border-radius:999px;background:color-mix(in srgb,#f0a36b 16%,var(--panel));font:500 11px/18px var(--font);color:#ffc79f}
+.ust .ut{font:400 15px/22px var(--font);color:var(--text)}
+.ubr{display:flex;flex-direction:column;gap:6px;margin-top:10px;padding-left:12px;border-left:2px solid color-mix(in srgb,#f0a36b 55%,var(--border-strong))}
+.usl .ust.dec{border:0;border-bottom:1px solid var(--border);border-radius:8px}
+.ubo{display:grid;grid-template-columns:52px auto 14px minmax(0,1fr);align-items:baseline;gap:8px;font:400 13px/20px var(--font);color:var(--text-2)}
+.uif{font:600 12px/18px var(--font);color:#ffc79f;min-width:44px} .uc{color:var(--text);font-weight:500} .uar{color:var(--text-3)}
+.ud{color:var(--accent-on);font:500 13px/20px var(--font)} button.ud:hover{text-decoration:underline} .ud.end{color:var(--text-2)}
+.un{display:block;width:100%;padding-left:0;color:var(--text-3);font-size:12px}
+.unote{display:flex;align-items:center;gap:6px;margin-top:8px;font:400 12px/18px var(--font);color:var(--text-2)} .unote.q{color:var(--warn-text)} .unote small{color:var(--text-3)}
+.uo{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)} .uo:last-child{border-bottom:0}
+.uod{flex:none;width:10px;height:10px;margin-top:5px;border-radius:50%;background:#7cc04f} .uod.x{background:var(--text-3)}
+.uo b{display:block;font:500 14px/20px var(--font)} .uo small{font:400 13px/20px var(--font);color:var(--text-2)}
+.ukv{display:grid;grid-template-columns:72px minmax(0,1fr);gap:8px 10px;font:400 13px/20px var(--font)} .ukv>span:nth-child(odd){color:var(--text-3)}
+.ukv em{display:block;font-style:normal;font-size:12px;color:var(--text-3)} .ukv em.ok{color:var(--ok-text)} .ukv em.aw{color:var(--warn-text)}
+/* step editor: drag handle instead of a number */
+.npx .us .grip2{flex:none;width:22px;height:28px;display:grid;place-items:center;color:var(--text-3);cursor:grab;border-radius:6px} .npx .us .grip2:hover{color:var(--text);background:var(--surface)}
+.npx .us.dragging{opacity:.45} .npx .us.dropb{box-shadow:0 -2px 0 var(--accent-hover)} .npx .us.dropa{box-shadow:0 2px 0 var(--accent-hover)}
+/* details: two columns */
+.npx .npb1 .npc{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px 32px;align-items:start;max-width:960px;margin:0 auto;padding:32px 24px!important}
+.npx .npb1 .npc>.fld{margin:0!important}
+@media (max-width:820px){.npx .npb1 .npc{grid-template-columns:minmax(0,1fr)}}
+/* native selects: own chevron with room on the right */
+.npx .us .op select,.sdm select,.npm select{appearance:none;-webkit-appearance:none;padding-right:34px!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a3a7b5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 12px center!important}
+</style>
+<script>
+/* FB84 · drag a step by its handle */
+(function(){ let from=null;
+document.addEventListener('pointerdown',e=>{ const g=e.target.closest&&e.target.closest('#npModal .us .grip2'); if(!g) return; const r=g.closest('.us'); r.setAttribute('draggable','true'); });
+document.addEventListener('pointerup',()=>{ document.querySelectorAll('#npModal .us[draggable]').forEach(r=>r.removeAttribute('draggable')); });
+document.addEventListener('dragstart',e=>{ const r=e.target.closest&&e.target.closest('#npModal .us[data-si]'); if(!r||!S.np) return; from=+r.dataset.si; r.classList.add('dragging'); try{ e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',String(from)); }catch(_){} });
+document.addEventListener('dragover',e=>{ const r=e.target.closest&&e.target.closest('#npModal .us[data-si]'); if(from==null||!r) return; e.preventDefault(); const b=r.getBoundingClientRect(); const after=e.clientY>b.top+b.height/2; document.querySelectorAll('#npModal .us').forEach(x=>x.classList.remove('dropb','dropa')); r.classList.add(after?'dropa':'dropb'); });
+document.addEventListener('drop',e=>{ const r=e.target.closest&&e.target.closest('#npModal .us[data-si]'); if(from==null||!r||!S.np) return; e.preventDefault(); const b=r.getBoundingClientRect(); let to=+r.dataset.si+(e.clientY>b.top+b.height/2?1:0); const P=S.np.steps; const [x]=P.splice(from,1); if(to>from) to--; P.splice(to,0,x); from=null; renderNP(); });
+document.addEventListener('dragend',()=>{ from=null; document.querySelectorAll('#npModal .us').forEach(x=>x.classList.remove('dragging','dropb','dropa')); });
+})();
+</script>
+<style>
+/* FB85 · Change specifications list lives on the business system canvas: panel and breadcrumbs stay, the table fills the rest */
+#csList{position:absolute;z-index:12;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+#csList[hidden]{display:none}
+body.cs2 #cDock,body.cs2 #cStatus,body.cs2 #cxBar,body.cs2 #cPlay,body.cs2 #fxKey{visibility:hidden}
+#csList .h{display:flex;align-items:center;gap:12px;padding:18px 20px 12px}
+#csList .h h2{margin:0;font:600 18px/26px var(--font)} #csList .h .count{margin-left:-4px}
+#csList .h .sp{flex:1}
+#csList .h .field{width:260px;height:32px}
+#csList .fl{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:0 20px 14px;border-bottom:1px solid var(--border)}
+#csList .fg{display:flex;align-items:center;gap:4px}
+#csList .fg>span{font:500 12px/18px var(--font);color:var(--text-3);margin-right:4px}
+#csList .fg button{height:28px;padding:0 10px;border-radius:999px;font:500 12px/18px var(--font);color:var(--text-2);box-shadow:inset 0 0 0 1px var(--border-strong);display:inline-flex;align-items:center;gap:6px}
+#csList .fg button:hover{color:var(--text)}
+#csList .fg button.on{background:var(--selected);color:var(--accent-on);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 55%,transparent)}
+#csList .fg button i{width:7px;height:7px;border-radius:50%}
+#csList .tb{flex:1;min-height:0;overflow:auto}
+#csList table{width:100%;border-collapse:collapse;font:400 13px/20px var(--font)}
+#csList th{position:sticky;top:0;z-index:1;background:var(--panel);text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);font:500 12px/18px var(--font);color:var(--text-3);white-space:nowrap}
+#csList th:first-child,#csList td:first-child{padding-left:20px} #csList th:last-child,#csList td:last-child{padding-right:20px}
+#csList td{padding:12px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text-2)}
+#csList tr.r{cursor:pointer} #csList tr.r:hover td{background:var(--surface)}
+#csList .t{display:flex;align-items:center;gap:10px;min-width:0} #csList .t b{display:block;font:500 14px/20px var(--font);color:var(--text)} #csList .t small{display:block;font:400 12px/18px var(--font);color:var(--text-3)}
+#csList .ty{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;font:500 12px/16px var(--font);white-space:nowrap;background:var(--surface);color:var(--text-2)}
+#csList .who{display:flex;align-items:center;gap:8px;white-space:nowrap}
+#csList .st{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:var(--text)} #csList .st i{width:8px;height:8px;border-radius:50%}
+#csList .none{padding:40px 20px;text-align:center;color:var(--text-3)}
+</style>
+<script>
+/* FB85 */
+(function(){
+const STATUS=[['draft','Draft','#a3a7b5'],['review','In review','#ffcc4d'],['approved','Approved','#7b97f0'],['progress','In progress','#9a84f2'],['done','Done','#34c759']];
+const TYPES=[['uc','Use case'],['rf','Bounded context']];
+S.cs2=S.cs2||false; S.csf=S.csf||{st:'all',ty:'all',q:''};
+const host=document.getElementById('vCodona'); const el=document.createElement('section'); el.id='csList'; el.hidden=true; el.setAttribute('aria-label','Change specifications'); host.appendChild(el);
+const typeOf=x=>x.type==='uc'?'Use case':'Bounded context';
+function rows(){ const f=S.csf, q=f.q.trim().toLowerCase(); const ord=k=>STATUS.findIndex(s=>s[0]===k);
+  return (window.SPECS||[]).filter(x=>(f.st==='all'||x.status===f.st)&&(f.ty==='all'||x.type===f.ty)&&(!q||(x.title+' '+(x.scope||'')+' '+x.by).toLowerCase().includes(q))).sort((a,b)=>ord(a.status)-ord(b.status)); }
+function html(){ const f=S.csf; const R=rows(); const all=window.SPECS||[];
+  const pill=(g,k,l,c)=>`<button class="${f[g]===k?'on':''}" data-act="csf" data-arg="${g}|${k}">${c?`<i style="background:${c}"></i>`:''}${l}</button>`;
+  return `<div class="h"><h2>Change specifications</h2><span class="count">${all.length}</span><span class="sp"></span><label class="field">${I('search',16)}<input id="csQ" value="${esc(f.q)}" placeholder="Search specifications" autocomplete="off"></label></div>
+   <div class="fl"><div class="fg"><span>Status</span>${pill('st','all','All')}${STATUS.map(([k,l,c])=>pill('st',k,l,c)).join('')}</div><div class="fg"><span>Type</span>${pill('ty','all','All')}${TYPES.map(([k,l])=>pill('ty',k,l)).join('')}</div></div>
+   <div class="tb">${R.length?`<table><thead><tr><th>Specification</th><th>Type</th><th>Proposed by</th><th>Updated</th><th>Status</th></tr></thead><tbody>${R.map(x=>{ const s=STATUS.find(z=>z[0]===x.status)||STATUS[0];
+     return `<tr class="r" data-act="spopen" data-arg="${x.id}"><td><div class="t">${x.type==='uc'?kindIc('usecase',16):kindIc('context',16)}<span><b>${esc(x.title)}</b><small>${esc(x.scope||(x.persona?'Persona · '+x.persona:''))}</small></span></div></td><td><span class="ty">${typeOf(x)}</span></td><td><span class="who">${pAv(x.by,20)}${esc(x.by)}</span></td><td style="white-space:nowrap">${esc(x.when)}</td><td><span class="st"><i style="background:${s[2]}"></i>${s[1]}</span></td></tr>`; }).join('')}</tbody></table>`:'<div class="none">No specifications match these filters.</div>'}</div>`; }
+function place(){ const v=host.getBoundingClientRect(); const p=document.querySelector('#cPanel .card')||document.getElementById('cPanel'); const c=document.getElementById('cCrumb');
+  const pr=p?p.getBoundingClientRect():{right:v.left+404}; const cr=c?c.getBoundingClientRect():{bottom:v.top+64};
+  el.style.left=Math.round(pr.right-v.left+16)+'px'; el.style.top=Math.round(Math.max(cr.bottom-v.top+12,16))+'px'; el.style.right='24px'; el.style.bottom='24px'; }
+function paint(){ const on=S.cs2&&S.tab==='codona'; document.body.classList.toggle('cs2',on); el.hidden=!on; if(!on){ el.innerHTML=''; return; }
+  const a=document.activeElement, keep=a&&a.id==='csQ'?a.selectionStart:null; el.innerHTML=html(); place(); if(keep!=null){ const n=document.getElementById('csQ'); n.focus(); n.setSelectionRange(keep,keep); } }
+/* the list is a canvas view of the business system */
+const open=()=>{ S.cs2=true; S.tab='codona'; S.specs.open=null; S.ucx.flow=null; S.level=0; render(); };
+{ const _r=render; render=function(){ if(S.tab==='specs'&&!(S.specs&&S.specs.open)){ S.tab='codona'; S.cs2=true; } if(S.tab!=='codona') S.cs2=false; _r(); try{ paint(); }catch(e){ console.error(e); } }; }
+{ const _t=ACT.tab; ACT.tab=function(t){ if(t==='specs'){ open(); return; } S.cs2=false; return _t.apply(this,arguments); }; }
+ACT.spclose=open;
+ACT.spopen=function(id){ S.cs2=false; S.specs.open=id; S.tab='specs'; render(); };
+ACT.cs2sys=function(){ S.cs2=false; S.specs.open=null; S.tab='codona'; try{ ACT.home(); }catch(e){ render(); } };
+ACT.csf=function(a){ const [g,k]=a.split('|'); S.csf[g]=k; paint(); };
+document.addEventListener('input',e=>{ if(e.target.id==='csQ'){ S.csf.q=e.target.value; paint(); } });
+/* anything else on the panel, the breadcrumbs or the rail leaves the list */
+document.addEventListener('click',e=>{ if(!S.cs2) return; const b=e.target.closest&&e.target.closest('[data-act]'); if(!b||b.closest('#csList')) return; const a=b.dataset.act;
+  if(/^(cs|sp|sd|toast|theme|zoom|rsc|bssync|nppmenu)/.test(a)) return; if(b.closest('#cPanel,#cCrumb,#rail,#cTop,#appTop')) S.cs2=false; },true);
+/* breadcrumbs: Business systems › Commerce platform › Change specifications */
+{ const _c=crumbHTML; crumbHTML=function(){ const h=_c(); if(!S.cs2) return h; const i=h.indexOf('<span class="ci cur">'); return (i>=0?h.slice(0,i):h+SEP)+'<span class="ci cur">Change specifications</span>'; }; }
+{ const _h=hashOf; hashOf=function(){ return S.cs2&&S.tab==='codona' ? '#/codona/specs' : _h(); }; }
+if(location.hash==='#/codona/specs'){ S.cs2=true; }
+addEventListener('resize',()=>{ if(S.cs2) place(); });
+/* labels: Use case and Bounded context, everywhere a type is named */
+const fixLbl=root=>{ (root||document).querySelectorAll('.sd-k span,.ty,.kv span').forEach(n=>{ if(n.children.length) return; if(n.textContent==='Refactoring specification') n.textContent='Bounded context'; else if(n.textContent==='Use case specification') n.textContent='Use case'; }); };
+{ const _r=render; render=function(){ _r(); try{ fixLbl(document.getElementById('vSpecs')); }catch(e){} }; }
+try{ render(); }catch(e){}
 })();
 </script>
 </body>

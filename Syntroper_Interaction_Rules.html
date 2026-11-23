@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Syntroper · Diagram colour and interaction rules</title>
+<style>
+:root{
+  --canvas:#060b15;--panel:#131620;--surface:#1d212d;--surface-strong:#2f3341;--border:#1c202c;--border-strong:#2f3341;
+  --text:#fff;--text-2:#a3a7b5;--text-3:#778196;--warn:#ffcc4d;--danger:#ea4d44;
+  --sel:#624ED5;--sel-hov:rgba(134,115,242,.75);--rel:#3E4352;--chip-rel:#fff;
+  --font:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--text);font:400 14px/22px var(--font)}
+.wrap{max-width:1080px;margin:0 auto;padding:48px 40px 96px}
+h1{font:600 26px/34px var(--font);margin:0 0 6px}
+.lead{color:var(--text-2);margin:0 0 28px}
+h2{font:600 18px/26px var(--font);margin:48px 0 12px;padding-top:24px;border-top:1px solid var(--border)}
+h3{font:600 14px/20px var(--font);margin:24px 0 8px}
+p{margin:0 0 10px;color:var(--text-2)}
+code{font:500 12px/18px var(--mono);background:var(--surface);padding:1px 6px;border-radius:5px;color:var(--text);white-space:nowrap}
+table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:13px;line-height:20px}
+th{text-align:left;font:600 11px/16px var(--font);letter-spacing:.05em;text-transform:uppercase;color:var(--text-3);padding:8px 12px;border-bottom:1px solid var(--border-strong)}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text-2)}
+td:first-child{color:var(--text);font-weight:500}
+.sw{display:inline-flex;align-items:center;gap:8px}
+.sw i{width:14px;height:14px;border-radius:4px;display:inline-block;border:1px solid rgba(255,255,255,.12);flex:none}
+.states{display:grid;grid-template-columns:80px repeat(5,minmax(0,1fr));gap:10px;margin:12px 0;align-items:stretch}
+.states .rh{display:flex;align-items:center;font:600 12px/16px var(--font);color:var(--text-3);text-transform:uppercase;letter-spacing:.05em}
+.states .ch{font:600 13px/18px var(--font);padding:0 2px}
+.states svg{display:block;width:100%;height:84px;background-color:var(--canvas);background-image:radial-gradient(circle at 1px 1px,var(--surface) 1px,transparent 1.2px);background-size:12px 12px;border-radius:10px;border:1px solid var(--border)}
+.states small code{white-space:normal;font-size:11px}
+.states small{display:block;font:400 12px/17px var(--font);color:var(--text-3);margin-top:6px}
+.prio{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
+.prio span{padding:4px 10px;border-radius:999px;background:var(--surface);font:500 12px/18px var(--font)}
+.prio em{color:var(--text-3);font-style:normal}
+.bug{background:color-mix(in srgb,var(--danger) 9%,var(--panel));border:1px solid color-mix(in srgb,var(--danger) 45%,var(--border-strong));border-radius:12px;padding:20px 22px;margin-top:12px}
+.bug h3{margin-top:0;color:#ffafa3} .bug h3+p{margin-bottom:14px}
+.bug ol{margin:8px 0 14px;padding-left:20px;color:var(--text-2)} .bug li{margin:6px 0}
+.note{border-left:3px solid var(--sel);padding:4px 0 4px 14px;margin:14px 0;color:var(--text-2)}
+.toc{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.toc a{padding:4px 10px;border-radius:999px;background:var(--surface);color:var(--text-2);font:500 12px/18px var(--font);text-decoration:none}
+.toc a:hover{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Diagram colour and interaction rules</h1>
+<p class="lead">Taken from the context diagram (Levels 1–3), which is the reference. Every other diagram follows it. If a diagram does something different, that's a bug.</p>
+<div class="toc"><a href="#states">States</a><a href="#tokens">Tokens</a><a href="#rules">General rules</a><a href="#maps">Context diagram</a><a href="#galaxy">Galaxy</a><a href="#board">Impact board</a><a href="#seq">Sequence</a><a href="#flow">Flowchart</a><a href="#swim">Swim lane</a><a href="#teams">Teams</a><a href="#fix">Fix: double states</a></div>
+
+<h2 id="states">States</h2>
+<div class="states">
+ <span></span><span class="ch">Rest</span><span class="ch">Hover</span><span class="ch">Selected</span><span class="ch">Connected</span><span class="ch">Dimmed</span>
+ <span class="rh">Cards</span>
+ <div><svg viewBox="0 0 160 84"><rect x="30" y="24" width="100" height="36" rx="8" fill="#131620" stroke="#2f3341"/><rect x="42" y="38" width="56" height="8" rx="4" fill="#a3a7b5"/></svg><small><code>--panel</code>, 1px <code>--border-strong</code></small></div>
+ <div><svg viewBox="0 0 160 84"><rect x="30" y="24" width="100" height="36" rx="8" fill="#131620" stroke="rgba(134,115,242,.75)" stroke-dasharray="5 4"/><rect x="42" y="38" width="56" height="8" rx="4" fill="#a3a7b5"/></svg><small>Border dashed <code>--sel-hov</code>. No ring, no fill change</small></div>
+ <div><svg viewBox="0 0 160 84"><rect x="30" y="24" width="100" height="36" rx="8" fill="#131620" stroke="#624ED5" stroke-width="3"/><rect x="42" y="38" width="56" height="8" rx="4" fill="#a3a7b5"/></svg><small>Border <code>--sel</code> solid plus a 2px <code>--sel</code> ring</small></div>
+ <div><svg viewBox="0 0 160 84"><rect x="30" y="24" width="100" height="36" rx="8" fill="#131620" stroke="#2f3341"/><rect x="42" y="38" width="56" height="8" rx="4" fill="#a3a7b5"/></svg><small>Looks like rest. Stays at full opacity</small></div>
+ <div><svg viewBox="0 0 160 84"><rect x="30" y="24" width="100" height="36" rx="8" fill="#0d1018" stroke="#181b25"/><rect x="42" y="38" width="56" height="8" rx="4" fill="#a3a7b5" opacity=".14"/></svg><small>Card stays solid: fill <code>#0d1018</code>, border <code>#181b25</code>. Content at 14%</small></div>
+ <span class="rh">Arrows</span>
+ <div><svg viewBox="0 0 160 84"><path d="M20 42H128" stroke="#2f3341" stroke-width="1.4"/><path d="M128 37l9 5-9 5z" fill="#2f3341"/><rect x="52" y="33" width="46" height="18" rx="5" fill="#131620" stroke="#fff"/><text x="75" y="45.5" fill="#fff" font-size="9" text-anchor="middle" font-family="ui-monospace,monospace">calls</text></svg><small>1.4px <code>--border-strong</code>. Label chip <code>--panel</code></small></div>
+ <div><svg viewBox="0 0 160 84"><path d="M20 42H128" stroke="rgba(134,115,242,.75)" stroke-width="3.5" stroke-dasharray="5 4" stroke-linecap="round"/><path d="M128 36l10 6-10 6z" fill="rgba(134,115,242,.75)"/><rect x="52" y="33" width="46" height="18" rx="5" fill="#131620" stroke="#624ED5" stroke-dasharray="2 3"/><text x="75" y="45.5" fill="#fff" font-size="9" text-anchor="middle" font-family="ui-monospace,monospace">calls</text></svg><small>3.5px dashed <code>--sel-hov</code>. Chip border dashed <code>--sel</code></small></div>
+ <div><svg viewBox="0 0 160 84"><path d="M20 42H128" stroke="#624ED5" stroke-width="3.5"/><path d="M128 36l10 6-10 6z" fill="#624ED5"/><rect x="52" y="33" width="46" height="18" rx="5" fill="#624ED5" stroke="#624ED5"/><text x="75" y="45.5" fill="#fff" font-size="9" text-anchor="middle" font-family="ui-monospace,monospace">calls</text></svg><small>3.5px solid <code>--sel</code>. Chip filled <code>--sel</code>, white text</small></div>
+ <div><svg viewBox="0 0 160 84"><path d="M20 42H128" stroke="#3E4352" stroke-width="1.4"/><path d="M128 37l9 5-9 5z" fill="#3E4352"/><rect x="52" y="33" width="46" height="18" rx="5" fill="#131620" stroke="#fff"/><text x="75" y="45.5" fill="#fff" font-size="9" text-anchor="middle" font-family="ui-monospace,monospace">calls</text></svg><small>Solid <code>--rel</code>. Chip border and text <code>--chip-rel</code></small></div>
+ <div><svg viewBox="0 0 160 84"><g opacity=".14"><path d="M20 42H128" stroke="#2f3341" stroke-width="1.4"/><path d="M128 37l9 5-9 5z" fill="#2f3341"/><rect x="52" y="33" width="46" height="18" rx="5" fill="#131620" stroke="#fff"/><text x="75" y="45.5" fill="#fff" font-size="9" text-anchor="middle" font-family="ui-monospace,monospace">calls</text></g></svg><small>Whole arrow and its chip at 14%</small></div>
+</div>
+<p>Each element is in exactly one state at a time. When two could apply, the stronger one wins:</p>
+<div class="prio"><span>Selected</span><em>›</em><span>Connected</span><em>›</em><span>Hover</span><em>›</em><span>Dimmed</span><em>›</em><span>Rest</span></div>
+
+<h2 id="tokens">Tokens</h2>
+<table>
+<tr><th>Token</th><th>Dark</th><th>Light</th><th>Used for</th></tr>
+<tr><td><code>--sel-hov</code></td><td><span class="sw"><i style="background:rgba(134,115,242,.75)"></i>rgba(134,115,242,.75)</span></td><td><span class="sw"><i style="background:#8673f2"></i>#8673f2</span></td><td>Hover</td></tr>
+<tr><td><code>--sel</code></td><td><span class="sw"><i style="background:#624ED5"></i>#624ED5</span></td><td><span class="sw"><i style="background:#624ed5"></i>#624ED5</span></td><td>Selected</td></tr>
+<tr><td><code>--rel</code></td><td><span class="sw"><i style="background:#3E4352"></i>#3E4352</span></td><td><span class="sw"><i style="background:#b8bcc8"></i>#B8BCC8</span></td><td>Connected arrows and lines</td></tr>
+<tr><td><code>--chip-rel</code></td><td><span class="sw"><i style="background:#fff"></i>#FFFFFF</span></td><td><span class="sw"><i style="background:#14161d"></i>#14161D</span></td><td>Label chips: border and text, at rest and when connected</td></tr>
+<tr><td><code>--dim-op</code></td><td>0.14</td><td>0.14</td><td>Content of dimmed cards, dimmed arrows</td></tr>
+<tr><td>Dimmed card</td><td><span class="sw"><i style="background:#0d1018"></i>#0D1018 fill, #181B25 border</span></td><td><span class="sw"><i style="background:#f4f5f7"></i>#F4F5F7 fill, #E6E8EC border</span></td><td>The card stays opaque so lines never show through it</td></tr>
+</table>
+<h3>Colours at rest</h3>
+<p>These belong to the element and say what it is. Interaction never uses them, and they're never used for interaction.</p>
+<table>
+<tr><th>What</th><th>Look</th></tr>
+<tr><td>Event arrow</td><td>Dashed 2 4, same colour as other arrows</td></tr>
+<tr><td>Suggested arrow</td><td><code>--warn</code>, dashed 5 4. It stays <code>--warn</code> when connected</td></tr>
+<tr><td>Needs clarification</td><td><code>--warn</code>, dotted</td></tr>
+<tr><td>Confirmed integration</td><td><code>--ok</code></td></tr>
+<tr><td>Impact</td><td><code>--danger</code> (context board only)</td></tr>
+<tr><td>Kind icons</td><td><code>--k-*</code> colours, on icons only, never on borders or lines</td></tr>
+<tr><td>Flowchart and swim lane shapes</td><td>Coloured border by shape type, as in the flowchart legend</td></tr>
+</table>
+
+<h2 id="rules">General rules</h2>
+<table>
+<tr><th>Rule</th><th>Detail</th></tr>
+<tr><td>Hover is one change</td><td>Only the element under the pointer changes: its border or line turns dashed <code>--sel-hov</code>. Neighbours don't change, and there's no fill change, glow or ring.</td></tr>
+<tr><td>Hover on selected</td><td>Nothing changes, only the cursor.</td></tr>
+<tr><td>Hover on connected</td><td>Gets the hover look over the connected look. It goes back to connected when the pointer leaves.</td></tr>
+<tr><td>Hover on dimmed</td><td>The card's content goes back to full opacity with the dashed border, so you can read it. The neighbours stay dimmed.</td></tr>
+<tr><td>Connections show on click</td><td>Hover never previews connections. Connected only appears after a click.</td></tr>
+<tr><td>Connected cards</td><td>No extra border, ring or colour. They just stay at full opacity while the rest dims.</td></tr>
+<tr><td>Connected arrows</td><td>Turn <code>--rel</code> and solid, except suggested arrows, which keep <code>--warn</code> dashed. Their chips use <code>--chip-rel</code>.</td></tr>
+<tr><td>One selection</td><td>Only one element is selected at a time, card or arrow, never a group.</td></tr>
+<tr><td>Selecting an arrow</td><td>The arrow is selected and the two cards at its ends are connected.</td></tr>
+<tr><td>Clearing</td><td>Click the selected element again, click empty canvas or press Esc.</td></tr>
+<tr><td>Selection beats colour at rest</td><td>A selected element is <code>--sel</code>, even when it's red for impact or yellow for clarification.</td></tr>
+<tr><td>Never dimmed</td><td>The canvas, lanes, lifelines, their headers, legends and the zoom bar.</td></tr>
+<tr><td>Tooltips</td><td>Allowed on hover. A tooltip isn't a state.</td></tr>
+<tr><td>Keyboard</td><td>Focus looks like hover. Enter selects, Esc clears.</td></tr>
+</table>
+
+<h2 id="maps">Context diagram · Levels 1–3 (reference)</h2>
+<table>
+<tr><th>Element</th><th>Rest</th><th>Hover</th><th>Selected</th><th>Connected</th><th>Dimmed</th></tr>
+<tr><td>Card</td><td><code>--panel</code>, <code>--border-strong</code></td><td>Dashed <code>--sel-hov</code> border</td><td><code>--sel</code> border, 2px ring</td><td>As rest</td><td>Solid dark card, content 14%</td></tr>
+<tr><td>Arrow</td><td>1.4px <code>--border-strong</code></td><td>3.5px dashed <code>--sel-hov</code></td><td>3.5px solid <code>--sel</code></td><td>Solid <code>--rel</code></td><td>14%</td></tr>
+<tr><td>Arrow label chip</td><td><code>--panel</code>, <code>--chip-rel</code> border</td><td>Dashed <code>--sel</code> border</td><td>Filled <code>--sel</code>, white text</td><td><code>--chip-rel</code> border and text</td><td>14%</td></tr>
+<tr><td>Suggested arrow</td><td><code>--warn</code> dashed</td><td>Dashed <code>--sel-hov</code></td><td>3.5px solid <code>--sel</code></td><td><code>--warn</code> dashed</td><td>14%</td></tr>
+</table>
+
+<h2 id="galaxy">Galaxy</h2>
+<p>Same five states, mapped to its shapes.</p>
+<table>
+<tr><th>Element</th><th>Rest</th><th>Hover</th><th>Selected</th><th>Connected</th></tr>
+<tr><td>Bounded context (arc)</td><td><code>--surface-strong</code> fill</td><td>Dashed <code>--sel-hov</code> outline, same fill</td><td>Filled <code>--sel</code>, white label</td><td>Lighter fill <code>--surface-strong-h</code></td></tr>
+<tr><td>Use case (bar)</td><td><code>--surface-strong</code></td><td>Dashed <code>--sel-hov</code></td><td><code>--sel</code></td><td><code>--text-3</code></td></tr>
+<tr><td>Integration (curve)</td><td><code>--text-3</code>, by status</td><td>Dashed <code>--sel-hov</code></td><td>3.5px solid <code>--sel</code></td><td>Solid <code>--rel</code>, clarification stays <code>--warn</code></td></tr>
+<tr><td>Integration point (dot)</td><td><code>--text-2</code></td><td>Dashed <code>--sel-hov</code> ring</td><td>Filled <code>--sel</code></td><td>White</td></tr>
+<tr><td>External system (box)</td><td><code>--text-3</code> border, by status</td><td>Dashed <code>--sel-hov</code></td><td><code>--sel</code> border</td><td><code>--text-2</code> border</td></tr>
+<tr><td>Label chip</td><td><code>--chip-rel</code></td><td>Dashed <code>--sel</code></td><td>Filled <code>--sel</code></td><td><code>--chip-rel</code></td></tr>
+</table>
+
+<h2 id="board">New bounded context · impact board</h2>
+<p>Same rules as the Galaxy. Impact red is a colour at rest, not a state.</p>
+<table>
+<tr><th>Element</th><th>Rest</th><th>Hover</th><th>Selected</th></tr>
+<tr><td>Impacted use case or context</td><td>Red</td><td>Dashed <code>--sel-hov</code> outline over the red</td><td><code>--sel</code></td></tr>
+<tr><td>Impacted integration</td><td>Red line. No new lines are drawn</td><td>Dashed <code>--sel-hov</code></td><td><code>--sel</code></td></tr>
+</table>
+
+<h2 id="seq">Sequence diagram</h2>
+<table>
+<tr><th>Element</th><th>Rest</th><th>Hover</th><th>Selected</th><th>Connected</th></tr>
+<tr><td>Arrow</td><td>Base. Return messages dashed</td><td>3.5px dashed <code>--sel-hov</code></td><td>3.5px solid <code>--sel</code>. The side card shows this arrow only</td><td>Other arrows of the same step: solid <code>--rel</code></td></tr>
+<tr><td>Arrow label</td><td>Text, no box</td><td>1px dashed <code>--sel-hov</code> outline</td><td><code>--sel</code> chip</td><td><code>--chip-rel</code></td></tr>
+<tr><td>Lifeline header</td><td>Card at rest</td><td>Dashed <code>--sel-hov</code></td><td><code>--sel</code> border, ring</td><td>As rest</td></tr>
+<tr><td>Decision and branch chips</td><td>Coloured as decisions</td><td>Dashed <code>--sel-hov</code></td><td><code>--sel</code>. Steps below redraw</td><td>As rest</td></tr>
+<tr><td>Lifeline</td><td colspan="4">Never changes state</td></tr>
+</table>
+
+<h2 id="flow">Flowchart</h2>
+<table>
+<tr><th>Element</th><th>Rest</th><th>Hover</th><th>Selected</th><th>Connected</th></tr>
+<tr><td>Card: start, step, decision, other path</td><td>Shape border colour</td><td>Dashed <code>--sel-hov</code> border</td><td><code>--sel</code> border, 1px ring</td><td>As rest</td></tr>
+<tr><td>Connector</td><td>Base</td><td>Dashed <code>--sel-hov</code></td><td>—</td><td>Solid <code>--rel</code> when it touches the selection</td></tr>
+<tr><td>Branch label</td><td>Chip</td><td>Dashed <code>--sel</code> border</td><td>—</td><td><code>--chip-rel</code></td></tr>
+</table>
+
+<h2 id="swim">Swim lane</h2>
+<p>One lane for the persona, one for the system.</p>
+<table>
+<tr><th>Element</th><th>Rest</th><th>Hover</th><th>Selected</th><th>Connected</th></tr>
+<tr><td>Step, decision, start, end</td><td>Shape border colour</td><td>Dashed <code>--sel-hov</code> border</td><td><code>--sel</code> border</td><td>As rest</td></tr>
+<tr><td>Arrow</td><td>Base. Branches and loop backs in the decision colour</td><td>Dashed <code>--sel-hov</code></td><td>—</td><td>Solid <code>--rel</code></td></tr>
+<tr><td>Lanes and lane headers</td><td colspan="4">Never change state</td></tr>
+</table>
+
+<h2 id="teams">Teams org chart</h2>
+<table>
+<tr><th>Element</th><th>Rest</th><th>Hover</th><th>Selected</th></tr>
+<tr><td>Team card</td><td><code>--panel</code>, <code>--border-strong</code></td><td>Dashed <code>--sel-hov</code> border and the + button</td><td><code>--sel</code> border. The card opens in place</td></tr>
+<tr><td>Person card</td><td>As rest</td><td>Dashed <code>--sel-hov</code></td><td>—</td></tr>
+<tr><td>Connector</td><td colspan="3">Never changes state</td></tr>
+</table>
+
+<h2 id="fix">Fix needed: double hover and selection states</h2>
+<div class="bug">
+<h3>What happens in the dev environment</h3>
+<p>Hovering in the Galaxy changes two or three things at once. The element gets an outline, its fill or width changes too, and its neighbours light up while the rest dims. It looks like two colours fighting. An element must show one state at a time, like the context diagram does.</p>
+<h3>Causes found in the prototype</h3>
+<ol>
+<li><b>Hover previews connections.</b> <code>preview()</code> runs on <code>mouseover</code>, adds <code>pvhi</code> to the neighbours and <code>pvdim</code> to the rest. With the <code>.hov</code> outline, that's two states from one hover. Connections should only show on click.</li>
+<li><b>Hover is defined five times.</b> There are separate <code>.el.hov</code> rule sets in the base Galaxy styles, the Galaxy layer, the old orange theme, the first <code>--sel-hov</code> pass and the dashed pass. They stack, so one hover gets a fill, a width and a dash at the same time.</li>
+<li><b>Hover changes the fill.</b> <code>.el[data-k=ctx].hov .arc</code> sets a lighter fill (<code>#4a5063</code> or <code>--surface-strong-h</code>) as well as the outline. The lighter fill is the connected look, so hover reads as connected.</li>
+<li><b>Hover changes widths.</b> <code>stroke-width:2.2</code> on external boxes, <code>3.4px</code> on integrations while something is selected.</li>
+<li><b>Peek while selected.</b> Hovering a dimmed element adds <code>peek</code> as well as <code>hov</code>.</li>
+<li><b>Old cards rules.</b> The context diagram card has three hover rules (outline, ring, dashed border) in different blocks. Only the last one should exist.</li>
+</ol>
+<h3>Fix</h3>
+<ol>
+<li>One function sets one state class on each element: <code>rest</code>, <code>hov</code>, <code>sel</code>, <code>rel</code> or <code>dim</code>, picked by the priority above.</li>
+<li>Delete the old rule sets. Keep one per state, as in the tables above.</li>
+<li>Remove the hover preview, or move it to click.</li>
+<li>Hover changes the border or line only: no fill, no width on cards, no ring.</li>
+<li>Apply the same to the sequence diagram, flowchart, swim lane and Teams.</li>
+</ol>
+</div>
+<p class="note">How to check: hover each element type in each diagram, with and without a selection. Only the element under the pointer should change.</p>
+</div>
+</body>
+</html>
