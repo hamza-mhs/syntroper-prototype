@@ -15199,34 +15199,41 @@ ACT.ncback=function(){ if(!S.ncHold) return; S.nc=S.ncHold; S.ncHold=null; if(S.
 </script>
 <style>body:not(.light) #csDoc .udg-live,body:not(.light) #vSpecs .sd-bd,body:not(.light) #lStage,body:not(.light) .lstage{background-image:radial-gradient(circle at 1px 1px,#2a2f3d 1px,transparent 1.2px)!important;background-size:18px 18px!important}</style>
 <script>
-/* FB95 · review guide: only what changed 20–24 Nov and isn't in Murtaza's list yet; held modules stay */
+/* FB95 · review guide grouped by day, newest first: 23 Nov (incl. 24), 20 Nov, 19 Nov. Change specifications are left out for now. */
 (function(){
-const drop=new Set(['Use case sidebar|Sticky header and actions','Use case sidebar|Close in the title row','Use case sidebar|Review status, persona, source and assignee','Use case sidebar|Accept, Propose changes, Reject','Use case sidebar|Assign to review or revise','Use case sidebar|Reject with a reason','Use case sidebar|History','Use case sidebar|Steps summary','Use case sidebar|Open sequence steps','Use case sidebar|Connected layers as tabs','Use case sidebar|API one level down, with Back','Use case sidebar|Rejected use cases are hidden','Use case sidebar|Filter and group by persona',
- 'Chat room|Use case name in the header','Chat room|Members and invite','Chat room|Proposed actions','Chat room|Ask about any use case with /',
- 'Sequence diagram|System level: persona and system only','Sequence diagram|One arrow selected at a time','Sequence diagram|Decisions as If / Else if on the lifeline',
- 'Flowchart|Steps start collapsed','Flowchart|Code files and APIs under their own headings','Flowchart|File tabs and Open in editor','Flowchart|Shape colours and legend',
- 'Swim lane|Swim lane as a third diagram','All diagrams|Interaction rules','Teams|Org chart','APIs|Group APIs by use case','APIs|Every use case of an API','Navigation|Syntroper Code and Syntroper Infra',
- 'Teams|Invite inside the card','Teams|Invite on demand, smooth cards']);
-const keep=WN.filter(f=>!drop.has(f.a+'|'+f.n));
+const D19=new Set(['Use case sidebar|Sticky header and actions','Use case sidebar|Close in the title row','Use case sidebar|Review status, persona, source and assignee','Use case sidebar|Accept, Propose changes, Reject','Use case sidebar|Assign to review or revise','Use case sidebar|Reject with a reason','Use case sidebar|History','Use case sidebar|Steps summary','Use case sidebar|Open sequence steps','Use case sidebar|API one level down, with Back','Use case sidebar|Rejected use cases are hidden','Use case sidebar|Filter and group by persona',
+ 'Chat room|Members and invite','Chat room|Ask about any use case with /','Sequence diagram|System level: persona and system only','Sequence diagram|One arrow selected at a time','Sequence diagram|Decisions as If / Else if on the lifeline',
+ 'Flowchart|Steps start collapsed','Flowchart|Code files and APIs under their own headings','Flowchart|File tabs and Open in editor','Flowchart|Shape colours and legend','All diagrams|Interaction rules','APIs|Group APIs by use case','APIs|Every use case of an API','Navigation|Syntroper Code and Syntroper Infra','General|Light mode']);
+const D20=new Set(['Use case sidebar|Connected layers as tabs','Chat room|Use case name in the header','Chat room|Proposed actions','Swim lane|Swim lane as a third diagram','New bounded context|Impact on the Galaxy','New bounded context|Impact list','New bounded context|Save as draft',
+ 'New use case|One persona','New use case|User or system steps, action or decision','New use case|Live diagram','New use case|Review and save as draft','Teams|Org chart','General|The URL keeps the view']);
+const drop=new Set(['Teams|Invite inside the card','Teams|Invite on demand, smooth cards']);
 const H0=()=>{ try{ S.ucx.flow=null; S.nc=null; renderNC(); S.np=null; renderNP(); }catch(e){} S.tab='codona'; try{ WN_HOME(); }catch(e){} render(); };
 const TAB=t=>()=>{ H0(); ACT.tab(t); };
 const UC=(id,f)=>()=>{ H0(); ACT.layer(2); ACT.gsel('uc:'+id); if(f) setTimeout(f,60); };
 const add=[
  ['Teams','Members in one column, all expanded','Every team opens expanded. Its members stack in one column under it, joined by a line, with sub-teams to the right. Member cards are narrower than team cards.', TAB('teams'), ['#vTeams']],
  ['Teams','Smooth cards','One width for team cards. Opening a card, expanding, adding a team or members animate. Clicking empty canvas closes the open card and cancels a new team.', TAB('teams'), ['#vTeams']],
- ['Use case sidebar','Connected layers: underlined tabs','Underlined tabs with a search. The list keeps a steady height, short or long.', UC('cancel-order',()=>{ const c=document.querySelector('#cxItem .cgtabs'); if(c) c.scrollIntoView({block:'start'}); }), ['.cgtabs']],
+ ['Use case sidebar','Connected layers: underlined tabs','Underlined tabs with a white line under the active one, and a search. The list keeps a steady height, short or long.', UC('cancel-order',()=>{ const c=document.querySelector('#cxItem .cgtabs'); if(c) c.scrollIntoView({block:'start'}); }), ['.cgtabs']],
  ['Home','Cards with an icon and a plain button','Use cases to review and Open questions show their icon on the left and a plain button on the right.', H0, ['#cPanel .cta.hasi']],
- ['Business systems','GitHub mark only','The business system card shows the GitHub logo without the white box.', ()=>{ H0(); try{ ACT.sysl&&ACT.sysl(); }catch(e){} }, ['.bsc .gh']],
+ ['Business system','GitHub mark only','The business system card shows the GitHub logo without the white box.', ()=>{ H0(); try{ ACT.sysl&&ACT.sysl(); }catch(e){} }, ['.bsc .gh']],
  ['New use case','Steps header and review','Steps has a heading, one line under it, and Generate with AI on the right. No move arrows; drag the handle. The stepper fills the sidebar. Review: use case card, step timeline with branches, endings, optional business details. Decision placeholders are neutral grey.', ()=>{ H0(); ACT.layer(2); ACT.npopen(); }, ['#npModal .npside']]
 ].map(([a,n,how,go,sel])=>({a,n,how,go,sel,r:1,red:false}));
-const sup=new Set(['Change specifications|Inside the business system','Change specifications|List by status','Change specifications|Push to Jira, ClickUp or Notion']);
-const all=[...add, ...keep.filter(f=>!sup.has(f.a+'|'+f.n)&&f.a!=='Change specifications')]; all.forEach(f=>{ if(f.a==='Business systems') f.a='Business system'; });
-const ORD=['Teams','Home','Business system','Galaxy','Use case sidebar','Comments','General','New use case','New bounded context'];
-const rank=f=>{ const i=ORD.indexOf(f.a); return i<0?ORD.length:i; };
-WN.length=0; WN.push(...all.map((f,i)=>[f,i]).sort((x,y)=>rank(x[0])-rank(y[0])||x[1]-y[1]).map(x=>x[0]));
+const all=[...add, ...WN.filter(f=>f.a!=='Change specifications'&&!drop.has(f.a+'|'+f.n))]; const seen=new Set();
+const list=all.filter(f=>{ const k=f.a+'|'+f.n; if(seen.has(k)) return false; seen.add(k); return true; });
+list.forEach(f=>{ if(f.a==='Business systems') f.a='Business system'; const k=f.a+'|'+f.n; f.d=D19.has(k)?'19 Nov':D20.has(k)?'20 Nov':'23 Nov'; });
+const DAYS=['23 Nov','20 Nov','19 Nov'];
+const ORD=['Teams','Home','Business system','Galaxy','Use case sidebar','Chat room','Sequence diagram','Flowchart','Swim lane','All diagrams','APIs','Comments','Navigation','General','New use case','New bounded context'];
+const rk=f=>{ const i=ORD.indexOf(f.a); return i<0?ORD.length:i; };
+WN.length=0; WN.push(...list.map((f,i)=>[f,i]).sort((x,y)=>DAYS.indexOf(x[0].d)-DAYS.indexOf(y[0].d)||rk(x[0])-rk(y[0])||x[1]-y[1]).map(x=>x[0]));
 WN.forEach((f,i)=>f.i=i+1);
-const LEG='<span><i></i>Changes from 20 to 24 Nov</span>';
+const LAB={'23 Nov':'23 November','20 Nov':'20 November','19 Nov':'19 November'};
+/* list: a date heading, then the areas of that day */
+wnListHTML=function(){ const L=WN.filter(f=>S.wn.r==='all'||String(f.r)===S.wn.r);
+  return DAYS.map(d=>{ const day=L.filter(f=>f.d===d); if(!day.length) return ''; const areas=[...new Set(day.map(f=>f.a))];
+    return `<div class="wn-day"><b>${LAB[d]}</b><span>${day.length} change${day.length===1?'':'s'}</span></div>`+areas.map(a=>`<div class="wn-g">${esc(a)}</div>${day.filter(f=>f.a===a).map(f=>`<div class="wn-i ${S.wn.active===f.i?'on':''}" data-i="${f.i}"><span class="no">${f.i}</span><div class="tx"><b>${esc(f.n)}</b><small>${esc(f.how)}</small><button type="button" data-wn="go" data-arg="${f.i}">Show me</button></div></div>`).join('')}`).join(''); }).join(''); };
+const LEG='<span><i></i>Newest first · 23, 20 and 19 Nov</span>';
 ['#wnPanel','#wnBtn','#wnLayer'].forEach(q=>{ const e=document.querySelector(q); if(e) e.remove(); });
+document.head.insertAdjacentHTML('beforeend','<style>#wnPanel .wn-day{position:sticky;top:0;z-index:2;display:flex;align-items:baseline;gap:8px;margin:14px -4px 2px;padding:10px 4px 8px;background:var(--wnbg,#1a0f1d);border-bottom:2px solid var(--wn,#ff4fc4)}#wnPanel .wn-day:first-child{margin-top:0}#wnPanel .wn-day b{font:700 15px/20px var(--font);color:var(--wn,#ff4fc4)}#wnPanel .wn-day span{font:500 12px/16px var(--font);color:var(--text-3)}</style>');
 try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); const l=document.querySelector('#wnPanel .wn-leg'); if(l) l.innerHTML=LEG; }catch(e){} }); }catch(e){}
 { const _s=wnSync; wnSync=function(){ _s(); const l=document.querySelector('#wnPanel .wn-leg'); if(l) l.innerHTML=LEG; }; }
 })();
