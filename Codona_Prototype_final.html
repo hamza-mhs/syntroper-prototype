@@ -13156,7 +13156,7 @@ render();
 </style>
 <SCRIPT_START>
 /* ===== Org chart only ===== */
-S.view='chart'; S.panel=null; S.adding=null; S.zoom=.7; S.open=new Set([...T.filter(t=>!t.parent).map(t=>t.id),'eng','plat','checkout','design'].filter(id=>T.some(t=>t.id===id)));
+S.view='chart'; S.panel=null; S.adding=null; S.zoom=.7; S.open=new Set(T.map(t=>t.id));
 const roleOf=(t,p)=>(t.m.find(x=>x[0]===p)||[])[1]||'';
 chartHTML=function(){ const q=(S.q||'').trim().toLowerCase();
   const people=t=>{ const L=t.m; if(!L.length) return ''; const show=L.slice(0,2);
@@ -13164,7 +13164,7 @@ chartHTML=function(){ const q=(S.q||'').trim().toLowerCase();
       +(L.length>2?`<li class="pli"><div class="ocard more" data-a="panel" data-v="${t.id}">+${L.length-2} people</div></li>`:''); };
   const adding=id=>S.adding===id?`<li><div class="ocard nw"><input id="ocNew" placeholder="Team name" aria-label="New team name" autocomplete="off"><small>Enter to add · Esc to cancel</small></div></li>`:'';
   const node=t=>{ const ks=kids(t.id); const open=S.open.has(t.id); const all=allMembers(t.id); const hit=q&&t.name.toLowerCase().includes(q);
-    const kidsHTML=open?pnodes(t)+ks.map(node).join('')+adding(t.id):adding(t.id);
+    const kidsHTML=open?(window.pnodes?pnodes(t):'')+ks.map(node).join('')+adding(t.id):adding(t.id);
     return `<li><div class="ocard ${S.panel===t.id?'on':''}" draggable="true" data-id="${t.id}" data-a="panel" data-v="${t.id}" role="button" tabindex="0" style="${q&&!hit?'opacity:.35':''}">
       <div class="r">${tAv(t,'sm')}<b>${q?mark(t.name):esc(t.name)}</b></div>
       <span class="meta"><span>${pl(all.length,'member')}</span>${ks.length?`<span>${pl(ks.length,'sub-team')}</span>`:''}</span>
@@ -13175,7 +13175,7 @@ chartHTML=function(){ const q=(S.q||'').trim().toLowerCase();
   const top=kids(null);
   return `<div class="ocw"><div class="chart"><div class="oc"><ul><li class="root"><div class="ocard" data-id="__root"><div class="r"><span class="av t sm" style="background:#fff">${logo(14)}</span><b>Syntroper’s Org</b></div><span class="meta"><span>${pl(top.length,'top-level team')}</span><span>${pl(new Set(T.flatMap(t=>t.m.map(x=>x[0]))).size,'member')}</span></span>
       <button class="add" data-a="addsub" data-v="__root" aria-label="Add a top-level team">${I('plus',14)}</button></div>
-    <ul>${orgOnly()}${top.map(node).join('')}${adding('__root')}</ul></li></ul></div></div>
+    <ul>${window.orgOnly?orgOnly():''}${top.map(node).join('')}${adding('__root')}</ul></li></ul></div></div>
     <div class="zm"><button data-a="zoom" data-v="out" aria-label="Zoom out">−</button><span>${Math.round((S.zoom||1)*100)}%</span><button data-a="zoom" data-v="in" aria-label="Zoom in">+</button><button data-a="zoom" data-v="fit" aria-label="Reset">⤢</button></div>
     <div class="hint">Hover a team and press + to add one under it · pinch or ⌘ scroll to zoom · drag the canvas to pan</div>
     </div>`; };
@@ -13263,7 +13263,7 @@ function expandHTML(t){ const ks=kids(t.id);
     <input class="nm" value="${esc(t.name)}" data-a="rename" data-v="${t.id}" aria-label="Team name">
     <h5>Members · ${t.m.length}<span class="sp"></span>${S.addm&&S.addm.tid===t.id?'':`<button class="btn sm" data-a="addm" data-v="${t.id}">${I('plus',12)}Add members</button>`}</h5>
     <span class="xhint">${t.m.length?`${pl(t.m.length,'member')} below the card. Change a role or remove someone on their card.`:'No members yet.'}</span>
-    ${S.addm&&S.addm.tid===t.id?addmHTML(t):''}
+    ${S.addm&&S.addm.tid===t.id&&window.addmHTML?addmHTML(t):''}
     <div class="acts2"><button class="btn" data-a="addsub" data-v="${t.id}">${I('plus',12)}Sub-team</button><button class="btn" data-a="move" data-v="${t.id}">Move</button><button class="btn" style="color:var(--danger-text)" data-a="del" data-v="${t.id}">Archive</button><span style="flex:1"></span><button class="ib" data-a="panelx" aria-label="Close">${I('x',14)}</button></div></div>`; }
 /* the expanded card is part of the chart: mark it, and open a new team straight away */
 { const _c=chartHTML; chartHTML=function(){ let h=_c(); if(S.panel) h=h.replace(`class="ocard on" draggable="true" data-id="${S.panel}"`,`class="ocard on open" draggable="false" data-id="${S.panel}"`); return h; }; }
@@ -13379,7 +13379,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&S.addm){ S.addm=nu
 const _r=render; render=function(){ if(S.addm&&S.addm.tid!==S.panel) S.addm=null; _r(); };
 })();
 <\/script>
-<style>.ocw{background-image:radial-gradient(circle at 1px 1px,#626b83 1.2px,transparent 1.4px)!important}</style>
+<style>.ocw{background-image:radial-gradient(circle at 1px 1px,#2a2f3d 1px,transparent 1.2px)!important}</style>
 <style>
 /* members as tree nodes */
 .ocard.pn{flex-direction:row;align-items:center;gap:10px;padding:10px 12px;cursor:default;background:var(--canvas)}
@@ -13404,6 +13404,8 @@ window.pnodes=t=>!t.m.length?'':'<li class="pli mli"><div class="mstack">'+t.m.m
 .oc li.mli .ocard.pn{position:relative}
 .oc li.mli .ocard.pn+.ocard.pn::before{content:"";position:absolute;left:50%;top:-15px;height:14px;width:0;border-left:1px solid var(--line,var(--border-strong))}
 </style>
+<SCRIPT_START>try{ render(); }catch(e){}<\/script>
+<style>.ocard.pn{width:212px!important;padding:8px 10px!important;gap:8px!important}.ocard.pn .av{width:28px!important;height:28px!important;font-size:11px!important}</style>
 </body>
 </html>
 </script>
@@ -15035,7 +15037,7 @@ function post(){ const n=document.querySelector('#npModal .ncm.npm'); if(!n||!S.
 </script>
 <style>
 /* FB90 · canvas dots: brighter in dark mode, subtler in light mode */
-body:not(.light) .stage,body:not(.light) #ucFlow,body:not(.light) #dbd,body:not(.light) .wstage,body:not(.light) .npx .npb3 .db-cv,body:not(.light) .npg,body:not(.light) .ocw,body:not(.light) .npx .ue-r,body:not(.light) .sd-bd,body:not(.light) .udg,body:not(.light) #npModal .npph{background-image:radial-gradient(circle at 1px 1px,#626b83 1.2px,transparent 1.4px)!important;background-size:18px 18px!important}
+body:not(.light) .stage,body:not(.light) #ucFlow,body:not(.light) #dbd,body:not(.light) .wstage,body:not(.light) .npx .npb3 .db-cv,body:not(.light) .npg,body:not(.light) .ocw,body:not(.light) .npx .ue-r,body:not(.light) .sd-bd,body:not(.light) .udg,body:not(.light) #npModal .npph{background-image:radial-gradient(circle at 1px 1px,#2a2f3d 1px,transparent 1.2px)!important;background-size:18px 18px!important}
 body.light:not(.nodots) .stage,body.light:not(.nodots) #ucFlow,body.light:not(.nodots) #dbd,body.light:not(.nodots) .wstage,body.light:not(.nodots) .npx .npb3 .db-cv,body.light:not(.nodots) .npg,body.light:not(.nodots) .ocw,body.light:not(.nodots) .npx .ue-r,body.light:not(.nodots) .sd-bd,body.light:not(.nodots) .udg,body.light:not(.nodots) #npModal .npph{background-image:radial-gradient(circle at 1px 1px,#cdd0da 1.05px,transparent 1.25px)!important;background-size:18px 18px!important}
 </style>
 <style>
@@ -15195,6 +15197,43 @@ ACT.ncback=function(){ if(!S.ncHold) return; S.nc=S.ncHold; S.ncHold=null; if(S.
 { const _r=render; render=function(){ _r(); b.hidden=!S.ncHold||!!S.nc; if(!b.hidden) b.innerHTML=`${I('arrow-left',14)}Back to ${S.ncHold.mode==='add'?'the move':'New bounded context'}`; }; }
 })();
 </script>
-<style>body:not(.light) #csDoc .udg-live,body:not(.light) #vSpecs .sd-bd,body:not(.light) #lStage,body:not(.light) .lstage{background-image:radial-gradient(circle at 1px 1px,#626b83 1.2px,transparent 1.4px)!important;background-size:18px 18px!important}</style>
+<style>body:not(.light) #csDoc .udg-live,body:not(.light) #vSpecs .sd-bd,body:not(.light) #lStage,body:not(.light) .lstage{background-image:radial-gradient(circle at 1px 1px,#2a2f3d 1px,transparent 1.2px)!important;background-size:18px 18px!important}</style>
+<script>
+/* FB95 · review guide: only what changed 20–24 Nov and isn't in Murtaza's list yet; held modules stay */
+(function(){
+const drop=new Set(['Use case sidebar|Sticky header and actions','Use case sidebar|Close in the title row','Use case sidebar|Review status, persona, source and assignee','Use case sidebar|Accept, Propose changes, Reject','Use case sidebar|Assign to review or revise','Use case sidebar|Reject with a reason','Use case sidebar|History','Use case sidebar|Steps summary','Use case sidebar|Open sequence steps','Use case sidebar|Connected layers as tabs','Use case sidebar|API one level down, with Back','Use case sidebar|Rejected use cases are hidden','Use case sidebar|Filter and group by persona',
+ 'Chat room|Use case name in the header','Chat room|Members and invite','Chat room|Proposed actions','Chat room|Ask about any use case with /',
+ 'Sequence diagram|System level: persona and system only','Sequence diagram|One arrow selected at a time','Sequence diagram|Decisions as If / Else if on the lifeline',
+ 'Flowchart|Steps start collapsed','Flowchart|Code files and APIs under their own headings','Flowchart|File tabs and Open in editor','Flowchart|Shape colours and legend',
+ 'Swim lane|Swim lane as a third diagram','All diagrams|Interaction rules','Teams|Org chart','APIs|Group APIs by use case','APIs|Every use case of an API','Navigation|Syntroper Code and Syntroper Infra',
+ 'Teams|Invite inside the card','Teams|Invite on demand, smooth cards']);
+const keep=WN.filter(f=>!drop.has(f.a+'|'+f.n));
+const H0=()=>{ try{ S.ucx.flow=null; S.nc=null; renderNC(); S.np=null; renderNP(); }catch(e){} S.tab='codona'; try{ WN_HOME(); }catch(e){} render(); };
+const TAB=t=>()=>{ H0(); ACT.tab(t); };
+const UC=(id,f)=>()=>{ H0(); ACT.layer(2); ACT.gsel('uc:'+id); if(f) setTimeout(f,60); };
+const add=[
+ ['Teams','Members in one column, all expanded','Every team opens expanded. Its members stack in one column under it, joined by a line, with sub-teams to the right. Member cards are narrower than team cards.', TAB('teams'), ['#vTeams']],
+ ['Teams','Smooth cards','One width for team cards. Opening a card, expanding, adding a team or members animate. Clicking empty canvas closes the open card and cancels a new team.', TAB('teams'), ['#vTeams']],
+ ['Use case sidebar','Connected layers: underlined tabs','Underlined tabs with a search. The list keeps a steady height, short or long.', UC('cancel-order',()=>{ const c=document.querySelector('#cxItem .cgtabs'); if(c) c.scrollIntoView({block:'start'}); }), ['.cgtabs']],
+ ['Home','Cards with an icon and a plain button','Use cases to review and Open questions show their icon on the left and a plain button on the right.', H0, ['#cPanel .cta.hasi']],
+ ['Business systems','GitHub mark only','The business system card shows the GitHub logo without the white box.', ()=>{ H0(); try{ ACT.sysl&&ACT.sysl(); }catch(e){} }, ['.bsc .gh']],
+ ['New use case','Steps header and review','Steps has a heading, one line under it, and Generate with AI on the right. No move arrows; drag the handle. The stepper fills the sidebar. Review: use case card, step timeline with branches, endings, optional business details. Decision placeholders are neutral grey.', ()=>{ H0(); ACT.layer(2); ACT.npopen(); }, ['#npModal .npside']]
+].map(([a,n,how,go,sel])=>({a,n,how,go,sel,r:1,red:false}));
+const sup=new Set(['Change specifications|Inside the business system','Change specifications|List by status','Change specifications|Push to Jira, ClickUp or Notion']);
+const all=[...add, ...keep.filter(f=>!sup.has(f.a+'|'+f.n)&&f.a!=='Change specifications')]; all.forEach(f=>{ if(f.a==='Business systems') f.a='Business system'; });
+const ORD=['Teams','Home','Business system','Galaxy','Use case sidebar','Comments','General','New use case','New bounded context'];
+const rank=f=>{ const i=ORD.indexOf(f.a); return i<0?ORD.length:i; };
+WN.length=0; WN.push(...all.map((f,i)=>[f,i]).sort((x,y)=>rank(x[0])-rank(y[0])||x[1]-y[1]).map(x=>x[0]));
+WN.forEach((f,i)=>f.i=i+1);
+const LEG='<span><i></i>Changes from 20 to 24 Nov</span>';
+['#wnPanel','#wnBtn','#wnLayer'].forEach(q=>{ const e=document.querySelector(q); if(e) e.remove(); });
+try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); const l=document.querySelector('#wnPanel .wn-leg'); if(l) l.innerHTML=LEG; }catch(e){} }); }catch(e){}
+{ const _s=wnSync; wnSync=function(){ _s(); const l=document.querySelector('#wnPanel .wn-leg'); if(l) l.innerHTML=LEG; }; }
+})();
+</script>
+<style>/* active connected-layer tab: white underline */
+.cgtabs .tr button{position:relative}
+.cgtabs .tr button.on::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;border-radius:2px 2px 0 0;background:var(--text)}
+body.light .cgtabs .tr button.on::after{background:var(--text)}</style>
 </body>
 </html>

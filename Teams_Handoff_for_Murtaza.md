@@ -16,9 +16,11 @@ Prototype: Codona_Prototype_final.html → left navigation → Teams (also Teams
 
 **Members as nodes.** Expanding a team shows every member as a node under the team card. Members form one column, stacked top to bottom and joined by a line; the team's sub-teams sit to the right of that column, each with its own member column when expanded (teams grow left to right, members top to bottom). For production, a layout library such as d3-hierarchy or ELK (layered) can apply the same rule. A member node has avatar, name, email and role; change the role from the role chip, or remove the person with × on hover. All members always show, never a subset, which fixes the old behaviour where some people appeared as cards and others were hidden. The chip on the connector reads e.g. **2 sub-teams · 3 members** and expands or collapses both. Org members who are in no team hang off the org card as “Org member · no team”.
 
+**Default state.** Every team starts expanded, so all members and sub-teams are visible on first load. The chip under a card collapses it.
+
 **Open card.** Clicking a card opens it in place: rename, members with role and remove, Add members, Sub-team, Move, Archive. Clicking empty canvas closes it and cancels a new team that hasn't been named.
 
-**Canvas.** Pinch or ⌘/Ctrl + scroll zooms at the cursor, scroll or drag pans. All cards have the same width (272 px). Opening a card, expanding sub-teams, adding a team and adding members animate (about 0.25–0.3 s, off with reduced motion).
+**Canvas.** Pinch or ⌘/Ctrl + scroll zooms at the cursor, scroll or drag pans. Team cards are 272 px wide, member cards 212 px. Opening a card, expanding sub-teams, adding a team and adding members animate (about 0.25–0.3 s, off with reduced motion).
 
 ## Roles (static for now)
 
