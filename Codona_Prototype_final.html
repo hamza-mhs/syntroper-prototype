@@ -6316,7 +6316,7 @@ function intFacts(it, p){
 function suggestedActs(sel, kindTxt){
   const key=sel.t+':'+sel.id; const open=S.fb.inv===key; const resc=S.fb.rescan[key];
   const ev = sel.t==='ctx' ? (CTB[sel.id].module||'') : sel.t==='int' ? INB[sel.id].file : sel.t==='uc' ? (INB[UCB[sel.id].i[0]]||{}).file||'' : '';
-  return `<div class="sact"><div class="sh">${fbI('help',14)}<span>Codona suggested this ${esc(kindTxt)}. Is it right?</span></div>
+  return `<div class="sact"><div class="sh">${fbI('help-circle',14)}<span>Codona suggested this ${esc(kindTxt)}. Is it right?</span></div>
     <div class="sb"><button class="btn primary sm" data-act="fbconfirm" data-arg="${esc(key)}">${fbI('check',14)}Confirm</button>
     <div class="invw"><button class="btn sm ${open?'on':''}" data-act="fbinv" data-arg="${esc(key)}" aria-expanded="${open}">${fbI('search',14)}Investigate${fbI('chevD',12)}</button>
       ${open?`<div class="invm" role="menu">
@@ -8753,9 +8753,9 @@ function focusStep(L){ const hl=S.ucx.hl; if(!hl) return; const n=L.N[hl.i-1]; i
 window.renderFlowCanvas=function(focus){ const id=S.ucx.flow; const on=!!id && S.tab==='codona'; box.hidden=!on; $('#ucLeg').hidden=!on; $('#vCodona').classList.toggle('flowing',on);
   if(!on){ shownId=null; return; } const L=build(id); if(shownId!==id){ shownId=id; requestAnimationFrame(()=>fit(L,false)); } else if(focus) focusStep(L); };
 /* the flowchart belongs to the selected use case, on the Galaxy level */
-{ const _r=render; render=function(){ const sd=S.side; if(S.ucx.flow && S.ucx.flow!=='__np' && !(S.tab==='codona' && S.level===0 && sd.v==='item' && sd.sel && sd.sel.t==='uc' && sd.sel.id===S.ucx.flow)) S.ucx.flow=null; _r(); renderFlowCanvas(); }; }
-{ const _rc=renderChrome; renderChrome=function(){ _rc(); if(S.ucx.flow){ $('#cTop').insertAdjacentHTML('afterbegin',`<button class="btn fx-close float" data-act="ucview" data-arg="${esc(S.ucx.flow)}|text">${I('x',16)}Close diagram</button>`); } }; }
-{ const _c=crumbHTML; crumbHTML=function(){ const h=_c(); if(!S.ucx.flow) return h; return h.replace(/<span class="ci cur">([^<]*)<\/span>$/, (m,t)=>`${crumbBtn(t,'ucview',S.ucx.flow+'|text')}${SEP}<span class="ci cur">${S.ucx.fv==='seq'?'Sequence diagram':'Flowchart'}</span>`); }; }
+{ const _r=render; render=function(){ const sd=S.side; if(S.ucx.flow && !/^__/.test(S.ucx.flow) && !(S.tab==='codona' && S.level===0 && sd.v==='item' && sd.sel && sd.sel.t==='uc' && sd.sel.id===S.ucx.flow)) S.ucx.flow=null; _r(); renderFlowCanvas(); }; }
+{ const _rc=renderChrome; renderChrome=function(){ _rc(); if(S.ucx.flow&&!/^__/.test(S.ucx.flow)){ $('#cTop').insertAdjacentHTML('afterbegin',`<button class="btn fx-close float" data-act="ucview" data-arg="${esc(S.ucx.flow)}|text">${I('x',16)}Close diagram</button>`); } }; }
+{ const _c=crumbHTML; crumbHTML=function(){ const h=_c(); if(!S.ucx.flow||/^__/.test(S.ucx.flow)) return h; return h.replace(/<span class="ci cur">([^<]*)<\/span>$/, (m,t)=>`${crumbBtn(t,'ucview',S.ucx.flow+'|text')}${SEP}<span class="ci cur">${S.ucx.fv==='seq'?'Sequence diagram':'Flowchart'}</span>`); }; }
 { const _z=ACT.zoom; ACT.zoom=function(a){ if(S.ucx.flow && S.tab==='codona'){ if(a==='fit') fit(layout(S.ucx.flow),true); else d3.select(box).transition().duration(200).call(zoom.scaleBy,a==='in'?1.25:.8); return; } return _z.call(this,a); }; }
 { const _p=currentPct; currentPct=function(){ return S.ucx.flow ? Math.round(T.k*100) : _p(); }; }
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && S.ucx.flow && !S.ucx.pop && !S.np && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){ e.stopImmediatePropagation(); S.ucx.flow=null; render(); } }, true);
@@ -9552,7 +9552,7 @@ window.renderFlowCanvas=function(focus){ const id=S.ucx.flow; const on=!!id && S
   else if(focus && S.ucx.hl){ const n=L.N.find(m=>m.k==='proc'&&m.i===S.ucx.hl.i); if(n){ const a=area(); const sy=T.y+n.y*T.k; if(sy<a.y||sy+n.h*T.k>a.y+a.h) d3.select(box).transition().duration(250).call(zoom.transform, d3.zoomIdentity.translate(T.x, a.y+a.h/2-(n.y+n.h/2)*T.k).scale(T.k)); } } };
 { const _z=ACT.zoom; ACT.zoom=function(a){ if(S.ucx.flow && S.tab==='codona'){ if(a==='fit') fit(lastL||layout(S.ucx.flow,S.ucx.fv),true); else d3.select(box).transition().duration(200).call(zoom.scaleBy,a==='in'?1.25:.8); return; } return _z.call(this,a); }; }
 { const _p=currentPct; currentPct=function(){ return S.ucx.flow ? Math.round(T.k*100) : _p(); }; }
-{ const _rc=renderChrome; renderChrome=function(){ _rc(); if(!S.ucx.flow) return; const v=S.ucx.fv;
+{ const _rc=renderChrome; renderChrome=function(){ _rc(); if(!S.ucx.flow||/^__/.test(S.ucx.flow)) return; const v=S.ucx.fv;
     $('#cTop').insertAdjacentHTML('beforeend', `${v==='seq'?`<div class="fvt float sql" role="tablist" aria-label="Level">${[['sys','System'],['ctx','Bounded contexts'],['code','Code']].map(([k,l],i)=>`<button role="tab" aria-selected="${S.ucx.sl===k}" class="${S.ucx.sl===k?'on':''}" data-act="ucsl" data-arg="${k}"><span class="lvn">${i+1}</span>${l}</button>`).join('')}</div>`:''}<div class="fvt float" role="tablist" aria-label="Diagram">${[['seq','Sequence diagram'],['cards','Flowchart']].map(([k,l])=>`<button role="tab" aria-selected="${v===k||(k==='cards'&&v==='symbols')}" class="${v===k||(k==='cards'&&v==='symbols')?'on':''}" data-act="ucfv" data-arg="${k}">${l}</button>`).join('')}</div>`); }; }
 /* FB33 · code inside the flowchart: click a file, an API or "Show all code" on a step and the code opens in the card */
 S.fx = {open:{}, int:{}, exp:{}};
@@ -11635,7 +11635,7 @@ try{ render(); requestAnimationFrame(()=>{ try{ wnApplyGuide(); wnSync(); }catch
 let last=null;
 const reset=()=>{ S.fx.open={}; S.fx.int={}; S.fx.exp={}; S.ucx.hl=null; S.ucx.pop=null; if(S.uct&&S.uct.code) S.uct.code={}; };
 const _r=render; render=function(){ const sd=S.side; const cur=sd&&sd.v==='item'&&sd.sel&&sd.sel.t==='uc'?sd.sel.id:null;
-  if(S.ucx.flow && S.ucx.flow!=='__np' && S.ucx.flow!==cur && S.tab==='codona' && !S.level){ S.ucx.flow=null; }
+  if(S.ucx.flow && !/^__/.test(S.ucx.flow) && S.ucx.flow!==cur && S.tab==='codona' && !S.level){ S.ucx.flow=null; }
   const key=S.ucx.flow||null; if(key!==last){ reset(); last=key; }
   _r(); };
 const _v=ACT.ucview; ACT.ucview=function(a){ const [id,v]=a.split('|'); if(v==='flow'&&S.ucx.flow!==id) reset(); return _v.call(this,a); };
@@ -13160,7 +13160,7 @@ chartHTML=function(){ const q=(S.q||'').trim().toLowerCase();
       <div class="r">${tAv(t,'sm')}<b>${q?mark(t.name):esc(t.name)}</b></div>
       <span class="meta"><span>${pl(all.length,'member')}</span>${ks.length?`<span>${pl(ks.length,'sub-team')}</span>`:''}</span>
       ${S.panel===t.id?expandHTML(t):t.m.length?`<span class="avs">${t.m.slice(0,4).map(([p])=>pAv(p,'sm')).join('')}${t.m.length>4?`<em>+${t.m.length-4}</em>`:''}</span>`:''}
-      ${ks.length||t.m.length?`<button class="ex" data-a="tog" data-v="${t.id}" aria-label="${open?'Collapse':'Expand'}">${open?I('cd',12):I('cr',12)+' '+(ks.length+t.m.length)}</button>`:''}
+      ${ks.length||t.m.length?`<button class="ex ${open?'exo':''}" data-a="tog" data-v="${t.id}" aria-label="${open?'Collapse':'Expand'}">${open?I('cd',12)+(ks.length?' '+ks.length+' sub-team'+(ks.length===1?'':'s'):''):I('cr',12)+' '+(ks.length+t.m.length)}</button>`:''}
       <button class="add" data-a="addsub" data-v="${t.id}" aria-label="Add a team under ${esc(t.name)}" title="Add a team under ${esc(t.name)}">${I('plus',14)}</button></div>
       ${kidsHTML?`<ul>${kidsHTML}</ul>`:''}</li>`; };
   const top=kids(null);
@@ -13252,9 +13252,9 @@ body.light .ocw{background-image:radial-gradient(circle at 1px 1px,#c1bdda 1.1px
 function expandHTML(t){ const ks=kids(t.id);
   return `<div class="xp" data-a="noop">
     <input class="nm" value="${esc(t.name)}" data-a="rename" data-v="${t.id}" aria-label="Team name">
-    <h5>Members · ${t.m.length}</h5>
-    <div class="mlist">${t.m.map(([p,r])=>`<div class="mr2">${pAv(p,'sm')}<b>${esc(PB[p].n)}</b><button class="role" data-a="role" data-v="${t.id}|${p}">${r}${I('cd',12)}</button><button class="ib" data-a="rmm" data-v="${t.id}|${p}" aria-label="Remove ${esc(PB[p].n)}">${I('x',12)}</button></div>`).join('')||'<span class="none">No members yet. Invite people to this team.</span>'}</div>
-    <div class="inv2"><input class="ie" data-v="${t.id}" type="text" placeholder="Name or email" aria-label="Invite by name or email" autocomplete="off"><button class="btn primary sm" data-a="invin" data-v="${t.id}">Invite</button></div>
+    <h5>Members · ${t.m.length}<span class="sp"></span>${S.invOpen===t.id?'':`<button class="btn sm" data-a="invo" data-v="${t.id}">${I('plus',12)}Invite</button>`}</h5>
+    <div class="mlist">${t.m.map(([p,r])=>`<div class="mr2 ${S.justAdded===p?'nw':''}">${pAv(p,'sm')}<b>${esc(PB[p].n)}</b><button class="role" data-a="role" data-v="${t.id}|${p}">${r}${I('cd',12)}</button><button class="ib" data-a="rmm" data-v="${t.id}|${p}" aria-label="Remove ${esc(PB[p].n)}">${I('x',12)}</button></div>`).join('')||'<span class="none">No members yet. Invite people to this team.</span>'}</div>
+    ${S.invOpen===t.id?`<div class="inv2"><input class="ie" data-v="${t.id}" type="text" placeholder="Name or email" aria-label="Invite by name or email" autocomplete="off"><button class="btn primary sm" data-a="invin" data-v="${t.id}">Invite</button><button class="ib" data-a="invc" aria-label="Cancel invite">${I('x',12)}</button></div>`:''}
     <div class="acts2"><button class="btn" data-a="addsub" data-v="${t.id}">${I('plus',12)}Sub-team</button><button class="btn" data-a="move" data-v="${t.id}">Move</button><button class="btn" style="color:var(--danger-text)" data-a="del" data-v="${t.id}">${I('trash',12)}Delete</button><span style="flex:1"></span><button class="ib" data-a="panelx" aria-label="Close">${I('x',14)}</button></div></div>`; }
 /* the expanded card is part of the chart: mark it, and open a new team straight away */
 { const _c=chartHTML; chartHTML=function(){ let h=_c(); if(S.panel) h=h.replace(`class="ocard on" draggable="true" data-id="${S.panel}"`,`class="ocard on open" draggable="false" data-id="${S.panel}"`); return h; }; }
@@ -13298,9 +13298,44 @@ const add=(tid,el)=>{ const inp=el&&el.closest('.xp')?el.closest('.xp').querySel
   if(!p){ if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){ toast('Type a name from your org or an email address'); inp.focus(); return; }
     const id='u'+Date.now(); const n=v.split('@')[0].replace(/[._-]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase()); PEOPLE.push([id,n,v]); PB[id]={id,n,e:v,c:COLORS[PEOPLE.length%COLORS.length]}; p=PB[id]; }
   if(t.m.some(x=>x[0]===p.id)){ toast(`${p.n} is already in ${t.name}`); return; }
-  t.m.push([p.id,'Contributor']); toast(`Invited ${p.n} to ${t.name} as Contributor`); render(); setTimeout(()=>{ const n=document.querySelector(`.ie[data-v="${tid}"]`); if(n) n.focus(); },0); };
+  S.justAdded=p.id; t.m.push([p.id,'Contributor']); toast(`Invited ${p.n} to ${t.name} as Contributor`); render(); setTimeout(()=>{ const n=document.querySelector(`.ie[data-v="${tid}"]`); if(n) n.focus(); },0); };
 A.invin=(v)=>add(v,document.activeElement&&document.activeElement.classList.contains('ie')?document.activeElement:null);
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('ie')){ e.preventDefault(); add(e.target.dataset.v,e.target); } });
+})();
+<\/script>
+<style>.ocard .ex.exo{left:50%!important;right:auto!important;transform:translateX(-50%)!important;bottom:-30px!important;height:22px;padding:0 10px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;color:var(--text);background:var(--panel);border-color:var(--border-strong);z-index:2}</style>
+<style>
+/* one width for every node; smooth open, add and invite */
+.ocard,.ocard.pc,.ocard.open,.ocard.nw{width:272px!important;box-sizing:border-box}
+.ocard{transition:border-color .15s,box-shadow .15s,background .15s}
+.ocard.open .xp.anim{animation:xpIn .32s cubic-bezier(.2,.8,.2,1) both;overflow:hidden}
+@keyframes xpIn{from{opacity:0;max-height:0;transform:translateY(-4px)}to{opacity:1;max-height:900px;transform:none}}
+.ocard.nw{animation:ocIn .24s cubic-bezier(.2,.8,.2,1) both}
+@keyframes ocIn{from{opacity:0;transform:scale(.96) translateY(-6px)}to{opacity:1;transform:none}}
+.ocard .xp .mr2.nw{animation:rowIn .3s ease both}
+@keyframes rowIn{from{opacity:0;transform:translateX(-6px);background:var(--selected)}to{opacity:1;transform:none;background:transparent}}
+.ocard .xp .inv2{animation:rowIn .22s ease both}
+.oc li>ul{animation:subIn .28s cubic-bezier(.2,.8,.2,1) both}
+@keyframes subIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.oc li.still>ul{animation:none}
+@media (prefers-reduced-motion:reduce){.ocard,.ocard *,.oc li>ul{animation:none!important;transition:none!important}}
+</style>
+<SCRIPT_START>
+(function(){
+A.invo=v=>{ S.invOpen=v; render(); setTimeout(()=>{ const i=document.querySelector(`.ie[data-v="${v}"]`); if(i) i.focus(); },0); };
+A.invc=()=>{ S.invOpen=null; render(); };
+/* animate only what changed: the card that just opened, sub-teams that just expanded */
+let lastPanel=null, lastOpen=new Set(S.open?[...S.open]:[]);
+const _r=render; render=function(){ const pc=S.panel!==lastPanel; if(pc&&S.panel!==S.invOpen) S.invOpen=null; _r();
+  if(pc&&S.panel){ const x=document.querySelector('.ocard.open .xp'); if(x) x.classList.add('anim'); }
+  document.querySelectorAll('.oc li').forEach(li=>{ const c=li.querySelector(':scope > .ocard[data-id]'); const id=c&&c.dataset.id; if(id&&lastOpen.has(id)) li.classList.add('still'); });
+  lastPanel=S.panel; lastOpen=new Set(S.open?[...S.open]:[]); lastOpen.add('__root'); setTimeout(()=>{ S.justAdded=null; },400); };
+/* click on empty canvas: cancel a new team, close the open card */
+let down=null;
+document.addEventListener('pointerdown',e=>{ down=e.target.closest&&e.target.closest('.ocw')?{x:e.clientX,y:e.clientY}:null; },true);
+document.addEventListener('click',e=>{ if(!down) return; const moved=Math.hypot(e.clientX-down.x,e.clientY-down.y)>4; down=null; if(moved) return;
+  if(!e.target.closest('.ocw')||e.target.closest('.ocard,button,input,select,.zm,.hint,.menu')) return;
+  if(S.adding||S.panel){ S.adding=null; S.panel=null; S.invOpen=null; render(); } },true);
 })();
 <\/script>
 </body>
@@ -13368,7 +13403,7 @@ document.addEventListener('input',e=>{ if(e.target.id==='specQ'){ S.specs.q=e.ta
 ACT.ncgo=function(){ const M=S.nc; if(!M) return; const D=dbModel(); if(!D.sel.size) return; const name=(M.name||'').trim(); if(!D.add&&!name){ toast('Give the new context a name first.'); return; }
   const srcs=[...new Set(D.mov.map(id=>UCB[id].ctx))].map(c=>CTB[c]?CTB[c].name:c);
   SPECS.unshift({id:'cs'+Date.now(), type:'rf', title:D.add?`Move into ${D.tName}`:`New context: ${name}`, status:'draft', by:ME, when:'Just now', scope:`${srcs.join(', ')||'—'} → ${D.tName}`, impact:{uc:D.issues.filter(x=>x.type!=='pt').reduce((n,x)=>n+(x.st?x.st.length:1),0), pt:D.issues.filter(x=>x.type==='pt').length+D.infos.length}, moves:D.mov.map(id=>UCB[id].name)});
-  S.nc=null; renderNC(); toast(`Saved as a draft refactoring specification. See it in Change specifications.`); render(); };
+  S.nc=null; renderNC(); render(); specToast('Saved as a draft bounded context specification.', SPECS[0].id); };
 { const _g=ACT.npgo; ACT.npgo=function(){ const M=S.np; const nm=M&&M.name&&M.name.trim(); const per=M&&M.per&&M.per[0]; const steps=M&&M.steps?M.steps.map(x=>(x.who==='system'?'System ':'User ')+x.t):[];
     const r=_g.apply(this,arguments); if(nm&&!S.np){ SPECS.unshift({id:'cs'+Date.now(), type:'uc', title:nm, status:'draft', by:ME, when:'Just now', scope:'', persona:per?((window.PERSONAS||[]).find(p=>p.id===per)||{name:per}).name:'', steps}); } return r; }; }
 })();
@@ -13516,7 +13551,7 @@ Object.assign(ACT,{
   npsave(){ const M=S.np; const nm=M.name.trim(); const steps=M.steps.filter(x=>x.t.trim());
     (window.SPECS=window.SPECS||[]).unshift({id:'cs'+Date.now(), type:'uc', title:nm.charAt(0).toUpperCase()+nm.slice(1), status:'draft', by:ME, when:'Just now', scope:'', persona:PN(M), steps:steps.map(x=>(x.who==='user'?PN(M):'System')+(x.kind==='decision'?' decides: ':': ')+x.t),
       flow:JSON.parse(JSON.stringify(steps)), ch:M.ch, ctxPick:M.ctx||'auto', who:M.who||'auto'});
-    S.np=null; R(); toast('Saved as a draft use case specification. See it in Change specifications.'); }
+    S.np=null; R(); specToast('Saved as a draft use case specification.', SPECS[0].id); }
 });
 document.addEventListener('input',e=>{ const t=e.target; if(!S.np||!S.np.steps) return;
   if(t.classList.contains('npS')){ find(t.dataset.s).t=t.value; const cv=document.querySelector('#npModal .ue-r .cv'); if(cv) cv.innerHTML=diag(S.np); }
@@ -13644,9 +13679,11 @@ const L=[
  ['New use case','Live diagram','Sequence, Flowchart or Swim lane draws as you type.', NP(2), ['#npModal .ue-r']],
  ['New use case','Review and save as draft','Saves a use case specification.', NP(3), ['#npModal .rv']],
  ['Change specifications','Inside the business system','A card on the Commerce platform panel opens them. They are no longer in the left navigation.', ()=>{ H0(); }, ['.cspec-cta']],
- ['Change specifications','List on the business system canvas','View all keeps the Commerce platform panel and the breadcrumbs, and shows every specification in a table next to them. Filter by status and by type (Use case, Bounded context). The tool row and the ticket column are gone.', ()=>{ H0(); ACT.tab('specs'); }, ['#csList']],
+ ['Change specifications','In the business system sidebar','View all turns the left sidebar into Change specifications: search, a filter for status and type, and cards grouped by status. Pick one and it opens on the canvas next to it, on the primary dark background. The breadcrumbs end with its name.', ()=>{ H0(); ACT.tab('specs'); }, ['.csside']],
+ ['Change specifications','Diagrams open by default','A use case spec shows its Flowchart, Sequence or Swim lane straight away; a bounded context spec shows its boundary diagram.', ()=>{ H0(); ACT.tab('specs'); ACT.spopen('cs4'); }, ['#csDoc .udg']],
  ['Change specifications','Use case proposal','Goal, then Persona · Channel · Business system, then the proposed flow: who does each step, and every decision branch with where it goes. Click a destination to jump to it. View diagram shows Flowchart, Sequence or Swim lane of the same flow. Outcomes list every ending. The rail shows context, channel and reviewer as picked.', ()=>{ H0(); ACT.spopen('cs4'); }, ['#vSpecs .usl']],
  ['New use case','Two-column details, drag handles','Details fields sit in two columns. Steps have a drag handle instead of a number. When the persona is called System, the buttons read Persona · System and Commerce platform.', NP(2), ['#npModal .grip2']],
+ ['Teams','Sub-team count on the line','An expanded team shows a chip on its connector, like 2 sub-teams · 1 person. Click it to collapse.', TAB('teams'), ['#vTeams']],
  ['Teams','Invite inside the card','The open card has a name-or-email field and Invite. No dialog.', TAB('teams'), ['#vTeams']],
  ['Change specifications','A document you can share','Share opens link, access and people with view, comment or edit. Publish and Share sit at the top.', ()=>{ H0(); ACT.tab('specs'); ACT.spopen('cs1'); ACT.sdshare(); }, ['#sdModal .sdm']],
  ['Change specifications','Saved selection','Unique APIs, whole, partial and impacted use cases as separate counts. Grouped by source context; each use case shows selected / total. Partial ones open by default and list what stays. Shared routes are marked.', ()=>{ H0(); ACT.tab('specs'); ACT.spopen('cs1'); }, ['#sd-selection']],
@@ -14074,11 +14111,11 @@ body.npscr #ucLeg{z-index:41}
 (function(){
 const ID='__np';
 const scr=()=>!!S.np;
-const cv=()=>!!S.np&&(S.np.stage||1)>=2;
+const cv=()=>!!S.np;
 window.npArea=function(){ if(!document.body.classList.contains('npcv')) return null; const sd=document.querySelector('#npModal .npside'); const v=document.getElementById('vCodona'); if(!sd||!v) return null;
   const r=sd.getBoundingClientRect(), b=v.getBoundingClientRect(); const x=r.right-b.left+32; return {x, y:72, w:Math.max(200,b.width-x-32), h:Math.max(200,b.height-72-32)}; };
 function dock(){ const n=document.querySelector('#npModal .ncm.npm'); if(!n||n.querySelector(':scope > .npside')||!cv()) return; const a=document.activeElement, pos=a&&a.selectionStart;
-  const sd=document.createElement('div'); sd.className='npside'; const hd=n.querySelector(':scope > .mhd'), ft=n.querySelector(':scope > .mft'), ed=n.querySelector('.ue-l')||n.querySelector('.rv-l');
+  const sd=document.createElement('div'); sd.className='npside'; const hd=n.querySelector(':scope > .mhd'), ft=n.querySelector(':scope > .mft'), ed=n.querySelector('.ue-l')||n.querySelector('.rv-l')||n.querySelector('.npb1');
   [hd,ed,ft].forEach(x=>{ if(x) sd.appendChild(x); }); n.prepend(sd); if(a&&n.contains(a)&&document.activeElement!==a){ a.focus(); try{ if(pos!=null) a.setSelectionRange(pos,pos); }catch(e){} } }
 const per=M=>{ const p=(window.PERSONAS||[]).find(x=>x.id===(M.per||[])[0]); return p?p.name:'User'; };
 function toFlow(M){ const steps=[], alts=[], idx={}; let cur=null;
@@ -14102,7 +14139,8 @@ let last='';
 function apply(refit){ const on=scr(), c=cv(); document.body.classList.toggle('npscr',on); document.body.classList.toggle('npcv',c);
   const rail=document.getElementById('rail'), top=document.getElementById('appTop')||document.querySelector('header');
   if(rail) document.body.style.setProperty('--npL',Math.round(rail.getBoundingClientRect().right)+'px'); if(top) document.body.style.setProperty('--npT',Math.round(top.getBoundingClientRect().bottom)+'px');
-  if(c){ sync(); if(S.tab!=='codona') S.tab='codona'; const M=S.np; S.ucx.fv=M.dv==='flow'?'cards':(M.dv||'seq'); S.ucx.sl='sys'; const was=S.ucx.flow; S.ucx.flow=ID; S.ucx.hl=null;
+  if(c&&(S.np.stage||1)<2){ if(S.ucx.flow===ID){ S.ucx.flow=null; last=''; try{ renderFlowCanvas(); }catch(e){} } }
+  else if(c){ sync(); if(S.tab!=='codona') S.tab='codona'; const M=S.np; S.ucx.fv=M.dv==='flow'?'cards':(M.dv||'seq'); S.ucx.sl='sys'; const was=S.ucx.flow; S.ucx.flow=ID; S.ucx.hl=null;
     const key=M.stage+'|'+S.ucx.fv; try{ renderFlowCanvas(); }catch(e){ console.error(e); }
     if(refit||was!==ID||key!==last){ last=key; requestAnimationFrame(()=>{ try{ ACT.zoom('fit'); }catch(e){} }); } }
   else if(S.ucx.flow===ID){ S.ucx.flow=null; delete UCB[ID]; last=''; try{ renderFlowCanvas(); }catch(e){} } }
@@ -14357,12 +14395,21 @@ function boundary(x,P){ const set=new Set(x.sel||[]); const src=Object.entries(P
   const ar=src.map(([c,rows])=>{ const apis=new Set(rows.flatMap(r=>r.u.apis.filter(a=>set.has(a)))).size; return {c, uc:rows.length, apis}; });
   return `<div class="sd-bd"><div class="src">${ar.map(a=>`<div class="sd-bx">${esc(cxN(a.c))}<small>${a.uc} use case${a.uc===1?'':'s'} · ${a.apis} API${a.apis===1?'':'s'}</small></div>`).join('')||'<div class="sd-bx">—</div>'}</div>
     <div class="sd-ar"><span>moves ${set.size} API${set.size===1?'':'s'}</span></div><div class="sd-bx t">${esc(x.target||(x.scope||'').split('→').pop().trim()||'New context')}<small>Proposed context</small></div></div>`; }
-function decisions(x,P){ const Q=[];
-  P.ucs.filter(u=>!u.apis.every(a=>(x.sel||[]).includes(a))).forEach(u=>Q.push([esc(`${u.name} is split. Does the rest stay in ${cxN(u.ctx)}?`), `Raised by the partial selection of ${u.name}`, null]));
-  [...P.shared].forEach(a=>Q.push([`Who owns <code>${esc(a)}</code>?`, 'Raised by a route shared by more than one use case', null]));
-  if(!x.owner) Q.push([esc('Which team owns the new context?'),'Raised by the proposal: no owning team yet', null]);
-  (x.oq||[]).forEach(([q,w])=>Q.push([esc(q),'Raised by a reviewer',w]));
-  return Q.length?Q.map(([q,s,w])=>`<div class="sd-q"><b>${q}</b><small>${esc(s)}</small><span class="who">${w?pAv(w,18)+esc(w):'<span style="color:var(--warn-text)">Owner to confirm</span>'} · Open</span></div>`).join(''):'<div class="sd-none">Nothing to decide.</div>'; }
+function decisions(x,P){ const Q=[]; const tgt=x.target||'the new context';
+  P.ucs.filter(u=>!u.apis.every(a=>(x.sel||[]).includes(a))).forEach(u=>Q.push({k:'part:'+u.id, q:esc(`${u.name} is split. Does the rest stay in ${cxN(u.ctx)}?`), s:`Raised by the partial selection of ${u.name}`, o:[`Yes, the rest stays in ${cxN(u.ctx)}`,`No, move all of ${u.name} to ${tgt}`]}));
+  [...P.shared].forEach(a=>{ const us=P.ucs.filter(u=>u.apis.includes(a)); Q.push({k:'api:'+a, q:`Who owns <code>${esc(a)}</code>?`, s:`Raised by a route shared by ${us.map(u=>u.name).join(' and ')}`, o:[`${tgt} owns it`,`It stays in ${cxN((us[0]||{}).ctx)}`,'Shared contract, both keep a copy']}); });
+  if(!x.owner) Q.push({k:'owner', q:esc(`Which team owns ${tgt}?`), s:'Raised by the proposal: no owning team yet', o:['Checkout team','Fulfillment team','Payments team','Platform team']});
+  (x.oq||[]).forEach(([q,w],i)=>Q.push({k:'oq:'+i, q:esc(q), s:'Raised by a reviewer', w, o:[]}));
+  x.ans=x.ans||{}; S.sdq=S.sdq||{};
+  const open=Q.filter(d=>!x.ans[d.k]).length;
+  const row=d=>{ const a=x.ans[d.k]; const op=S.sdq[x.id+'|'+d.k]; const dr=(S.sdqd||{})[x.id+'|'+d.k]||{};
+    return `<div class="sd-q2 ${a?'done':''} ${op?'open':''}"><button class="qh" data-act="sdqo" data-arg="${esc(x.id+'|'+d.k)}" aria-expanded="${!!op}"><span class="qi">${a?I('check-circle',16):I('help-circle',16)}</span><span class="qt"><b>${d.q}</b><small>${esc(d.s)}</small></span><span class="qs ${a?'ok':''}">${a?'Answered':d.w?esc(d.w)+' · Open':'Open'}</span>${I(op?'chevron-up':'chevron-down',14)}</button>
+      ${op?`<div class="qb">${a?`<div class="qa">${pAv(a.by,18)}<span><b>${esc(a.by)}</b> · ${esc(a.when)}</span></div><p class="qv">${esc(a.v)}</p>${a.note?`<p class="qn">${esc(a.note)}</p>`:''}<div class="qf"><button class="btn sm" data-act="sdqre" data-arg="${esc(x.id+'|'+d.k)}">Reopen</button></div>`
+        :`${d.o.length?`<div class="qo" role="radiogroup">${d.o.map((o,k)=>`<button role="radio" aria-checked="${dr.v===o}" data-act="sdqp" data-arg="${esc(x.id+'|'+d.k+'|'+k)}"><span class="cx-rb ${dr.v===o?'on':''}"></span>${esc(o)}</button>`).join('')}</div>`:''}
+        <textarea class="qtx" data-q="${esc(x.id+'|'+d.k)}" placeholder="${d.o.length?'Add a note (optional)':'Write the answer'}">${esc(dr.note||'')}</textarea>
+        <div class="qf"><button class="btn sm" data-act="sdqo" data-arg="${esc(x.id+'|'+d.k)}">Cancel</button><button class="btn primary sm" data-act="sdqa" data-arg="${esc(x.id+'|'+d.k)}" ${d.o.length&&!dr.v?'disabled':''}>Answer</button></div>`}</div>`:''}</div>`; };
+  window.__sdQ=window.__sdQ||{}; window.__sdQ[x.id]=Q;
+  return Q.length?`<p class="sd-sub" style="margin-top:-8px">${open?`${open} open · ${Q.length-open} answered`:'All answered'}</p>`+Q.map(row).join(''):'<div class="sd-none">Nothing to decide.</div>'; }
 function rfDoc(x){ const P=snap(x); const s=ST(x.status); const nApi=(x.sel||[]).length;
   const T=[];
   T.push(sec('selection','Saved selection',`Everything the author picked, grouped by where it lives today. A shared route counts once in the total.`,`<div class="sd-flow">${[...new Set(Object.keys(P.groups).map(cxN))].map(esc).join(', ')||'—'} ${I('arrow-right',14)} <span style="color:var(--accent-on)">${esc(x.target||'New context')}</span></div>${selection(x,P)}`));
@@ -14392,15 +14439,15 @@ function ucDoc(x){ ucData(x); const s=ST(x.status); const F=x.flow||[]; const pe
   const ix={}; F.forEach((z,i)=>ix[z.id]=i);
   const dest=(o,i)=>{ if(o.to==='end') return `<span class="ud end">End${o.note?` · ${esc(o.note)}`:''}</span>`; const j=o.to==='next'||!o.to?i+1:ix[o.to]; if(j==null||j>=F.length) return `<span class="ud end">End · ${esc(x.result||'Done')}</span>`;
     return `<button class="ud" data-act="ucjump" data-arg="${x.id}|${j}">${o.to==='next'||!o.to?'Next · ':''}Step ${j+1} · ${esc(F[j].t.slice(0,40))}</button>${o.note?`<small class="un">${esc(o.note)}</small>`:''}`; };
-  const notes=i=>{ const id=F[i].id; const r=(x.rules||[]).filter(z=>z[0]===id).map(z=>`<div class="unote r">${I('info',12)}Rule · ${esc(z[1])}</div>`); const q=(x.oq||[]).filter(z=>z[2]===id).map(z=>`<div class="unote q">${I('help',12)}Open question · ${esc(z[0])} <small>· ${esc(z[1])}</small></div>`); return r.join('')+q.join(''); };
+  const notes=i=>{ const id=F[i].id; const r=(x.rules||[]).filter(z=>z[0]===id).map(z=>`<div class="unote r">${I('info',12)}Rule · ${esc(z[1])}</div>`); const q=(x.oq||[]).filter(z=>z[2]===id).map(z=>`<div class="unote q">${I('help-circle',12)}Open question · ${esc(z[0])} <small>· ${esc(z[1])}</small></div>`); return r.join('')+q.join(''); };
   const steps=F.map((z,i)=>`<li class="ust ${z.kind==='decision'?'dec':''}" id="ust-${x.id}-${i}"><span class="un2">${i+1}</span><div class="ub"><div class="uw"><span class="uwho ${z.who}">${esc(who(z.who))}</span>${z.kind==='decision'?'<span class="uk">Decision</span>':''}</div><div class="ut">${esc(z.t)}</div>
      ${z.kind==='decision'?`<div class="ubr">${(z.opts||[]).map((o,k)=>`<div class="ubo"><span class="uif">${k?'Else if':'If'}</span><span class="uc">${esc(o.t||'…')}</span><span class="uar">→</span><span>${dest(o,i)}</span></div>`).join('')}</div>`:''}${notes(i)}</div></li>`).join('');
   const ends=[]; F.forEach((z,i)=>(z.opts||[]).forEach(o=>{ if(o.to==='end') ends.push([`${z.t} ${o.t}`,o.note||'The flow stops here']); })); ends.unshift([ 'Main flow completes', x.result||'Done' ]);
-  const dv=(S.ucdv&&S.ucdv[x.id])||null; const diag=dv?(()=>{ try{ return dv==='swim'?specSwim(F,per,SYS()):dv==='seq'?specSeq(F,per,SYS()):specFlow(F,per); }catch(e){ return ''; } })():'';
+  const dv=(S.ucdv&&x.id in S.ucdv)?S.ucdv[x.id]:'flow'; const diag=dv?(()=>{ try{ return dv==='swim'?specSwim(F,per,SYS()):dv==='seq'?specSeq(F,per,SYS()):specFlow(F,per); }catch(e){ return ''; } })():'';
   const T=[];
   T.push(sec('flow','Proposed flow',x.trigger?`Starts when ${esc(x.trigger.charAt(0).toLowerCase()+x.trigger.slice(1))}`:'',
     `<div class="udbar"><span class="sp"></span>${dv?`<div class="dvseg">${[['flow','Flowchart'],['seq','Sequence'],['swim','Swim lane']].map(([k,l])=>`<button class="${dv===k?'on':''}" data-act="ucdv" data-arg="${x.id}|${k}">${l}</button>`).join('')}</div><button class="btn sm" data-act="ucdv" data-arg="${x.id}|">Hide diagram</button>`:`<button class="btn sm" data-act="ucdv" data-arg="${x.id}|flow">View diagram</button>`}</div>
-     ${dv?`<div class="udg">${diag}</div>`:''}<ol class="usl">${steps}</ol>`,{count:F.length}));
+     ${dv?`<div class="udg udg-live" data-sp="${x.id}" data-fv="${dv}"></div>`:''}<ol class="usl">${steps}</ol>`,{count:F.length}));
   T.push(sec('outcomes','Outcomes','What the persona sees at each ending.',`${ends.map(([a,b],k)=>`<div class="uo"><span class="uod ${k?'x':''}"></span><div><b>${esc(a)}</b><small>${esc(b)}</small></div></div>`).join('')}`));
   const unplaced=(x.oq||[]).filter(z=>!z[2]);
   if(unplaced.length) T.push(sec('decisions','Open questions','',unplaced.map(([q,w])=>`<div class="sd-q"><b>${esc(q)}</b><small>Raised by a reviewer</small><span class="who">${pAv(w,18)}${esc(w)} · Open</span></div>`).join('')));
@@ -14420,23 +14467,38 @@ function rail(x){ const rv=x.reviewers||[]; const L=x.link; const draft=x.status
       <button class="btn ghost sm" data-act="sdadd" style="justify-content:flex-start">${I('plus',14)}Add reviewer</button>
       ${draft?`<button class="btn primary" data-act="sdreq" ${rv.length?'':'disabled'}>Request review</button>`:''}
       <p class="hint">Reviews belong to revision ${x.rev}. A new revision asks reviewers to look again.</p></div>
+    <div class="sd-c"><h3>History</h3>${(()=>{ const H=[]; const n=Object.keys(x.ans||{}).length; if(n) H.push([pAv(ME,18),`${n} decision${n===1?'':'s'} answered`,'Just now']); if(x.link) H.push([`<span style="width:18px;display:inline-grid;place-items:center">${I('arrow-right',12)}</span>`,`Published as ${esc(x.link.key)}`,`Rev ${x.link.rev||x.rev}`]); for(let r=x.rev;r>=1;r--) H.push([pAv(x.by,18),r===1?'Created':'New revision · selection changed',r===x.rev?esc(x.when):'Earlier']); return H.map(([a,t,w])=>`<div class="sd-rv">${a}<span>${t}</span><em>${w}</em></div>`).join(''); })()}</div>
     <div class="sd-c"><h3>Publish</h3>${Object.entries(TOOLS).map(([k,[n]])=>{ const on=SPEC_TOOLS[k]; const here=L&&L.tool===k; return `<div class="sd-tl">${LOGO(k,16)}${n}${here?`<span class="k">${esc(L.key)}</span>`:''}<em class="${on?'ok':''}">${here?`Rev ${L.rev||x.rev}`:on?'Connected':'Not connected'}</em></div>`; }).join('')}
       <button class="btn" data-act="sdpub">${L?'Update publication':'Preview publication'}</button></div>
   </aside>`; }
 function docHTML(x){ E(x); return `<div class="sd-bar">${crumbs(x)}<button class="btn" data-act="sdshare">${I('users',14)}Share</button><button class="btn" data-act="sdpub">${L(x)}</button></div>
   <div class="sd"><article class="sd-doc">${x.type==='uc'?ucDoc(x):rfDoc(x)}</article>${rail(x)}</div>`; }
 const L=x=>x.link?'Update publication':'Publish';
+window.specDoc=x=>docHTML(x);
 /* ---------- dialogs ---------- */
 let M=null; const mhost=()=>{ let h=document.getElementById('sdModal'); if(!h){ h=document.createElement('div'); h.id='sdModal'; document.body.appendChild(h); } return h; };
 const close=()=>{ M=null; mhost().innerHTML=''; };
 function dlg(title,body,foot){ mhost().innerHTML=`<div class="sdm-bg" data-act="sdx"></div><div class="sdm" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="h"><b>${title}</b><button class="ib" data-act="sdx" aria-label="Close">${I('x',16)}</button></div><div class="b">${body}</div><div class="f">${foot}</div></div>`; }
 const cur=()=>SPECS.find(s=>s.id===S.specs.open);
-function shareDlg(){ const x=cur(); const sh=x.share; const url=`https://app.syntroper.com/commerce-platform/specs/${x.num.toLowerCase()}`;
-  dlg(`Share ${esc(x.num)}`,`<div class="row"><label class="field">${I('link',14)}<input readonly value="${url}" aria-label="Link"></label><button class="btn" data-act="sdcopy">Copy link</button></div>
-    <div><label class="l" for="sdAcc">General access</label><select id="sdAcc"><option value="org" ${sh.access==='org'?'selected':''}>Anyone in Syntroper’s Org can view</option><option value="team" ${sh.access==='team'?'selected':''}>Only the teams that own Orders and Returns</option><option value="invited" ${sh.access==='invited'?'selected':''}>Only people added below</option></select></div>
-    <div><label class="l">People</label><div class="ppl">${sh.people.map(([n,r],i)=>`<div class="pp">${pAv(n,22)}${esc(n)}${r==='Owner'?'<small style="margin-left:auto">Owner</small>':`<select data-sdrole="${i}"><option ${r==='Can view'?'selected':''}>Can view</option><option ${r==='Can comment'?'selected':''}>Can comment</option><option ${r==='Can edit'?'selected':''}>Can edit</option></select>`}</div>`).join('')}</div></div>
-    <div><label class="l">Add people</label><div class="opt">${DIR.filter(n=>!sh.people.some(p=>p[0]===n)).map(n=>`<button data-act="sdinv" data-arg="${esc(n)}">${pAv(n,20)}${esc(n)}<small>Can view</small></button>`).join('')||'<small style="color:var(--text-3)">Everyone is added.</small>'}</div></div>`,
-    `<button class="btn primary" data-act="sdx">Done</button>`); }
+/* share, after Figma “Share this Workload / Story” (9938:97294) */
+const mail=n=>{ const p=(n||'').toLowerCase().split(/[\s.]+/)[0]; return p+'@syntroper.ai'; };
+const ACC=[['invited','Only invited members','users'],['org','Anyone in Syntroper’s Org','globe'],['link','Anyone with the link','link'],['me','Only me','lock']];
+function shareDlg(view){ const x=cur(); const sh=x.share; if(sh.access==='team') sh.access='invited'; M=Object.assign(M||{},{share:view||'main'});
+  const url=`https://app.syntroper.com/commerce-platform/specs/${x.num.toLowerCase()}`;
+  const role=(r,i)=>r==='Owner'?'<span class="own">Owner</span>':`<select class="shs" data-sdrole="${i}" aria-label="Role">${['Editor','Commenter','Viewer'].map(o=>`<option ${r===o?'selected':''}>${o}</option>`).join('')}</select>`;
+  const a=ACC.find(z=>z[0]===sh.access)||ACC[0];
+  const main=`<div class="shh"><b>Share this specification</b><button class="shl" data-act="sdcopy">${I('copy',14)}Copy link</button><button class="ib" data-act="sdx" aria-label="Close">${I('x',16)}</button></div>
+    <div class="shb"><label class="shk" for="sdAcc">Who can view?</label><div class="shsel">${I(a[2],14)}<select id="sdAcc">${ACC.map(([k,l])=>`<option value="${k}" ${sh.access===k?'selected':''}>${l}</option>`).join('')}</select>${I('chevron-down',14)}</div>
+      ${sh.access!=='me'?`<div class="shi">${I('alert',14)}<span>${sh.access==='link'?'Anyone with the link can open this revision. Reviewers keep their access.':sh.access==='org'?'Everyone in Syntroper’s Org can open it. Only people below can comment or edit.':'Only the people below can open it. Reviewers are added automatically.'}</span></div>`:''}
+      ${sh.access!=='me'?`<div class="shk">People with access (${sh.people.length})</div>
+      <div class="shinv"><input id="sdInv" placeholder="Invite by email" autocomplete="off"><select id="sdInvR" class="shs" aria-label="Role"><option>Editor</option><option>Commenter</option><option selected>Viewer</option></select><button class="btn primary sm" data-act="sdinv2">Invite</button></div>
+      <div class="shp">${sh.people.map(([n,r],i)=>`<div class="shr">${pAv(n,28)}<span class="nm"><b>${esc(n)}</b><small>${esc(mail(n))}</small></span>${role(r,i)}</div>`).join('')}</div>`:''}</div>
+    <button class="shf" data-act="sdemb">${I('code',16)}<span>Embed</span>${I('chevron-right',14)}</button>`;
+  const code=`<iframe src="${url}/embed" width="100%" height="720" frameborder="0" allowfullscreen title="${esc(x.num)} · ${esc(x.title)}"></iframe>`;
+  const emb=`<div class="shh"><button class="ib" data-act="sdembx" aria-label="Back">${I('chevron-left',16)}</button><b>Embed iframe</b><button class="ib" data-act="sdx" aria-label="Close">${I('x',16)}</button></div>
+    <div class="shb"><div class="shk">Code</div><pre class="shc">${esc(code)}</pre><button class="btn primary" data-act="sdcopyif">${I('copy',14)}Copy iframe</button>
+    <div class="shw">${I('alert',14)}<span>The embed only works when “Who can view?” is set to Anyone with the link. Private specifications need sign-in and can’t be embedded.</span></div></div>`;
+  mhost().innerHTML=`<div class="sdm-bg" data-act="sdx"></div><div class="sdm shm" role="dialog" aria-modal="true" aria-label="Share">${M.share==='embed'?emb:main}</div>`; }
 function revDlg(){ const x=cur(); const have=new Set(x.reviewers.map(r=>r[0]));
   dlg('Add reviewer',`<div class="opt">${DIR.filter(n=>!have.has(n)&&n!==x.by).map(n=>`<button data-act="sdpick" data-arg="${esc(n)}">${pAv(n,20)}${esc(n)}</button>`).join('')||'<small style="color:var(--text-3)">Everyone in the workspace is a reviewer.</small>'}</div>`,`<button class="btn" data-act="sdx">Close</button>`); }
 function pubDlg(t){ const x=cur(); const P=x.type==='rf'?snap(x):null; t=t||(x.link&&x.link.tool)||Object.keys(TOOLS).find(k=>SPEC_TOOLS[k])||'jira'; M={t}; const on=SPEC_TOOLS[t]; const [n,kind,dest]=TOOLS[t];
@@ -14451,7 +14513,7 @@ function paint(){ const v=V(); if(!v||S.tab!=='specs') return; const x=S.specs.o
   v.querySelectorAll('.lg').forEach(e=>{ const t=e.textContent.trim(); const k=t==='J'?'jira':t==='C'?'clickup':t==='N'?'notion':null; if(k&&!e.querySelector('svg')){ e.innerHTML=`<svg width="${parseInt(e.style.width)||18}" height="${parseInt(e.style.height)||18}"><use href="#lg-${k}"/></svg>`; } }); }
 { const _r=render; render=function(){ _r(); try{ paint(); }catch(e){ console.error(e); } }; }
 const R=()=>render();
-document.addEventListener('change',e=>{ const x=cur(); if(!x) return; if(e.target.id==='sdAcc'){ x.share.access=e.target.value; } if(e.target.dataset&&e.target.dataset.sdrole!=null){ x.share.people[+e.target.dataset.sdrole][1]=e.target.value; } });
+document.addEventListener('change',e=>{ const x=cur(); if(!x) return; if(e.target.id==='sdAcc'){ x.share.access=e.target.value; shareDlg(); } if(e.target.dataset&&e.target.dataset.sdrole!=null){ x.share.people[+e.target.dataset.sdrole][1]=e.target.value; } });
 Object.assign(ACT,{
   sdrow(k){ S.sdx=S.sdx||{}; const [id]=k.split('|'); const x=SPECS.find(s=>s.id===id); const P=snap(x); const ucId=k.split('|')[1]; const u=UCB[ucId]; const whole=u&&u.apis.every(a=>(x.sel||[]).includes(a)); const was=S.sdx[k]!=null?S.sdx[k]:!whole; S.sdx[k]=!was; R(); },
   sdshare(){ shareDlg(); }, sdx(){ close(); },
@@ -14459,6 +14521,8 @@ Object.assign(ACT,{
   ucjump(a){ const [id,j]=a.split('|'); const el=document.getElementById(`ust-${id}-${j}`); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'),1200); } },
   sdcopy(){ toast('Link copied. People with access can open it.'); },
   sdinv(n){ cur().share.people.push([n,'Can view']); shareDlg(); toast(`Shared with ${n}.`); },
+  sdinv2(){ const x=cur(); const e=document.getElementById('sdInv'); const v=(e&&e.value||'').trim(); const r=(document.getElementById('sdInvR')||{}).value||'Viewer'; if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)&&!DIR.includes(v)){ toast('Type an email address'); if(e) e.focus(); return; } const n=DIR.find(d=>mail(d)===v.toLowerCase()||d===v)||v; if(x.share.people.some(p=>p[0]===n)){ toast(`${n} already has access`); return; } x.share.people.push([n,r]); shareDlg(); toast(`Invited ${n} as ${r}.`); },
+  sdemb(){ shareDlg('embed'); }, sdembx(){ shareDlg('main'); }, sdcopyif(){ toast('Iframe code copied.'); },
   sdadd(){ revDlg(); }, sdpick(n){ const x=cur(); x.reviewers.push([n,'pending']); close(); R(); },
   sdreq(){ const x=cur(); x.status='review'; x.reviewers.forEach(r=>{ if(r[1]!=='approved'&&r[1]!=='changes') r[1]='pending'; }); toast(`Review requested from ${x.reviewers.length} reviewer${x.reviewers.length===1?'':'s'} on revision ${x.rev}.`); R(); },
   sdpub(){ pubDlg(); }, sdtool(k){ pubDlg(k); },
@@ -14561,7 +14625,7 @@ function html(){ const f=S.csf; const R=rows(); const all=window.SPECS||[];
   return `<div class="h"><h2>Change specifications</h2><span class="count">${all.length}</span><span class="sp"></span><label class="field">${I('search',16)}<input id="csQ" value="${esc(f.q)}" placeholder="Search specifications" autocomplete="off"></label></div>
    <div class="fl"><div class="fg"><span>Status</span>${pill('st','all','All')}${STATUS.map(([k,l,c])=>pill('st',k,l,c)).join('')}</div><div class="fg"><span>Type</span>${pill('ty','all','All')}${TYPES.map(([k,l])=>pill('ty',k,l)).join('')}</div></div>
    <div class="tb">${R.length?`<table><thead><tr><th>Specification</th><th>Type</th><th>Proposed by</th><th>Updated</th><th>Status</th></tr></thead><tbody>${R.map(x=>{ const s=STATUS.find(z=>z[0]===x.status)||STATUS[0];
-     return `<tr class="r" data-act="spopen" data-arg="${x.id}"><td><div class="t">${x.type==='uc'?kindIc('usecase',16):kindIc('context',16)}<span><b>${esc(x.title)}</b><small>${esc(x.scope||(x.persona?'Persona · '+x.persona:''))}</small></span></div></td><td><span class="ty">${typeOf(x)}</span></td><td><span class="who">${pAv(x.by,20)}${esc(x.by)}</span></td><td style="white-space:nowrap">${esc(x.when)}</td><td><span class="st"><i style="background:${s[2]}"></i>${s[1]}</span></td></tr>`; }).join('')}</tbody></table>`:'<div class="none">No specifications match these filters.</div>'}</div>`; }
+     return `<tr class="r" data-act="spopen" data-arg="${x.id}"><td><div class="t">${x.type==='uc'?kindIc('usecase',16):kindIc('context',16)}<span><b>${esc(x.title)}</b><small>${esc(x.scope||(x.persona?'Persona · '+x.persona:''))}</small></span></div></td><td><span class="ty ${x.type}">${typeOf(x)}</span></td><td><span class="who">${pAv(x.by,20)}${esc(x.by)}</span></td><td style="white-space:nowrap">${esc(x.when)}</td><td><span class="st"><i style="background:${s[2]}"></i>${s[1]}</span></td></tr>`; }).join('')}</tbody></table>`:'<div class="none">No specifications match these filters.</div>'}</div>`; }
 function place(){ const v=host.getBoundingClientRect(); const p=document.querySelector('#cPanel .card')||document.getElementById('cPanel'); const c=document.getElementById('cCrumb');
   const pr=p?p.getBoundingClientRect():{right:v.left+404}; const cr=c?c.getBoundingClientRect():{bottom:v.top+64};
   el.style.left=Math.round(pr.right-v.left+16)+'px'; el.style.top=Math.round(Math.max(cr.bottom-v.top+12,16))+'px'; el.style.right='24px'; el.style.bottom='24px'; }
@@ -14588,6 +14652,289 @@ addEventListener('resize',()=>{ if(S.cs2) place(); });
 const fixLbl=root=>{ (root||document).querySelectorAll('.sd-k span,.ty,.kv span').forEach(n=>{ if(n.children.length) return; if(n.textContent==='Refactoring specification') n.textContent='Bounded context'; else if(n.textContent==='Use case specification') n.textContent='Use case'; }); };
 { const _r=render; render=function(){ _r(); try{ fixLbl(document.getElementById('vSpecs')); }catch(e){} }; }
 try{ render(); }catch(e){}
+})();
+</script>
+<style>
+/* FB86 · spec opens in a side panel over the canvas; type chips in kind colours */
+#csList .ty.uc{background:color-mix(in srgb,var(--k-use-case,#A78BFA) 16%,transparent);color:color-mix(in srgb,var(--k-use-case,#A78BFA) 80%,#fff)}
+#csList .ty.rf{background:color-mix(in srgb,var(--k-bounded-context,#F472B6) 16%,transparent);color:color-mix(in srgb,var(--k-bounded-context,#F472B6) 80%,#fff)}
+body.light #csList .ty.uc{color:#6d4fd6} body.light #csList .ty.rf{color:#be2f7d}
+#csList tr.r.on td{background:var(--selected)}
+#csDoc{position:absolute;z-index:14;top:0;right:24px;bottom:24px;width:min(760px,calc(100% - 520px));min-width:460px;display:flex;flex-direction:column;background:var(--canvas);border:1px solid var(--border-strong);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+#csDoc[hidden]{display:none}
+#csDoc{display:block!important} #csDoc[hidden]{display:none!important}
+#csDoc .sc{position:absolute;inset:0;width:auto!important;overflow:auto}
+#csDoc .sd-bar{position:sticky;top:0;max-width:none;padding:12px 20px;margin:0;background:var(--canvas)}
+#csDoc .sd-bar .csbc{display:none}
+#csDoc .sd-bar .x{margin-right:auto}
+#csDoc .sd{display:block;max-width:none;padding:0 36px 48px}
+#csDoc .sd-doc{max-width:none;padding-top:24px}
+#csDoc .sd-rail{position:static;padding-top:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+#csDoc .sd-stats{grid-template-columns:repeat(4,1fr)}
+</style>
+<script>
+/* FB86 */
+(function(){
+const host=document.getElementById('vCodona'); const D=document.createElement('aside'); D.id='csDoc'; D.hidden=true; D.setAttribute('aria-label','Specification'); host.appendChild(D);
+const list=()=>document.getElementById('csList');
+let last=null;
+function paint(){ const on=S.cs2&&S.tab==='codona'&&S.specs.open; const x=on&&SPECS.find(s=>s.id===S.specs.open); D.hidden=!x; const L=list();
+  if(!x){ D.innerHTML=''; last=null; if(L) L.style.right='24px'; return; }
+  const sc=D.querySelector('.sc'), st=sc&&last===x.id?sc.scrollTop:0;
+  D.innerHTML=`<div class="sc">${specDoc(x)}</div>`; const bar=D.querySelector('.sd-bar'); if(bar) bar.insertAdjacentHTML('afterbegin',`<button class="ib x" data-act="csdx" aria-label="Close">${I('x',16)}</button>`);
+  D.querySelector('.sc').scrollTop=st; last=x.id;
+  if(L){ const t=L.style.top; D.style.top=t; const w=D.getBoundingClientRect().width; L.style.right=(w+40)+'px'; L.querySelectorAll('tr.r').forEach(r=>r.classList.toggle('on',r.dataset.arg===x.id)); }
+  try{ D.querySelectorAll('.sd-k span').forEach(n=>{ if(n.textContent==='Refactoring specification') n.textContent='Bounded context'; else if(n.textContent==='Use case specification') n.textContent='Use case'; }); }catch(e){} }
+{ const _r=render; render=function(){ const keep=S.cs2&&S.specs.open; _r(); if(keep&&!S.specs.open&&S.cs2) S.specs.open=keep; try{ paint(); }catch(e){ console.error(e); } }; }
+ACT.spopen=function(id){ S.tab='codona'; S.cs2=true; S.specs.open=S.specs.open===id?null:id; render(); };
+ACT.csdx=function(){ S.specs.open=null; render(); };
+ACT.spclose=function(){ S.tab='codona'; S.cs2=true; S.specs.open=null; render(); };
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!D.hidden&&!document.querySelector('#sdModal .sdm')){ e.stopPropagation(); ACT.csdx(); } },true);
+{ const _c=crumbHTML; crumbHTML=function(){ const h=_c(); if(!(S.cs2&&S.specs.open)) return h; const x=SPECS.find(s=>s.id===S.specs.open); if(!x) return h; return h.replace('<span class="ci cur">Change specifications</span>',`${crumbBtn('Change specifications','csdx')}${SEP}<span class="ci cur">${esc(x.title)}</span>`); }; }
+{ const _h=hashOf; hashOf=function(){ return S.cs2&&S.tab==='codona'&&S.specs.open ? '#/codona/specs/'+S.specs.open : _h(); }; }
+{ const m=location.hash.match(/^#\/codona\/specs\/(\w+)/); if(m){ S.cs2=true; S.specs.open=m[1]; } }
+addEventListener('resize',()=>{ try{ paint(); }catch(e){} });
+try{ render(); }catch(e){}
+})();
+</script>
+<style>
+/* FB87 · specs in the left sidebar, the open spec on the canvas */
+#csList{display:none!important}
+.csside .ch-row{display:flex;align-items:center;gap:8px} .csside .ch-row .count{margin-left:0}
+.csside .cs-sr{display:flex;gap:8px} .csside .cs-sr .field{flex:1;min-width:0}
+.csside .fbtn{position:relative;width:32px;height:32px;flex:none;border-radius:8px;display:grid;place-items:center;color:var(--text-2);box-shadow:inset 0 0 0 1px var(--border-strong)}
+.csside .fbtn.on{background:var(--selected);color:var(--accent-on);box-shadow:none}
+.csside .fbtn .n{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--accent);color:#fff;font:600 10px/16px var(--font);text-align:center}
+.csside .cfp{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:10px;background:var(--canvas);border:1px solid var(--border)}
+.csside .cfp h6{margin:0 0 6px;font:600 11px/16px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-3)}
+.csside .cfp .pl{display:flex;flex-wrap:wrap;gap:6px}
+.csside .cfp button{height:26px;padding:0 10px;border-radius:999px;font:500 12px/18px var(--font);color:var(--text-2);box-shadow:inset 0 0 0 1px var(--border-strong);display:inline-flex;align-items:center;gap:6px}
+.csside .cfp button.on{background:var(--selected);color:var(--accent-on);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 55%,transparent)}
+.csside .cfp button i{width:7px;height:7px;border-radius:50%}
+.csside .cgh{padding:12px 14px 6px;font:600 11px/16px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-3);display:flex;align-items:center;gap:6px}
+.csside .cgh i{width:7px;height:7px;border-radius:50%}
+.csc{display:flex;flex-direction:column;gap:6px;width:calc(100% - 16px);margin:0 8px 4px;padding:10px 12px;border-radius:10px;text-align:left;border:1px solid transparent}
+.csc:hover{background:var(--surface)} .csc.on{background:var(--selected);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.csc .r1{display:flex;align-items:flex-start;gap:10px} .csc .r1 b{flex:1;min-width:0;font:500 14px/20px var(--font);color:var(--text)}
+.csc .r1 .kic2{margin-top:2px}
+.csc .r2{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-left:26px;font:400 12px/18px var(--font);color:var(--text-3)}
+.csc .ty{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:999px;font:500 11px/16px var(--font)}
+.csc .ty.uc{background:color-mix(in srgb,var(--k-use-case,#A78BFA) 16%,transparent);color:color-mix(in srgb,var(--k-use-case,#A78BFA) 80%,#fff)}
+.csc .ty.rf{background:color-mix(in srgb,var(--k-bounded-context,#F472B6) 16%,transparent);color:color-mix(in srgb,var(--k-bounded-context,#F472B6) 80%,#fff)}
+body.light .csc .ty.uc{color:#6d4fd6} body.light .csc .ty.rf{color:#be2f7d}
+.csside .none{padding:24px 14px;color:var(--text-3);font:400 13px/20px var(--font)}
+/* the open spec: primary dark, quiet edge */
+#csDoc{background:var(--canvas)!important;border:1px solid var(--border)!important;box-shadow:none!important;container-type:inline-size}
+#csDoc .sd-bar{border-bottom:1px solid var(--border);justify-content:flex-end}
+#csDoc .sd-bar .x{display:none}
+#csDoc .sd{display:grid!important;grid-template-columns:minmax(0,1fr) 280px;gap:40px;padding:0 40px 56px!important}
+#csDoc .sd-rail{position:sticky!important;top:16px;display:flex!important;flex-direction:column;padding-top:28px!important}
+@container (max-width:980px){ #csDoc .sd{display:block!important;padding:0 28px 48px!important} #csDoc .sd-rail{position:static!important;display:grid!important;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))} }
+#csDoc .csempty{display:grid;place-items:center;height:100%;color:var(--text-3);font:400 14px/20px var(--font)}
+</style>
+<script>
+/* FB87 */
+(function(){
+const STATUS=[['draft','Draft','#a3a7b5'],['review','In review','#ffcc4d'],['approved','Approved','#7b97f0'],['progress','In progress','#9a84f2'],['done','Done','#34c759']];
+S.csf=S.csf||{q:''}; if(!Array.isArray(S.csf.st)) S.csf.st=[]; if(!Array.isArray(S.csf.ty)) S.csf.ty=[];
+const list=()=>{ const f=S.csf, q=(f.q||'').trim().toLowerCase(); return (window.SPECS||[]).filter(x=>(!f.st.length||f.st.includes(x.status))&&(!f.ty.length||f.ty.includes(x.type))&&(!q||(x.title+' '+(x.scope||'')+' '+x.by).toLowerCase().includes(q))); };
+function sideHTML(){ const f=S.csf; const L=list(); const n=f.st.length+f.ty.length;
+  const cnt=(g,k)=>(window.SPECS||[]).filter(x=>(g==='st'?x.status:x.type)===k).length;
+  const pill=(g,k,l,c)=>{ const on=f[g].includes(k); return `<button role="menuitemcheckbox" aria-checked="${on}" data-act="csf2" data-arg="${g}|${k}"><span class="cx-cb ${on?'on':''}">${on?I('check',12,'',2.2):''}</span>${c?`<i style="background:${c}"></i>`:''}<span class="l">${l}</span><small>${cnt(g,k)}</small></button>`; };
+  const card=x=>{ const s=STATUS.find(z=>z[0]===x.status)||STATUS[0]; return `<button class="csc ${S.specs.open===x.id?'on':''}" data-act="spopen" data-arg="${x.id}"><span class="r1">${x.type==='uc'?kindIc('usecase',16):kindIc('context',16)}<b>${esc(x.title)}</b></span><span class="r2"><span class="ty ${x.type}">${x.type==='uc'?'Use case':'Bounded context'}</span><span>${esc(x.scope||(x.persona||''))}</span></span><span class="r2">${pAv(x.by,16)}<span>${esc(x.by)} · ${esc(x.when)}</span></span></button>`; };
+  const groups=STATUS.map(([k,l,c])=>{ const G=L.filter(x=>x.status===k); return G.length?`<div class="cgh"><i style="background:${c}"></i>${l} · ${G.length}</div>${G.map(card).join('')}`:''; }).join('');
+  return `<section class="card fill csside"><div class="ch">${back()}<div class="ch-row"><h2>Change specifications</h2><span class="count">${(window.SPECS||[]).length}</span></div>
+    <div class="cs-sr"><label class="field">${I('search',16)}<input id="csQ2" value="${esc(f.q||'')}" placeholder="Search specifications" autocomplete="off"></label><button class="fbtn ${S.csfm||n?'on':''}" data-act="csfm" aria-label="Filter" aria-expanded="${!!S.csfm}">${I('filter',16)}${n?`<span class="n">${n}</span>`:''}</button></div>
+    ${S.csfm?`<div class="cfp2" role="menu"><h6>Status</h6>${STATUS.map(([k,l,c])=>pill('st',k,l,c)).join('')}<h6>Type</h6>${pill('ty','uc','Use case')}${pill('ty','rf','Bounded context')}${n?`<div class="cff"><button class="btn ghost sm" data-act="csfclr">Clear filters</button></div>`:''}</div>`:''}</div>
+    <div class="scroll">${groups||'<div class="none">No specifications match.</div>'}</div></section>`; }
+const on=()=>S.tab==='codona'&&S.side&&S.side.v==='specs';
+{ const _rs=renderSide; renderSide=function(){ if(S.side&&S.side.v==='specs'){ const body=document.getElementById('cBody'); const sc=body.querySelector('.scroll'); const t=body.dataset.key==='specs'&&sc?sc.scrollTop:0; const a=document.activeElement, pos=a&&a.id==='csQ2'?a.selectionStart:null;
+      body.innerHTML=sideHTML(); body.dataset.key='specs'; const s2=body.querySelector('.scroll'); if(s2) s2.scrollTop=t; if(pos!=null){ const i=document.getElementById('csQ2'); i.focus(); i.setSelectionRange(pos,pos); } return; } return _rs.apply(this,arguments); }; window.renderSide=renderSide; }
+function place(){ const D=document.getElementById('csDoc'); if(!D) return; const v=document.getElementById('vCodona').getBoundingClientRect(); const p=document.getElementById('cPanel'); const c=document.getElementById('cCrumb');
+  const pr=p?p.getBoundingClientRect():{right:v.left+404}; const cr=c?c.getBoundingClientRect():{bottom:v.top+64};
+  D.style.left=Math.round(pr.right-v.left+16)+'px'; D.style.top=Math.round(cr.bottom-v.top+12)+'px'; D.style.right='24px'; D.style.bottom='24px'; D.style.width='auto'; D.style.minWidth='0'; }
+{ const _r=render; render=function(){ S.cs2=on(); if(S.cs2){ const L=list(); if(!S.specs.open||!SPECS.some(s=>s.id===S.specs.open)) S.specs.open=L[0]?L[0].id:null; }
+    _r(); S.cs2=on(); try{ const D=document.getElementById('csDoc'); if(S.cs2){ if(!S.specs.open){ D.hidden=false; D.innerHTML='<div class="csempty">No specification selected</div>'; } place(); } else if(D){ D.hidden=true; } }catch(e){ console.error(e); } }; }
+const go=()=>{ S.tab='codona'; S.level=0; S.ucx.flow=null; if(!(S.side&&S.side.v==='specs')) navigate({v:'specs'}); else render(); };
+{ const _t=ACT.tab; ACT.tab=function(t){ if(t==='specs'){ go(); return; } return _t.apply(this,arguments); }; }
+ACT.spopen=function(id){ S.specs.open=id; if(!on()) go(); else render(); };
+ACT.spclose=go;
+ACT.csdx=go;
+ACT.csfm=function(){ S.csfm=!S.csfm; renderSide(); };
+ACT.csfclr=function(){ S.csf.st=[]; S.csf.ty=[]; render(); };
+ACT.csf2=function(a){ const [g,k]=a.split('|'); const A=S.csf[g]; const i=A.indexOf(k); if(i>=0) A.splice(i,1); else A.push(k); const L=list(); if(!L.some(x=>x.id===S.specs.open)) S.specs.open=L[0]?L[0].id:null; render(); };
+document.addEventListener('input',e=>{ if(e.target.id==='csQ2'){ S.csf.q=e.target.value; const L=list(); if(!L.some(x=>x.id===S.specs.open)) S.specs.open=L[0]?L[0].id:null; render(); } });
+{ const _c=crumbHTML; crumbHTML=function(){ return _c(); }; }
+{ const m=location.hash.match(/^#\/codona\/specs(?:\/(\w+))?/); if(m) setTimeout(()=>{ if(m[1]) S.specs.open=m[1]; go(); },0); }
+addEventListener('resize',()=>{ if(S.cs2) place(); });
+try{ render(); }catch(e){}
+})();
+</script>
+<style>
+/* FB88 */
+/* filter popover with checkboxes */
+.csside .ch{position:relative}
+.csside .cfp2{position:absolute;right:14px;top:calc(100% - 6px);z-index:30;width:250px;padding:6px;border-radius:12px;background:var(--panel);border:1px solid var(--border-strong);box-shadow:var(--shadow)}
+.csside .cfp2 h6{margin:8px 8px 4px;font:600 11px/16px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-3)}
+.csside .cfp2 button[role=menuitemcheckbox]{display:flex;align-items:center;gap:10px;width:100%;height:34px;padding:0 8px;border-radius:7px;text-align:left;font:400 13px/18px var(--font);color:var(--text)}
+.csside .cfp2 button[role=menuitemcheckbox]:hover{background:var(--surface)}
+.csside .cfp2 button i{width:8px;height:8px;border-radius:50%;margin-left:-2px} .csside .cfp2 .l{flex:1} .csside .cfp2 small{color:var(--text-3);font-size:12px}
+.csside .cff{border-top:1px solid var(--border);margin-top:6px;padding:6px 2px 0}
+/* active card: purple edge on the left */
+.csc{border:0!important;border-radius:8px} .csc.on{background:var(--selected)!important;box-shadow:inset 3px 0 0 var(--accent-hover)}
+/* decisions you can answer */
+.sd-q2{border-bottom:1px solid var(--border)}
+.sd-q2 .qh{display:grid;grid-template-columns:20px minmax(0,1fr) auto 16px;gap:12px;align-items:start;width:100%;padding:14px 0;text-align:left;color:var(--text-2)}
+.sd-q2 .qh:hover b{color:#fff}
+.sd-q2 .qi{color:var(--warn-text);margin-top:2px} .sd-q2.done .qi{color:var(--ok-text)}
+.sd-q2 .qt b{display:block;font:500 14px/20px var(--font);color:var(--text)} .sd-q2 .qt small{font:400 12px/18px var(--font);color:var(--text-3)}
+.sd-q2 .qt code{font:500 12px/18px var(--mono);background:var(--surface);padding:1px 6px;border-radius:4px}
+.sd-q2 .qs{font:500 12px/20px var(--font);color:var(--warn-text);white-space:nowrap} .sd-q2 .qs.ok{color:var(--ok-text)}
+.sd-q2 .qb{display:flex;flex-direction:column;gap:10px;margin:0 0 16px 32px;padding:14px;border-radius:10px;background:var(--panel);border:1px solid var(--border)}
+.sd-q2 .qo{display:flex;flex-direction:column;gap:2px} .sd-q2 .qo button{display:flex;align-items:center;gap:10px;min-height:32px;padding:0 6px;border-radius:7px;text-align:left;font:400 13px/18px var(--font);color:var(--text)} .sd-q2 .qo button:hover{background:var(--surface)}
+.sd-q2 textarea{min-height:64px;resize:vertical;padding:8px 10px;border-radius:8px;background:var(--canvas);border:1px solid var(--border-strong);color:var(--text);font:400 13px/20px var(--font);outline:0} .sd-q2 textarea:focus{border-color:var(--accent-hover)}
+.sd-q2 .qf{display:flex;justify-content:flex-end;gap:8px}
+.sd-q2 .qa{display:flex;align-items:center;gap:8px;font:400 12px/18px var(--font);color:var(--text-3)} .sd-q2 .qa b{color:var(--text-2);font-weight:500}
+.sd-q2 .qv{margin:0;font:500 14px/22px var(--font);color:var(--text)} .sd-q2 .qn{margin:0;font:400 13px/20px var(--font);color:var(--text-2)}
+/* review and publish: sticky, collapsible */
+#csDoc .sd-rail .sd-c h3{cursor:pointer;user-select:none;margin-bottom:0} #csDoc .sd-rail .sd-c h3 .cc{margin-left:auto;color:var(--text-3)}
+#csDoc .sd-rail .sd-c:not(.cc) h3{margin-bottom:10px}
+#csDoc .sd-rail .sd-c.cc>:not(h3){display:none!important}
+#csDoc .railt{display:flex;justify-content:flex-end;margin-bottom:-4px}
+#csDoc .railt button{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 8px;border-radius:7px;font:500 12px/18px var(--font);color:var(--text-2)} #csDoc .railt button:hover{color:var(--text);background:var(--surface)}
+#csDoc.railc .sd{grid-template-columns:minmax(0,1fr) 44px!important;gap:24px}
+#csDoc.railc .sd-rail>.sd-c{display:none!important}
+#csDoc .railmini{display:none;flex-direction:column;gap:8px} #csDoc.railc .railmini{display:flex}
+#csDoc .railmini button{position:relative;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:var(--panel);border:1px solid var(--border);color:var(--text-2)} #csDoc .railmini button:hover{color:var(--text)}
+#csDoc .railmini .n{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--surface-strong);color:var(--text);font:600 10px/16px var(--font);text-align:center}
+/* live diagram: the same canvas as Open sequence steps */
+#csDoc .udg-live{position:relative;height:560px;padding:0!important;overflow:hidden}
+#csDoc .udg-live #ucFlow{position:absolute!important;inset:0!important;z-index:1;border-radius:11px}
+#csDoc .udg-hint{position:absolute;right:10px;bottom:8px;z-index:2;font:400 11px/16px var(--font);color:var(--text-3);pointer-events:none}
+body.cs2 #ucLeg{display:none!important}
+/* share dialog, as in Figma */
+.sdm.shm{width:424px;padding:0;background:var(--canvas);border:1px solid var(--border-strong)}
+.shm .shh{display:flex;align-items:center;gap:8px;padding:18px 20px 10px} .shm .shh b{flex:1;font:600 15px/20px var(--font)}
+.shm .shl{display:inline-flex;align-items:center;gap:6px;font:500 13px/18px var(--font);color:var(--accent-on)} .shm .shl:hover{text-decoration:underline}
+.shm .shb{display:flex;flex-direction:column;gap:12px;padding:8px 24px 20px}
+.shm .shk{font:500 13px/18px var(--font);color:var(--text)}
+.shm .shsel{position:relative;display:flex;align-items:center;gap:8px;height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--border-strong);background:var(--panel);color:var(--text-2)}
+.shm .shsel select{flex:1;appearance:none;-webkit-appearance:none;background:transparent;border:0;color:var(--text);font:400 13px/18px var(--font);outline:0;height:100%}
+.shm .shi{display:flex;gap:8px;padding:12px 14px;border-radius:8px;background:color-mix(in srgb,var(--accent) 14%,var(--panel));box-shadow:inset 3px 0 0 var(--accent-hover);font:400 12px/18px var(--font);color:var(--text)} .shm .shi svg{flex:none;margin-top:2px;color:var(--accent-on)}
+.shm .shinv{display:flex;align-items:center;gap:6px;height:36px;padding:0 4px 0 10px;border-radius:8px;border:1px solid var(--border-strong);background:var(--panel)}
+.shm .shinv input{flex:1;min-width:0;height:100%;background:transparent;border:0;outline:0;color:var(--text);font:400 13px/18px var(--font)}
+.shm .shs{appearance:none;-webkit-appearance:none;height:26px;padding:0 24px 0 8px;border-radius:6px;border:1px solid var(--border-strong);background:var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a3a7b5' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 7px center;color:var(--text);font:500 12px/16px var(--font)}
+.shm .shinv .btn{height:28px}
+.shm .shp{display:flex;flex-direction:column;gap:4px}
+.shm .shr{display:flex;align-items:center;gap:10px;padding:6px 0} .shm .shr .nm{flex:1;min-width:0} .shm .shr b{display:block;font:500 13px/18px var(--font)} .shm .shr small{font:400 12px/16px var(--font);color:var(--text-3)}
+.shm .own{font:500 12px/16px var(--font);color:var(--text-3);padding-right:4px}
+.shm .shf{display:flex;align-items:center;gap:10px;width:100%;height:50px;padding:0 24px;border-top:1px solid var(--border);font:500 13px/18px var(--font);color:var(--text);text-align:left} .shm .shf span{flex:1} .shm .shf:hover{background:var(--panel)}
+.shm .shc{margin:0;padding:12px;border-radius:8px;background:var(--panel);border:1px solid var(--border);font:500 12px/18px var(--mono);color:#ffc79f;white-space:pre-wrap;word-break:break-all}
+.shm .shb>.btn.primary{width:100%}
+.shm .shw{display:flex;gap:8px;padding:12px 14px;border-radius:8px;background:color-mix(in srgb,var(--warn) 10%,var(--panel));box-shadow:inset 3px 0 0 var(--warn);font:400 12px/18px var(--font);color:var(--text)} .shm .shw svg{flex:none;margin-top:2px;color:var(--warn-text)}
+/* business system card: just the GitHub mark */
+.bsc .gh,.bsc .m .gh{background:none!important;width:auto!important;height:auto!important;color:var(--text)!important}
+/* home cards: icon, text, plain button */
+#cPanel .cta .ctai{flex:none;width:32px;height:32px;border-radius:8px;display:grid;place-items:center;background:var(--surface);color:var(--text-2)}
+#cPanel .cta.hasi{display:flex;align-items:center;gap:12px} #cPanel .cta.hasi .tx{flex:1;min-width:0}
+</style>
+<script>
+/* FB88 */
+(function(){
+const box=document.getElementById('ucFlow'), home=document.getElementById('cStage');
+const FV={flow:'cards',seq:'seq',swim:'swim'};
+function toFlow(x){ const F=x.flow||[]; const steps=[], alts=[], idx={}; let cur=null;
+  F.forEach(z=>{ const t=(z.t||'').trim();
+    if(z.kind==='decision'){ if(!cur){ cur={t:'Start',sc:null,apis:[]}; steps.push(cur); } const at=steps.length; idx[z.id]=at;
+      (z.opts||[]).forEach((o,k)=>{ if(k===0&&(o.to==='next'||!o.to)) return; const a={t:o.t||'Other option', kind:o.to==='end'?'cancel':'validation', at, steps:o.note?[o.note]:(t?[t]:[])}; if(o.to==='end') a.end='Ends'; else if(o.to==='next'||!o.to) a.end='Continues'; else a._to=o.to; alts.push(a); }); cur._after=1; return; }
+    if(!t) return;
+    if(z.who==='user'||!cur||cur._sys||cur._after){ cur={t, sc:null, apis:[]}; if(z.who!=='user') cur._sys=1; steps.push(cur); } else cur.r=cur.r?cur.r+'. '+t:t;
+    idx[z.id]=steps.length; });
+  alts.forEach(a=>{ if(a._to){ a.back=idx[a._to]||1; delete a._to; } });
+  steps.forEach(s=>{ if(!s.r) s.r=' '; delete s._sys; delete s._after; });
+  return {start:`${x.persona||'User'} starts`, result:x.result||x.title, steps, alts}; }
+const _na=window.npArea; window.npArea=function(){ if(box&&box.closest('#csDoc')) return {x:24,y:24,w:Math.max(200,box.clientWidth-48),h:Math.max(200,box.clientHeight-48)}; return _na?_na():null; };
+document.addEventListener('wheel',e=>{ if(box&&box.closest('#csDoc')&&box.contains(e.target)&&!e.ctrlKey&&!e.metaKey) e.stopPropagation(); },{capture:true});
+let shown=null;
+function mount(){ const D=document.getElementById('csDoc'); const h=D&&!D.hidden&&D.querySelector('.udg-live');
+  if(!h){ if(S.ucx.flow&&/^__sp/.test(S.ucx.flow)){ S.ucx.flow=null; shown=null; if(box.parentNode!==home.parentNode) home.after(box); try{ renderFlowCanvas(); }catch(e){} } return; }
+  const x=SPECS.find(s=>s.id===h.dataset.sp); if(!x) return; const id='__sp_'+x.id;
+  const per=(window.PERSONAS||[]).find(p=>p.name===x.persona);
+  UCB[id]=Object.assign(UCB[id]||{},{id, name:x.title, ch:x.ch||'store', ctx:(x.ctxPick&&x.ctxPick!=='auto'?x.ctxPick:'orders'), personas:per?[per.id]:[], apis:[], i:[], ext:[], m:{rpd:0}, _draft:1});
+  FLOW[id]=toFlow(x); S.ucx.flow=id; S.ucx.fv=FV[h.dataset.fv]||'cards'; S.ucx.sl='sys'; S.ucx.hl=null;
+  h.appendChild(box); h.insertAdjacentHTML('beforeend','<span class="udg-hint">Drag to pan · ⌘ scroll to zoom</span>');
+  try{ renderFlowCanvas(); }catch(e){ console.error(e); }
+  const key=id+'|'+S.ucx.fv; if(shown!==key){ shown=key; requestAnimationFrame(()=>{ try{ ACT.zoom('fit'); }catch(e){} }); } }
+/* rail: collapse the whole rail, or one card */
+S.sdrc=S.sdrc||false; S.sdcc=S.sdcc||{};
+function rail(){ const D=document.getElementById('csDoc'); if(!D||D.hidden) return; D.classList.toggle('railc',!!S.sdrc); const R=D.querySelector('.sd-rail'); if(!R||R.querySelector('.railt')) return;
+  const x=SPECS.find(s=>s.id===S.specs.open); const rv=(x&&x.reviewers||[]).length;
+  R.insertAdjacentHTML('afterbegin',`<div class="railt"><button data-act="sdrail" aria-label="${S.sdrc?'Show':'Hide'} side panel">${I(S.sdrc?'chevron-left':'chevron-right',14)}${S.sdrc?'':'Hide'}</button></div><div class="railmini"><button data-act="sdrail" title="Review">${I('users',16)}<span class="n">${rv}</span></button><button data-act="sdrail" title="Publish">${I('arrow-right',16)}</button>${x&&x.type==='uc'?`<button data-act="sdrail" title="Details">${I('file',16)}</button>`:''}</div>`);
+  R.querySelectorAll(':scope > .sd-c').forEach(c=>{ const h=c.querySelector('h3'); if(!h) return; const k=h.firstChild&&h.firstChild.textContent.trim(); c.classList.toggle('cc',!!S.sdcc[k]); h.dataset.act='sdcard'; h.dataset.arg=k; h.insertAdjacentHTML('beforeend',`<span class="cc">${I(S.sdcc[k]?'chevron-down':'chevron-up',14)}</span>`); }); }
+/* home cards: the icon moves left, the button keeps only its words */
+function cards(){ document.querySelectorAll('#cPanel .cta').forEach(c=>{ if(c.classList.contains('hasi')) return; const b=c.querySelector('.btn'); const sv=b&&b.querySelector('svg'); if(!sv) return; const s=document.createElement('span'); s.className='ctai'; s.appendChild(sv); c.insertBefore(s,c.firstChild); c.classList.add('hasi'); }); }
+{ const _r=render; render=function(){ if(box&&box.closest('#csDoc')) home.after(box); _r(); try{ mount(); rail(); cards(); }catch(e){ console.error(e); } }; }
+{ const _s=renderSide; renderSide=function(){ const r=_s.apply(this,arguments); try{ cards(); }catch(e){} return r; }; window.renderSide=renderSide; }
+const R=()=>render();
+Object.assign(ACT,{
+  sdrail(){ S.sdrc=!S.sdrc; R(); },
+  sdcard(k){ S.sdcc[k]=!S.sdcc[k]; R(); },
+  sdqo(a){ S.sdq=S.sdq||{}; S.sdq[a]=!S.sdq[a]; R(); },
+  sdqp(a){ const p=a.split('|'); const k=p.slice(0,-1).join('|'); const [id,...rest]=k.split('|'); const Q=(window.__sdQ||{})[id]||[]; const d=Q.find(q=>q.k===rest.join('|')); if(!d) return; S.sdqd=S.sdqd||{}; S.sdqd[k]=Object.assign(S.sdqd[k]||{},{v:d.o[+p[p.length-1]]}); R(); },
+  sdqa(a){ const [id,...r]=a.split('|'); const k=r.join('|'); const x=SPECS.find(s=>s.id===id); const d=((window.__sdQ||{})[id]||[]).find(q=>q.k===k); const dr=(S.sdqd||{})[a]||{}; const ta=document.querySelector(`.qtx[data-q="${CSS.escape(a)}"]`); const note=(ta&&ta.value||'').trim();
+    const v=dr.v||note; if(!v){ toast('Pick an answer or write one'); return; } x.ans=x.ans||{}; x.ans[k]={v, note:dr.v?note:'', by:ME, when:'Just now'}; if(k==='owner'&&dr.v) x.owner=dr.v; S.sdq[a]=false; toast('Answered. Reviewers see it on this revision.'); R(); },
+  sdqre(a){ const [id,...r]=a.split('|'); const x=SPECS.find(s=>s.id===id); delete x.ans[r.join('|')]; R(); }
+});
+document.addEventListener('input',e=>{ const t=e.target; if(t.classList&&t.classList.contains('qtx')){ S.sdqd=S.sdqd||{}; S.sdqd[t.dataset.q]=Object.assign(S.sdqd[t.dataset.q]||{},{note:t.value}); } });
+document.addEventListener('click',e=>{ if(S.csfm&&!e.target.closest('.cfp2,[data-act=csfm]')){ S.csfm=false; renderSide(); } },true);
+try{ render(); }catch(e){}
+})();
+</script>
+<style>
+/* FB89 · new use case: every step in the floating sidebar; Review structured; translucent checks */
+body.npscr.npcv #npModal .npside .npb1{flex:1;min-height:0;overflow:auto;display:block!important;padding:0!important}
+body.npscr.npcv #npModal .npside .npb1 .npc{display:flex!important;flex-direction:column;gap:18px;max-width:none;margin:0;padding:18px 20px!important}
+#npModal .npph{position:absolute;left:520px;top:16px;right:16px;bottom:16px;display:grid;place-items:center;pointer-events:none}
+#npModal .npph div{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--text-3);font:400 14px/20px var(--font)}
+#npModal .npph svg{color:var(--text-3);opacity:.7}
+.npsteps button.done .k{background:var(--ok-sub,rgba(52,199,89,.16))!important;color:var(--ok-text,#b3efbd)!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ok,#34c759) 40%,transparent)}
+.npx .us .sg button{white-space:nowrap}
+.nprv{display:flex;flex-direction:column;gap:0}
+.nprv .rs{padding:16px 0;border-bottom:1px solid var(--border)} .nprv .rs:first-child{padding-top:4px} .nprv .rs:last-child{border-bottom:0}
+.nprv h4{display:flex;align-items:center;gap:8px;margin:0 0 10px;font:600 13px/18px var(--font);color:var(--text)} .nprv h4 .count{margin-left:0}
+.nprv .chip{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:999px;background:var(--surface);font:500 12px/16px var(--font);color:var(--text-2)} .nprv .chip i{width:7px;height:7px;border-radius:50%;background:#a3a7b5}
+.nprv .kv{display:grid;grid-template-columns:88px minmax(0,1fr);gap:8px 12px;font:400 13px/20px var(--font)} .nprv .kv>span:nth-child(odd){color:var(--text-3)} .nprv .kv>span:nth-child(even){color:var(--text)}
+.nprv .kv em{font-style:normal;color:var(--text-3);font-size:12px}
+.nprv ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.nprv li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;padding:8px 0}
+.nprv li .n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--surface-strong);font:600 11px/1 var(--font)} .nprv li.dec .n{background:color-mix(in srgb,#f0a36b 22%,var(--panel));color:#ffc79f}
+.nprv li .w{display:block;font:600 11px/16px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-3)} .nprv li .w.u{color:#9fb4f5}
+.nprv li .t{font:400 13px/20px var(--font);color:var(--text)}
+.nprv li .br{margin-top:6px;padding-left:10px;border-left:2px solid color-mix(in srgb,#f0a36b 55%,var(--border-strong));display:flex;flex-direction:column;gap:2px;font:400 12px/18px var(--font);color:var(--text-2)} .nprv li .br b{color:#ffc79f;font-weight:600}
+.nprv .note{display:flex;gap:8px;padding:10px 12px;border-radius:8px;background:var(--canvas);border:1px solid var(--border);font:400 12px/18px var(--font);color:var(--text-2)}
+</style>
+<script>
+/* FB89 */
+(function(){
+window.specToast=function(msg,id){ toast(msg); const t=document.getElementById('toast'); if(!t) return; t.insertAdjacentHTML('beforeend',`<button class="tundo" style="margin-left:12px">View spec</button>`); const b=t.querySelector('.tundo:last-child'); b.onclick=()=>{ t.hidden=true; try{ ACT.tab('specs'); ACT.spopen(id); }catch(e){} }; };
+const SY=()=>(S.bs&&S.bs.name)||'Commerce platform';
+const pname=M=>{ const p=(window.PERSONAS||[]).find(x=>x.id===(M.per||[])[0]); return p?p.name:'User'; };
+function review(M){ const per=pname(M); const clash=/^system$/i.test(per); const who=w=>w==='user'?(clash?'Persona · System':per):(clash?SY():'System');
+  const st=(M.steps||[]).filter(x=>(x.t||'').trim()); const ix={}; st.forEach((x,i)=>ix[x.id]=i);
+  const to=(o,i)=>o.to==='end'?'End':(o.to==='next'||!o.to)?(i+1<st.length?`Step ${i+2}`:'End'):(ix[o.to]!=null?`Step ${ix[o.to]+1}`:'Next step');
+  let ch='—'; try{ ch=CHANNELS[M.ch]?(M.ch==='none'?'Background jobs':CHANNELS[M.ch].name):'—'; }catch(e){}
+  let cx='Suggested after the APIs are picked'; try{ if(M.ctx&&M.ctx!=='auto'&&CTB[M.ctx]) cx=CTB[M.ctx].name; }catch(e){}
+  const rv=!M.who||M.who==='auto'?'Owner of the context':M.who;
+  const ends=st.flatMap((x,i)=>(x.opts||[]).filter(o=>o.to==='end').map(o=>`${x.t} → ${o.t||'…'}`));
+  return `<div class="nprv"><div class="rs"><span class="chip"><i></i>Saved as a draft use case specification</span></div>
+    <div class="rs"><h4>Summary</h4><div class="kv"><span>Name</span><span>${esc(M.name||'')}</span><span>Persona</span><span>${esc(per)}</span><span>Channel</span><span>${esc(ch)}</span><span>Context</span><span>${esc(cx)}</span><span>Reviewer</span><span>${esc(rv)}</span></div></div>
+    <div class="rs"><h4>Steps<span class="count">${st.length}</span></h4><ol>${st.map((x,i)=>`<li class="${x.kind==='decision'?'dec':''}"><span class="n">${i+1}</span><div><span class="w ${x.who==='user'?'u':''}">${esc(who(x.who))}${x.kind==='decision'?' · Decision':''}</span><div class="t">${esc(x.t)}</div>${x.kind==='decision'?`<div class="br">${(x.opts||[]).map((o,k)=>`<span><b>${k?'Else if':'If'}</b> ${esc(o.t||'…')} → ${to(o,i)}</span>`).join('')}</div>`:''}</div></li>`).join('')}</ol></div>
+    <div class="rs"><h4>Endings</h4><div class="kv" style="grid-template-columns:minmax(0,1fr)"><span style="color:var(--text)">Main flow completes</span>${ends.map(e=>`<span style="color:var(--text-2)">${esc(e)}</span>`).join('')}</div></div>
+    <div class="rs"><div class="note">${I('alert',14)}<span>APIs and code are picked later, in the solution design.</span></div></div></div>`; }
+function post(){ const n=document.querySelector('#npModal .ncm.npm'); if(!n||!S.np) return; const st=S.np.stage||1;
+  let ph=n.querySelector(':scope > .npph'); if(st===1){ if(!ph) n.insertAdjacentHTML('beforeend',`<div class="npph"><div>${I('layers',28)}<span>New use case diagram will appear here</span></div></div>`); } else if(ph) ph.remove();
+  if(st===3){ const l=n.querySelector('.npside .rv-l'); if(l&&!l.dataset.rv){ l.dataset.rv=1; l.innerHTML=review(S.np); } } }
+{ const el=document.getElementById('npModal'); if(el) new MutationObserver(()=>requestAnimationFrame(()=>{ try{ post(); }catch(e){ console.error(e); } })).observe(el,{childList:true}); }
 })();
 </script>
 </body>

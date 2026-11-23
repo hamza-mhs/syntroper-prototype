@@ -805,7 +805,7 @@ chartHTML=function(){ const q=(S.q||'').trim().toLowerCase();
       <div class="r">${tAv(t,'sm')}<b>${q?mark(t.name):esc(t.name)}</b></div>
       <span class="meta"><span>${pl(all.length,'member')}</span>${ks.length?`<span>${pl(ks.length,'sub-team')}</span>`:''}</span>
       ${S.panel===t.id?expandHTML(t):t.m.length?`<span class="avs">${t.m.slice(0,4).map(([p])=>pAv(p,'sm')).join('')}${t.m.length>4?`<em>+${t.m.length-4}</em>`:''}</span>`:''}
-      ${ks.length||t.m.length?`<button class="ex" data-a="tog" data-v="${t.id}" aria-label="${open?'Collapse':'Expand'}">${open?I('cd',12):I('cr',12)+' '+(ks.length+t.m.length)}</button>`:''}
+      ${ks.length||t.m.length?`<button class="ex ${open?'exo':''}" data-a="tog" data-v="${t.id}" aria-label="${open?'Collapse':'Expand'}">${open?I('cd',12)+(ks.length?' '+ks.length+' sub-team'+(ks.length===1?'':'s'):''):I('cr',12)+' '+(ks.length+t.m.length)}</button>`:''}
       <button class="add" data-a="addsub" data-v="${t.id}" aria-label="Add a team under ${esc(t.name)}" title="Add a team under ${esc(t.name)}">${I('plus',14)}</button></div>
       ${kidsHTML?`<ul>${kidsHTML}</ul>`:''}</li>`; };
   const top=kids(null);
@@ -897,9 +897,9 @@ body.light .ocw{background-image:radial-gradient(circle at 1px 1px,#c1bdda 1.1px
 function expandHTML(t){ const ks=kids(t.id);
   return `<div class="xp" data-a="noop">
     <input class="nm" value="${esc(t.name)}" data-a="rename" data-v="${t.id}" aria-label="Team name">
-    <h5>Members · ${t.m.length}</h5>
-    <div class="mlist">${t.m.map(([p,r])=>`<div class="mr2">${pAv(p,'sm')}<b>${esc(PB[p].n)}</b><button class="role" data-a="role" data-v="${t.id}|${p}">${r}${I('cd',12)}</button><button class="ib" data-a="rmm" data-v="${t.id}|${p}" aria-label="Remove ${esc(PB[p].n)}">${I('x',12)}</button></div>`).join('')||'<span class="none">No members yet. Invite people to this team.</span>'}</div>
-    <div class="inv2"><input class="ie" data-v="${t.id}" type="text" placeholder="Name or email" aria-label="Invite by name or email" autocomplete="off"><button class="btn primary sm" data-a="invin" data-v="${t.id}">Invite</button></div>
+    <h5>Members · ${t.m.length}<span class="sp"></span>${S.invOpen===t.id?'':`<button class="btn sm" data-a="invo" data-v="${t.id}">${I('plus',12)}Invite</button>`}</h5>
+    <div class="mlist">${t.m.map(([p,r])=>`<div class="mr2 ${S.justAdded===p?'nw':''}">${pAv(p,'sm')}<b>${esc(PB[p].n)}</b><button class="role" data-a="role" data-v="${t.id}|${p}">${r}${I('cd',12)}</button><button class="ib" data-a="rmm" data-v="${t.id}|${p}" aria-label="Remove ${esc(PB[p].n)}">${I('x',12)}</button></div>`).join('')||'<span class="none">No members yet. Invite people to this team.</span>'}</div>
+    ${S.invOpen===t.id?`<div class="inv2"><input class="ie" data-v="${t.id}" type="text" placeholder="Name or email" aria-label="Invite by name or email" autocomplete="off"><button class="btn primary sm" data-a="invin" data-v="${t.id}">Invite</button><button class="ib" data-a="invc" aria-label="Cancel invite">${I('x',12)}</button></div>`:''}
     <div class="acts2"><button class="btn" data-a="addsub" data-v="${t.id}">${I('plus',12)}Sub-team</button><button class="btn" data-a="move" data-v="${t.id}">Move</button><button class="btn" style="color:var(--danger-text)" data-a="del" data-v="${t.id}">${I('trash',12)}Delete</button><span style="flex:1"></span><button class="ib" data-a="panelx" aria-label="Close">${I('x',14)}</button></div></div>`; }
 /* the expanded card is part of the chart: mark it, and open a new team straight away */
 { const _c=chartHTML; chartHTML=function(){ let h=_c(); if(S.panel) h=h.replace(`class="ocard on" draggable="true" data-id="${S.panel}"`,`class="ocard on open" draggable="false" data-id="${S.panel}"`); return h; }; }
@@ -943,9 +943,44 @@ const add=(tid,el)=>{ const inp=el&&el.closest('.xp')?el.closest('.xp').querySel
   if(!p){ if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){ toast('Type a name from your org or an email address'); inp.focus(); return; }
     const id='u'+Date.now(); const n=v.split('@')[0].replace(/[._-]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase()); PEOPLE.push([id,n,v]); PB[id]={id,n,e:v,c:COLORS[PEOPLE.length%COLORS.length]}; p=PB[id]; }
   if(t.m.some(x=>x[0]===p.id)){ toast(`${p.n} is already in ${t.name}`); return; }
-  t.m.push([p.id,'Contributor']); toast(`Invited ${p.n} to ${t.name} as Contributor`); render(); setTimeout(()=>{ const n=document.querySelector(`.ie[data-v="${tid}"]`); if(n) n.focus(); },0); };
+  S.justAdded=p.id; t.m.push([p.id,'Contributor']); toast(`Invited ${p.n} to ${t.name} as Contributor`); render(); setTimeout(()=>{ const n=document.querySelector(`.ie[data-v="${tid}"]`); if(n) n.focus(); },0); };
 A.invin=(v)=>add(v,document.activeElement&&document.activeElement.classList.contains('ie')?document.activeElement:null);
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('ie')){ e.preventDefault(); add(e.target.dataset.v,e.target); } });
+})();
+</script>
+<style>.ocard .ex.exo{left:50%!important;right:auto!important;transform:translateX(-50%)!important;bottom:-30px!important;height:22px;padding:0 10px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;color:var(--text);background:var(--panel);border-color:var(--border-strong);z-index:2}</style>
+<style>
+/* one width for every node; smooth open, add and invite */
+.ocard,.ocard.pc,.ocard.open,.ocard.nw{width:272px!important;box-sizing:border-box}
+.ocard{transition:border-color .15s,box-shadow .15s,background .15s}
+.ocard.open .xp.anim{animation:xpIn .32s cubic-bezier(.2,.8,.2,1) both;overflow:hidden}
+@keyframes xpIn{from{opacity:0;max-height:0;transform:translateY(-4px)}to{opacity:1;max-height:900px;transform:none}}
+.ocard.nw{animation:ocIn .24s cubic-bezier(.2,.8,.2,1) both}
+@keyframes ocIn{from{opacity:0;transform:scale(.96) translateY(-6px)}to{opacity:1;transform:none}}
+.ocard .xp .mr2.nw{animation:rowIn .3s ease both}
+@keyframes rowIn{from{opacity:0;transform:translateX(-6px);background:var(--selected)}to{opacity:1;transform:none;background:transparent}}
+.ocard .xp .inv2{animation:rowIn .22s ease both}
+.oc li>ul{animation:subIn .28s cubic-bezier(.2,.8,.2,1) both}
+@keyframes subIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.oc li.still>ul{animation:none}
+@media (prefers-reduced-motion:reduce){.ocard,.ocard *,.oc li>ul{animation:none!important;transition:none!important}}
+</style>
+<script>
+(function(){
+A.invo=v=>{ S.invOpen=v; render(); setTimeout(()=>{ const i=document.querySelector(`.ie[data-v="${v}"]`); if(i) i.focus(); },0); };
+A.invc=()=>{ S.invOpen=null; render(); };
+/* animate only what changed: the card that just opened, sub-teams that just expanded */
+let lastPanel=null, lastOpen=new Set(S.open?[...S.open]:[]);
+const _r=render; render=function(){ const pc=S.panel!==lastPanel; if(pc&&S.panel!==S.invOpen) S.invOpen=null; _r();
+  if(pc&&S.panel){ const x=document.querySelector('.ocard.open .xp'); if(x) x.classList.add('anim'); }
+  document.querySelectorAll('.oc li').forEach(li=>{ const c=li.querySelector(':scope > .ocard[data-id]'); const id=c&&c.dataset.id; if(id&&lastOpen.has(id)) li.classList.add('still'); });
+  lastPanel=S.panel; lastOpen=new Set(S.open?[...S.open]:[]); lastOpen.add('__root'); setTimeout(()=>{ S.justAdded=null; },400); };
+/* click on empty canvas: cancel a new team, close the open card */
+let down=null;
+document.addEventListener('pointerdown',e=>{ down=e.target.closest&&e.target.closest('.ocw')?{x:e.clientX,y:e.clientY}:null; },true);
+document.addEventListener('click',e=>{ if(!down) return; const moved=Math.hypot(e.clientX-down.x,e.clientY-down.y)>4; down=null; if(moved) return;
+  if(!e.target.closest('.ocw')||e.target.closest('.ocard,button,input,select,.zm,.hint,.menu')) return;
+  if(S.adding||S.panel){ S.adding=null; S.panel=null; S.invOpen=null; render(); } },true);
 })();
 </script>
 </body>
