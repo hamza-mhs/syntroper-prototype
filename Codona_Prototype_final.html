@@ -13683,6 +13683,11 @@ const L=[
  ['Change specifications','Diagrams open by default','A use case spec shows its Flowchart, Sequence or Swim lane straight away; a bounded context spec shows its boundary diagram.', ()=>{ H0(); ACT.tab('specs'); ACT.spopen('cs4'); }, ['#csDoc .udg']],
  ['Change specifications','Use case proposal','Goal, then Persona · Channel · Business system, then the proposed flow: who does each step, and every decision branch with where it goes. Click a destination to jump to it. View diagram shows Flowchart, Sequence or Swim lane of the same flow. Outcomes list every ending. The rail shows context, channel and reviewer as picked.', ()=>{ H0(); ACT.spopen('cs4'); }, ['#vSpecs .usl']],
  ['New use case','Two-column details, drag handles','Details fields sit in two columns. Steps have a drag handle instead of a number. When the persona is called System, the buttons read Persona · System and Commerce platform.', NP(2), ['#npModal .grip2']],
+ ['Change specifications','Filter, decisions, side panel','Filter opens a popover with checkboxes for status and type. Decisions needed open like questions: pick an answer, add a note, Answer; Reopen to change it. Review, History and Publish sit in a sticky side panel; each card collapses, and Hide folds the whole panel to icons.', ()=>{ H0(); ACT.tab('specs'); }, ['.csside']],
+ ['Change specifications','Share like a workload','Share follows the Figma share dialog: Copy link, Who can view, people with access and roles, invite by email, and Embed with the iframe code.', ()=>{ H0(); ACT.tab('specs'); ACT.spopen('cs1'); ACT.sdshare(); }, ['#sdModal .shm']],
+ ['Change specifications','Real use case diagrams','A use case spec uses the same Flowchart, Sequence and Swim lane as Open sequence steps, embedded in the document. Drag to pan, ⌘ scroll to zoom.', ()=>{ H0(); ACT.tab('specs'); ACT.spopen('cs4'); }, ['#csDoc .udg-live']],
+ ['New use case','All three steps on the canvas','Details, Steps and Review all sit in the floating sidebar. On Details the canvas says the diagram will appear there. Review is grouped into Summary, Steps and Endings. Saving shows View spec.', NP(1), ['#npModal .npside']],
+ ['Teams','Invite on demand, smooth cards','Cards share one width. Invite is a small button that opens the field. Opening a card, expanding sub-teams, adding a team or a member animate. Clicking empty canvas cancels a new team and closes the open card.', TAB('teams'), ['#vTeams']],
  ['Teams','Sub-team count on the line','An expanded team shows a chip on its connector, like 2 sub-teams · 1 person. Click it to collapse.', TAB('teams'), ['#vTeams']],
  ['Teams','Invite inside the card','The open card has a name-or-email field and Invite. No dialog.', TAB('teams'), ['#vTeams']],
  ['Change specifications','A document you can share','Share opens link, access and people with view, comment or edit. Publish and Share sit at the top.', ()=>{ H0(); ACT.tab('specs'); ACT.spopen('cs1'); ACT.sdshare(); }, ['#sdModal .sdm']],
@@ -14520,7 +14525,7 @@ Object.assign(ACT,{
   ucdv(a){ const [id,k]=a.split('|'); S.ucdv=S.ucdv||{}; S.ucdv[id]=k||null; R(); },
   ucjump(a){ const [id,j]=a.split('|'); const el=document.getElementById(`ust-${id}-${j}`); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'),1200); } },
   sdcopy(){ toast('Link copied. People with access can open it.'); },
-  sdinv(n){ cur().share.people.push([n,'Can view']); shareDlg(); toast(`Shared with ${n}.`); },
+  sdinv(n){ cur().share.people.push([n,'Viewer']); shareDlg(); toast(`Shared with ${n}.`); },
   sdinv2(){ const x=cur(); const e=document.getElementById('sdInv'); const v=(e&&e.value||'').trim(); const r=(document.getElementById('sdInvR')||{}).value||'Viewer'; if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)&&!DIR.includes(v)){ toast('Type an email address'); if(e) e.focus(); return; } const n=DIR.find(d=>mail(d)===v.toLowerCase()||d===v)||v; if(x.share.people.some(p=>p[0]===n)){ toast(`${n} already has access`); return; } x.share.people.push([n,r]); shareDlg(); toast(`Invited ${n} as ${r}.`); },
   sdemb(){ shareDlg('embed'); }, sdembx(){ shareDlg('main'); }, sdcopyif(){ toast('Iframe code copied.'); },
   sdadd(){ revDlg(); }, sdpick(n){ const x=cur(); x.reviewers.push([n,'pending']); close(); R(); },
@@ -14812,6 +14817,7 @@ try{ render(); }catch(e){}
 #csDoc .udg-live #ucFlow{position:absolute!important;inset:0!important;z-index:1;border-radius:11px}
 #csDoc .udg-hint{position:absolute;right:10px;bottom:8px;z-index:2;font:400 11px/16px var(--font);color:var(--text-3);pointer-events:none}
 body.cs2 #ucLeg{display:none!important}
+body.cs2 #cTop .fvt,body.cs2 #cTop .sql,body.cs2 #cTop .fx-close{display:none!important}
 /* share dialog, as in Figma */
 .sdm.shm{width:424px;padding:0;background:var(--canvas);border:1px solid var(--border-strong)}
 .shm .shh{display:flex;align-items:center;gap:8px;padding:18px 20px 10px} .shm .shh b{flex:1;font:600 15px/20px var(--font)}
@@ -14825,6 +14831,9 @@ body.cs2 #ucLeg{display:none!important}
 .shm .shinv input{flex:1;min-width:0;height:100%;background:transparent;border:0;outline:0;color:var(--text);font:400 13px/18px var(--font)}
 .shm .shs{appearance:none;-webkit-appearance:none;height:26px;padding:0 24px 0 8px;border-radius:6px;border:1px solid var(--border-strong);background:var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a3a7b5' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 7px center;color:var(--text);font:500 12px/16px var(--font)}
 .shm .shinv .btn{height:28px}
+.shm select.shs{width:auto!important;flex:none;height:26px!important;padding:0 24px 0 8px!important}
+.shm .shsel select{background-image:none!important;padding:0!important;height:100%!important;border:0!important}
+.shm .shinv input{min-width:120px}
 .shm .shp{display:flex;flex-direction:column;gap:4px}
 .shm .shr{display:flex;align-items:center;gap:10px;padding:6px 0} .shm .shr .nm{flex:1;min-width:0} .shm .shr b{display:block;font:500 13px/18px var(--font)} .shm .shr small{font:400 12px/16px var(--font);color:var(--text-3)}
 .shm .own{font:500 12px/16px var(--font);color:var(--text-3);padding-right:4px}
@@ -14894,12 +14903,19 @@ try{ render(); }catch(e){}
 /* FB89 · new use case: every step in the floating sidebar; Review structured; translucent checks */
 body.npscr.npcv #npModal .npside .npb1{flex:1;min-height:0;overflow:auto;display:block!important;padding:0!important}
 body.npscr.npcv #npModal .npside .npb1 .npc{display:flex!important;flex-direction:column;gap:18px;max-width:none;margin:0;padding:18px 20px!important}
-#npModal .npph{position:absolute;left:520px;top:16px;right:16px;bottom:16px;display:grid;place-items:center;pointer-events:none}
+#npModal .npph{position:absolute;inset:0;padding-left:512px;display:grid;place-items:center;pointer-events:none;z-index:1;background-color:var(--canvas);background-image:radial-gradient(circle at 1px 1px,var(--surface) 1px,transparent 1.2px);background-size:18px 18px}
+body.npscr.npcv #npModal .npside{z-index:3}
+body.npscr.npcv #npModal .npside .npb1 .fld,body.npscr.npcv #npModal .npside .npb1 .field,body.npscr.npcv #npModal .npside .npb1 .selw,body.npscr.npcv #npModal .npside .npb1 .pfs,body.npscr.npcv #npModal .npside .npb1 .pfs-b{width:100%!important;max-width:none!important}
 #npModal .npph div{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--text-3);font:400 14px/20px var(--font)}
 #npModal .npph svg{color:var(--text-3);opacity:.7}
 .npsteps button.done .k{background:var(--ok-sub,rgba(52,199,89,.16))!important;color:var(--ok-text,#b3efbd)!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ok,#34c759) 40%,transparent)}
 .npx .us .sg button{white-space:nowrap}
 .nprv{display:flex;flex-direction:column;gap:0}
+body.npscr #npModal .ncm.npm{top:var(--npT,52px)!important;bottom:0!important;height:auto!important;max-height:none!important;min-height:0!important}
+body.npscr.npcv #npModal .npside{top:16px!important;bottom:16px!important;height:auto!important;max-height:none!important}
+#npModal .nprv .kv>span{text-align:left!important;justify-self:start!important;margin:0!important;float:none!important}
+.nprv li.dec{border:0!important;padding:8px 0!important;border-radius:0!important}
+.nprv li .br b{display:inline-block;min-width:44px;white-space:nowrap}
 .nprv .rs{padding:16px 0;border-bottom:1px solid var(--border)} .nprv .rs:first-child{padding-top:4px} .nprv .rs:last-child{border-bottom:0}
 .nprv h4{display:flex;align-items:center;gap:8px;margin:0 0 10px;font:600 13px/18px var(--font);color:var(--text)} .nprv h4 .count{margin-left:0}
 .nprv .chip{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:999px;background:var(--surface);font:500 12px/16px var(--font);color:var(--text-2)} .nprv .chip i{width:7px;height:7px;border-radius:50%;background:#a3a7b5}
