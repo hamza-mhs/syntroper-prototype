@@ -8063,7 +8063,7 @@ const SPARK_BG='M23.8163 3.91421C24.5973 3.13317 25.8636 3.13317 26.6447 3.91421
 const SPARK='M25.25 5.62109C25.4086 5.62109 25.5789 5.72332 25.6221 5.91992L25.8477 6.9082C25.9759 7.47177 26.4011 7.91743 26.9434 8.08398L28.041 8.33887C28.2415 8.39867 28.3398 8.56154 28.3398 8.71875C28.3397 8.87723 28.2374 9.04661 28.041 9.08984L27.0527 9.31641C26.4514 9.45312 25.9849 9.92799 25.8477 10.5225L25.6221 11.5098C25.5622 11.7102 25.3993 11.8085 25.2422 11.8086C25.0816 11.8086 24.9086 11.7035 24.8682 11.502L24.6445 10.5215C24.5078 9.92014 24.0329 9.45363 23.4385 9.31641L22.4512 9.09082C22.2507 9.03107 22.1525 8.86808 22.1523 8.71094C22.1523 8.55209 22.255 8.38174 22.4521 8.33887L23.4395 8.11328C24.0031 7.98517 24.4486 7.55984 24.6152 7.01758L24.8701 5.91992C24.9299 5.71935 25.0928 5.62114 25.25 5.62109Z';
 /* filled tile (selected / avatar) or outline (dock, not active) */
 const HEXP=SPATH.slice(0,SPATH.indexOf('ZM')+1), SSHP=SPATH.slice(SPATH.indexOf('ZM')+1);
-window.sIc = (s=20, filled=true) => `<svg class="sai" width="${s}" height="${s}" viewBox="0 0 32 32" aria-hidden="true">${filled?'<rect width="32" height="32" rx="8" fill="#624ED5"/>':''}<path d="${HEXP}" fill="none" stroke="${filled?'#fff':'currentColor'}" stroke-width="1.3"/><path d="${SSHP}" fill="${filled?'#fff':'none'}" stroke="${filled?'none':'currentColor'}" stroke-width="1.3"/><path d="${SPARK_BG}" style="fill:${filled?'#624ED5':'var(--panel)'}"/><path d="${SPARK}" fill="${filled?'#fff':'currentColor'}"/></svg>`;
+window.sIc = (s=20, filled=true) => `<svg class="sai" width="${s}" height="${s}" viewBox="0 0 32 32" aria-hidden="true">${filled?'<rect width="32" height="32" rx="8" fill="#624ED5"/>':''}<path d="${HEXP}" fill="none" stroke="${filled?'#fff':'currentColor'}" stroke-width="1.3"/><path d="${SSHP}" fill="${filled?'#fff':'currentColor'}"/><path d="${SPARK_BG}" style="fill:${filled?'#624ED5':'var(--panel)'}"/><path d="${SPARK}" fill="${filled?'#fff':'currentColor'}"/></svg>`;
 AUTHORS.Syntroper = AUTHORS.Syntroper || {org:'Syntroper', c:'#624ed5'};
 
 S.ucx = {f:{src:[]}, hl:null, alt:{}, log:{}, flow:null, pop:null};
@@ -9333,8 +9333,8 @@ function roomHTML(id){ const R=room(id), u=UCB[id]; const mem=members(id); const
   return `<section class="card fill room-card"><div class="ch flat"><div class="rp-h"><button class="back" data-act="rpback">${I('arrow-left',16)}<span>${esc(u.name)}</span></button><span class="sp"></span><button class="ib" data-act="rpclose" aria-label="Close details">${I('x',16)}</button></div></div>
     <div class="room-h"><div class="t"><h2 class="rh2">${kindIc('usecase',16)}<span>${esc(u.name)}</span></h2><span class="sp"></span><button class="room-who rw2" data-act="rmem" data-arg="${id}" aria-haspopup="dialog" aria-label="${mem.length} members"><span class="stack">${mem.slice(0,3).map(n=>pAv(n,22)).join('')}</span>${mem.length>3?`<span class="more">+${mem.length-3}</span>`:''}${I('chevron-right',14)}</button></div></div>
     <div class="room-th" id="roomTh">${msgs}</div>
-    <div class="room-c">${sum}<textarea id="roomDraft" rows="2" placeholder="${fl?'What should change?':'Message #'+esc(slug(id))+', or @Syntroper'}">${esc(S.room.draft[id]||'')}</textarea>
-      <div class="f"><button class="room-flag ${fl?'on':''}" data-act="roomflag" data-arg="${id}" aria-pressed="${fl}">${I('flag',14)}Change request</button><span class="sp"></span><button class="aic-s" data-act="roompost" data-arg="${id}" aria-label="Send" ${(S.room.draft[id]||'').trim()?'':'disabled'}>${I('send',15)}</button></div></div></section>`; }
+    <div class="room-c">${sum}<div class="aicmp rcmp"><textarea id="roomDraft" rows="2" placeholder="${fl?'What should change?':'Message #'+esc(slug(id))+', or @Syntroper'}" aria-label="Message">${esc(S.room.draft[id]||'')}</textarea>
+      <div class="aicf"><button class="aic-b" data-act="toast" data-arg="Attachments are not part of this prototype." aria-label="Attach">${I('plus',16)}</button><span class="sp"></span><button class="aic-b" data-act="toast" data-arg="Voice input is not part of this prototype." aria-label="Voice">${I('wave',16)}</button><button class="aic-s" data-act="roompost" data-arg="${id}" aria-label="Send" ${(S.room.draft[id]||'').trim()?'':'disabled'}>${I('send',15)}</button></div></div></div></div></section>`; }
 function bindRoom(id){ const ta=$('#roomDraft'); if(!ta) return; ta.oninput=()=>{ S.room.draft[id]=ta.value; const b=$('#cxItem [data-act=roompost]'); if(b) b.disabled=!ta.value.trim(); };
   ta.onkeydown=e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); ACT.roompost(id); } };
   const th=$('#roomTh'); if(th && S.room.bottom){ th.scrollTop=th.scrollHeight; S.room.bottom=false; }
@@ -15350,5 +15350,24 @@ try{ render(); }catch(e){ console.error(e); }
 })();
 </script>
 
+<style>
+/* FB97 · chat room input uses the DS Chat/Composer (Syntroper chat): field on top, attach left, voice + send right. No Change request chip. */
+.room-c .aicmp.rcmp{margin:0}
+.aicmp:focus-within,.aicmp.rcmp:focus-within{border-color:transparent;background:linear-gradient(var(--canvas),var(--canvas)) padding-box,linear-gradient(90deg,#816cf8,#ca6eff) border-box}
+.room-flag{display:none!important}
+.room-c .rcmp textarea,.room-c .rcmp textarea:focus{border:0!important;background:none!important;box-shadow:none!important;border-radius:0;padding:4px;min-height:60px;max-height:140px;outline:none}
+</style>
+<style>
+/* FB98 · light mode: white chat sidebar, search fields with a border and depth, composer on white */
+body.light #aiChat.aichat{background:#fff}
+body.light .aicmp{background:#fff}
+body.light .aicmp:focus-within{background:linear-gradient(#fff,#fff) padding-box,linear-gradient(90deg,#816cf8,#ca6eff) border-box}
+body.light .tb-s{background:#fff;border:1px solid var(--border-strong,#c1bdda);box-shadow:inset 0 1px 2px rgba(16,24,40,.06)}
+body.light .tb-s:focus-within{border-color:var(--accent)}
+body.light .field{background:#fff;border-color:var(--border-strong,#c1bdda);box-shadow:inset 0 1px 2px rgba(16,24,40,.06)}
+body.light .field:focus-within{border-color:var(--accent)}
+/* card buttons hug their label: padding instead of a fixed width */
+#cPanel .cta .btn,.cta .btn{min-width:0!important;width:auto!important;flex:none;padding:0 16px}
+</style>
 </body>
 </html>
