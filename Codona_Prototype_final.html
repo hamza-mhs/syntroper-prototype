@@ -15382,6 +15382,41 @@ body.light #csList .ty.rf,body.light .csc .ty.rf{color:var(--k-bounded-context);
 body.light .tb-s{background:#f5f5f5!important;border:1px solid #e4e7f0!important;box-shadow:inset 0 1px 2px rgba(16,24,40,.05)!important}
 body.light .tb-s input{background:transparent}
 body.light .tb-s:focus-within{border-color:var(--accent)!important;background:#fff!important}
+/* FB100 · light mode: every search bar and input field gets the top bar search depth (#F5F5F5 fill, #E4E7F0 border, soft inset shadow; white + accent border on focus). Chat composers (.aicmp, .cx-box) keep the AI composer look. */
+body.light .tb-s,body.light .lf{background-color:#f5f5f5!important;border-color:#e4e7f0!important;box-shadow:inset 0 1px 2px rgba(16,24,40,.05)!important}
+body.light .tb-s:focus-within,body.light .lf:focus,body.light .lf:focus-within{background-color:#fff!important;border-color:var(--accent)!important}
+body.light .lf input,body.light .lf textarea,body.light .lf select{background-color:transparent!important}
+body.light .lf.err{box-shadow:inset 0 0 0 1px var(--danger-text)!important}
 </style>
+<script>
+/* FB100 · tag input boxes so light mode can give them one look */
+(function(){
+  var CTRL='input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=hidden]):not([type=color]):not([type=button]):not([type=submit]),textarea,select';
+  var SKIP='.aicmp,.cx-box,.npai';
+  function bordered(el){ var c=getComputedStyle(el);
+    if(['Top','Right','Bottom','Left'].some(function(k){return !(parseFloat(c['border'+k+'Width'])>0)||c['border'+k+'Style']==='none';})) return false;
+    var bc=c.borderTopColor; return !(bc==='transparent'||/rgba\([^)]*,\s*0\)$/.test(bc)); }
+  function boxOf(el){
+    if(el.closest(SKIP)) return null;
+    if(bordered(el)) return el;
+    var p=el.parentElement;
+    for(var i=0;i<2&&p&&p!==document.body;i++,p=p.parentElement){
+      if([].filter.call(p.querySelectorAll(CTRL),function(x){return !bordered(x);}).length!==1) return null;
+      if(p.offsetHeight>240) return null;
+      if(bordered(p)) return p;
+    }
+    return null;
+  }
+  var t=null;
+  function scan(){ t=null; document.querySelectorAll(CTRL).forEach(function(el){
+      if(el.__lfDone&&el.__lfBox&&el.__lfBox.isConnected&&el.__lfBox.classList.contains('lf')) return;
+      if(!el.offsetParent) return;
+      var b=boxOf(el); el.__lfDone=true; el.__lfBox=b; if(b) b.classList.add('lf'); }); }
+  function later(){ if(!t) t=setTimeout(scan,60); }
+  new MutationObserver(later).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden']});
+  document.addEventListener('focusin',later,true);
+  scan();
+})();
+</script>
 </body>
 </html>
