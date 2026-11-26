@@ -11990,7 +11990,7 @@ const stick=()=>{ const side=document.getElementById('cxItem'); if(!side) return
   if(room&&typeof room.cloneNode!=='function') return; let bar=sc.querySelector(':scope>.ucstk'); if(!det||!room||!det.querySelector('.ucr')){ if(bar) bar.remove(); return; }
   const title=(det.querySelector('h2 span')||det.querySelector('h2')).textContent;
   if(!bar){ bar=document.createElement('div'); bar.className='ucstk'; sc.insertBefore(bar,sc.firstChild); }
-  bar.innerHTML=`<h3>${esc(title)}</h3>`; bar.appendChild(room.cloneNode(true));
+  bar.innerHTML=`<div class="ucstk-in"><h3>${esc(title)}</h3></div>`; const inn=bar.firstChild; inn.appendChild(room.cloneNode(true)); const im=sc.querySelector('.det .ucimpl'); if(im) inn.appendChild(im.cloneNode(true));
   const upd=()=>{ const r=room.getBoundingClientRect(), t=sc.getBoundingClientRect().top; const past=r.bottom < t+4; bar.classList.toggle('on',past); };
   if(!sc.__stk){ sc.__stk=1; sc.addEventListener('scroll',upd,{passive:true}); } upd(); };
 { const _r=render; render=function(){ _r(); stick(); }; }
@@ -13405,7 +13405,34 @@ window.pnodes=t=>!t.m.length?'':'<li class="pli mli"><div class="mstack">'+t.m.m
 .oc li.mli .ocard.pn+.ocard.pn::before{content:"";position:absolute;left:50%;top:-15px;height:14px;width:0;border-left:1px solid var(--line,var(--border-strong))}
 </style>
 <SCRIPT_START>try{ render(); }catch(e){}<\/script>
-<style>.ocard.pn{width:212px!important;padding:8px 10px!important;gap:8px!important}.ocard.pn .av{width:28px!important;height:28px!important;font-size:11px!important}</style>
+<style>.ocard.pn{width:212px!important;padding:8px 10px!important;gap:8px!important}.ocard.pn .av{width:28px!important;height:28px!important;font-size:11px!important}/* FB101 · use case panel: sticky bar no longer shifts the content (no flicker); Explore implementation + Show evidence under the chat room and in the sticky bar; collapsed groups use even, tighter spacing */
+.ucstk{position:sticky!important;top:0;z-index:4;height:0!important;margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;background:none!important;display:block!important;overflow:visible}
+.ucstk-in{position:absolute;left:0;right:0;top:0;display:flex;flex-direction:column;gap:8px;padding:14px 22px 12px;background:var(--panel);border-bottom:1px solid var(--border);box-shadow:0 8px 12px -10px rgba(0,0,0,.6);opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .12s,transform .12s}
+.ucstk.on .ucstk-in{opacity:1;transform:none;pointer-events:auto}
+.ucstk-in h3{margin:0;padding-right:36px;font:600 16px/22px var(--font);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ucstk-in .rme2{margin:0!important}
+body.light .ucstk-in{background:#ffffff;box-shadow:0 8px 12px -10px rgba(19,22,32,.18)}
+.ucimpl{display:flex;gap:8px;margin:8px 0 0}
+.ucimpl .btn{flex:1 1 0;min-width:0;height:36px;font:500 13px/18px var(--font)}
+.ucstk-in .ucimpl{margin:0}
+.grp:has(> .cx-gh[aria-expanded="false"]){padding-bottom:0}
+.grp-h.cx-gh[aria-expanded="false"]{padding-top:10px;padding-bottom:10px}
+</style>
+<script>
+/* FB101 */
+(function(){
+  const implHTML=id=>`<div class="ucimpl"><button class="btn" data-act="ucexplore" data-arg="${id}">${I('layers',14)}Explore implementation</button><button class="btn" data-act="ucevidence" data-arg="${id}">${I('code',14)}Show evidence</button></div>`;
+  const _ih=itemHTML; itemHTML=function(sel,o={}){ let h=_ih(sel,o); if((o&&o.lib)||sel.t!=='uc'||!UCR[sel.id]) return h;
+    h=h.replace(/<div class="acts"><button class="btn primary" data-act="explore">[\s\S]*?<\/div>/,'');
+    const k=h.indexOf('<button class="rme rme2"'); if(k>=0&&h.indexOf('class="ucimpl"')<0){ const e=h.indexOf('</button>',k)+9; h=h.slice(0,e)+implHTML(sel.id)+h.slice(e); }
+    return h; };
+  Object.assign(ACT,{
+    ucexplore(id){ if(id===UC_LEVELS) return ACT.explore(); ACT.ucview(id+'|flow'); },
+    ucevidence(id){ if(id===UC_LEVELS) return ACT.evidence(); const b=(typeof codeOf==='function'?codeOf(id):[]).find(x=>x&&x.file); if(b&&window.ideOpen) ideOpen(b.file,b.line||null,b.repo||null); else toast('No code evidence for this use case yet'); }
+  });
+  try{ render(); }catch(e){}
+})();
+</script>
 </body>
 </html>
 </script>
@@ -15416,6 +15443,44 @@ body.light .lf.err{box-shadow:inset 0 0 0 1px var(--danger-text)!important}
   new MutationObserver(later).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden']});
   document.addEventListener('focusin',later,true);
   scan();
+})();
+</script>
+<style>
+/* FB102 · levels belong to a use case: the level switch in the dock is hidden on the Galaxy until a use case is selected, then slides in */
+#cDock .lvt.lv-in,#cDock .dv.lv-in{animation:lvIn .32s cubic-bezier(.2,.8,.2,1) both}
+@keyframes lvIn{from{opacity:0;max-width:0;transform:translateX(8px)}to{opacity:1;max-width:320px;transform:none}}
+#cDock .lvt.lv-in{overflow:hidden}
+.lvmenu .lv-note{margin:4px 8px 6px;padding:8px 10px;border-radius:8px;background:var(--surface);font:400 12px/17px var(--font);color:var(--text-2)}
+</style>
+<script>
+/* FB102 · levels follow the selected use case (docs 9.18 rule 1: a level without a use case falls back to L0) */
+(function(){
+  const selUc=()=>S.side&&S.side.v==='item'&&S.side.sel&&S.side.sel.t==='uc'?S.side.sel.id:null;
+  /* where the level switch belongs: inside the levels, on a question's code view, or with a use case picked */
+  const lvOn=()=>S.side.v==='level'||canvasLevel()>0||!!selUc();
+  window.lvOn=lvOn;
+  let shown=null;
+  const _dk=dockHTML;
+  dockHTML=function(pct,lib){
+    if(lib) return _dk(pct,lib);
+    const on=lvOn(); if(!on) S.lvMenu=false;
+    let h=_dk(pct,lib);
+    if(!on){ h=h.replace(/<span class="dv"><\/span>\s*<button class="lvt"[\s\S]*?<\/button>/,''); shown=false; return h; }
+    const anim=shown===false; shown=true;
+    if(anim) h=h.replace('<span class="dv"></span>','<span class="dv lv-in"></span>').replace('<button class="lvt"','<button class="lvt lv-in"');
+    const uid=S.side.v==='level'?UC_LEVELS:selUc();
+    if(uid&&UCB[uid]) h=h.replace('<div class="mh"><b>Levels</b><span>Complete Checkout</span></div>',`<div class="mh"><b>Levels</b><span>${esc(UCB[uid].name)}</span></div>`);
+    if(uid&&uid!==UC_LEVELS&&S.side.v!=='level'){
+      /* only Complete Checkout has modelled levels in this prototype */
+      h=h.replace(/<button class="lvi ([^"]*)" data-act="lvl" data-arg="([1-4])"/g,'<button class="lvi $1" data-act="lvl" data-arg="$2" disabled');
+      h=h.replace(/(<div class="lvmenu float"><div class="mh">[\s\S]*?<\/div>)/,'$1<div class="lv-note">Levels 1 to 4 are modelled for Complete Checkout in this prototype. Open it to try them.</div>');
+    }
+    return h; };
+  /* nothing picked: stay on Level 0 */
+  const _lvl=ACT.lvl;
+  ACT.lvl=function(a){ const n=+a; if(n>0&&!lvOn()){ toast('Select a use case to open its levels'); return; }
+    const u=selUc(); if(n>0&&u&&u!==UC_LEVELS&&S.side.v!=='level') return; return _lvl.call(this,a); };
+  try{ render(); }catch(e){}
 })();
 </script>
 </body>
