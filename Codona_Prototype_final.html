@@ -15447,9 +15447,26 @@ body.light .lf.err{box-shadow:inset 0 0 0 1px var(--danger-text)!important}
 </script>
 <style>
 /* FB102 · levels belong to a use case: the level switch in the dock is hidden on the Galaxy until a use case is selected, then slides in */
-#cDock .lvt.lv-in,#cDock .dv.lv-in{animation:lvIn .32s cubic-bezier(.2,.8,.2,1) both}
-@keyframes lvIn{from{opacity:0;max-width:0;transform:translateX(8px)}to{opacity:1;max-width:320px;transform:none}}
-#cDock .lvt.lv-in{overflow:hidden}
+/* the dock grows to make room, then the switch's parts arrive one after another; it folds away the same way */
+#cDock .lvt.lv-in,#cDock .lvt.lv-out{overflow:hidden;white-space:nowrap}
+#cDock .lvt.lv-in{animation:lvGrow .52s cubic-bezier(.22,1,.36,1) both}
+#cDock .dv.lv-in{animation:lvDv .52s cubic-bezier(.22,1,.36,1) both}
+#cDock .lvt.lv-in .th{animation:lvPop .46s cubic-bezier(.34,1.56,.64,1) .14s both}
+#cDock .lvt.lv-in .tx{animation:lvText .4s cubic-bezier(.22,1,.36,1) .2s both}
+#cDock .lvt.lv-in .chev{animation:lvText .36s cubic-bezier(.22,1,.36,1) .28s both}
+#cDock .lvt.lv-out{animation:lvShrink .3s cubic-bezier(.4,0,.2,1) both;pointer-events:none}
+#cDock .dv.lv-out{animation:lvDvOut .3s cubic-bezier(.4,0,.2,1) both}
+#cDock .lvt.lv-out>*{animation:lvFade .16s ease-out both}
+@keyframes lvGrow{0%{max-width:0;opacity:0;padding-left:0;padding-right:0;margin-left:0;margin-right:0}35%{opacity:1}100%{max-width:420px;opacity:1}}
+@keyframes lvShrink{0%{max-width:420px;opacity:1}100%{max-width:0;opacity:0;padding-left:0;padding-right:0;margin-left:0;margin-right:0}}
+@keyframes lvDv{0%{opacity:0;transform:scaleY(0)}100%{opacity:1;transform:none}}
+@keyframes lvDvOut{to{opacity:0;transform:scaleY(0);margin-left:0;margin-right:0;width:0}}
+@keyframes lvPop{0%{opacity:0;transform:scale(.55) rotate(-25deg)}100%{opacity:1;transform:none}}
+@keyframes lvText{0%{opacity:0;transform:translateX(-10px);filter:blur(3px)}100%{opacity:1;transform:none;filter:none}}
+@keyframes lvFade{to{opacity:0}}
+#cDock.lv-breathe{animation:lvBreathe .6s cubic-bezier(.22,1,.36,1)}
+@keyframes lvBreathe{0%{box-shadow:var(--shadow)}40%{box-shadow:var(--shadow),0 0 0 3px var(--accent-sub)}100%{box-shadow:var(--shadow)}}
+@media (prefers-reduced-motion:reduce){#cDock .lv-in,#cDock .lv-in *,#cDock .lv-out,#cDock .lv-out *,#cDock.lv-breathe{animation:none!important}}
 .lvmenu .lv-note{margin:4px 8px 6px;padding:8px 10px;border-radius:8px;background:var(--surface);font:400 12px/17px var(--font);color:var(--text-2)}
 </style>
 <script>
@@ -15465,9 +15482,17 @@ body.light .lf.err{box-shadow:inset 0 0 0 1px var(--danger-text)!important}
     if(lib) return _dk(pct,lib);
     const on=lvOn(); if(!on) S.lvMenu=false;
     let h=_dk(pct,lib);
-    if(!on){ h=h.replace(/<span class="dv"><\/span>\s*<button class="lvt"[\s\S]*?<\/button>/,''); shown=false; return h; }
+    if(!on){
+      if(shown===true){ /* fold it away: keep it for the length of the animation, then drop it */
+        h=h.replace('<span class="dv"></span>','<span class="dv lv-out"></span>').replace('<button class="lvt"','<button class="lvt lv-out" tabindex="-1" aria-hidden="true"');
+        clearTimeout(window.__lvOutT); window.__lvOutT=setTimeout(()=>document.querySelectorAll('#cDock .lv-out').forEach(e=>e.remove()),320);
+      } else h=h.replace(/<span class="dv"><\/span>\s*<button class="lvt"[\s\S]*?<\/button>/,'');
+      shown=false; return h; }
     const anim=shown===false; shown=true;
-    if(anim) h=h.replace('<span class="dv"></span>','<span class="dv lv-in"></span>').replace('<button class="lvt"','<button class="lvt lv-in"');
+    if(anim){ h=h.replace('<span class="dv"></span>','<span class="dv lv-in"></span>').replace('<button class="lvt"','<button class="lvt lv-in"');
+      clearTimeout(window.__lvOutT);
+      requestAnimationFrame(()=>{ const d=document.getElementById('cDock'); if(!d) return; d.classList.remove('lv-breathe'); void d.offsetWidth; d.classList.add('lv-breathe');
+        setTimeout(()=>{ d.classList.remove('lv-breathe'); d.querySelectorAll('.lv-in').forEach(e=>e.classList.remove('lv-in')); },700); }); }
     const uid=S.side.v==='level'?UC_LEVELS:selUc();
     if(uid&&UCB[uid]) h=h.replace('<div class="mh"><b>Levels</b><span>Complete Checkout</span></div>',`<div class="mh"><b>Levels</b><span>${esc(UCB[uid].name)}</span></div>`);
     if(uid&&uid!==UC_LEVELS&&S.side.v!=='level'){
@@ -15480,6 +15505,52 @@ body.light .lf.err{box-shadow:inset 0 0 0 1px var(--danger-text)!important}
   const _lvl=ACT.lvl;
   ACT.lvl=function(a){ const n=+a; if(n>0&&!lvOn()){ toast('Select a use case to open its levels'); return; }
     const u=selUc(); if(n>0&&u&&u!==UC_LEVELS&&S.side.v!=='level') return; return _lvl.call(this,a); };
+  try{ render(); }catch(e){}
+})();
+</script>
+<style>
+/* FB103 · levels open on the right, beside the use case; the use cases list stays on the left */
+#cxItem.lvside .rp-h{display:flex;align-items:center;gap:8px;width:100%}
+#cxItem.lvside .rp-h .back{display:inline-flex;align-items:center;gap:6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+</style>
+<script>
+/* FB103 */
+(function(){
+  const rp=document.getElementById('cxItem'); if(!rp) return;
+  const ucName=()=>UCB[UC_LEVELS]?UCB[UC_LEVELS].name:'the use case';
+  const _rs=renderSide;
+  renderSide=function(){
+    const sd=S.side; const body=$('#cBody');
+    if(sd.v!=='level'||S.tab!=='codona'||(S.cx&&S.cx.min)){ rp.classList.remove('lvside'); return _rs.apply(this,arguments); }
+    const key='level:'+S.level+':'+(S.l2&&S.l2.tab||'');
+    const dsc=rp.querySelector('.scroll'); const keepDet=rp.dataset.key===key&&dsc?dsc.scrollTop:0;
+    const lsc=body.querySelector('.scroll'); const keepList=body.dataset.list==='2'&&lsc?lsc.scrollTop:null;
+    _rs.apply(this,arguments);                        /* the level panel renders into the left body first, so every patch still applies */
+    const html=body.innerHTML;
+    const lst=[...S.stack].reverse().find(x=>x.v==='layer'&&x.n===2)||{v:'layer',n:2};
+    S.side=lst; try{ _rs.apply(this,arguments); } finally { S.side=sd; }   /* the use cases list stays on the left */
+    body.dataset.list='2';
+    body.querySelectorAll('.row').forEach(r=>{ const on=r.dataset.arg==='uc:'+UC_LEVELS||r.dataset.arg===UC_LEVELS; r.classList.toggle('on',on); if(on) r.setAttribute('aria-current','true'); });
+    const sc=body.querySelector('.scroll'); if(sc){ if(keepList!=null) sc.scrollTop=keepList; else { const on=body.querySelector('.row.on'); if(on) on.scrollIntoView({block:'nearest'}); } }
+    rp.innerHTML=html; rp.hidden=false; rp.dataset.key=key; rp.classList.add('lvside');
+    const head=`<div class="rp-h"><button class="back" data-act="lvexit" title="Back to ${esc(ucName())}">${I('arrow-left',16)}${esc(ucName())}</button><span class="sp"></span><button class="ib" data-act="lvclose" aria-label="Close the levels">${I('x',16)}</button></div>`;
+    const bk=rp.querySelector('.back'); if(bk) bk.outerHTML=head; else rp.insertAdjacentHTML('afterbegin',head);
+    const d2=rp.querySelector('.scroll'); if(d2) d2.scrollTop=keepDet;
+  };
+  /* one step out of the levels, back to the use case, wherever you are in them */
+  function lvexit(){ S.node=null; S.level=0; S.q.file=null; if(S.lvMenu) S.lvMenu=false;
+    while(S.stack.length&&S.stack[S.stack.length-1].v==='level') S.stack.pop();
+    const t=S.stack[S.stack.length-1];
+    S.side = t&&t.v==='item' ? S.stack.pop() : {v:'item',sel:{t:'uc',id:UC_LEVELS}};
+    if(!S.stack.some(x=>x.v==='layer'&&x.n===2)) S.stack.push({v:'layer',n:2});
+    render(); }
+  Object.assign(ACT,{ lvexit, lvclose(){ lvexit(); if(ACT.rpclose) ACT.rpclose(); } });
+  const _gb=goBack; goBack=function(){ if(S.side.v==='level') return lvexit(); return _gb.apply(this,arguments); };
+  /* picking another use case in the list leaves the levels for that use case */
+  const _nav=navigate; navigate=function(next){ if(S.side.v==='level'&&next&&next.v==='item'){ S.level=0; S.node=null; S.q.file=null; while(S.stack.length&&S.stack[S.stack.length-1].v==='level') S.stack.pop(); S.side=next; render(); return; } return _nav.apply(this,arguments); };
+  /* level canvases fit in the space between the two panels */
+  const _fa=freeArea; freeArea=function(){ const a=_fa(); if(S.side.v==='level'&&!rp.hidden){ const w=rp.offsetWidth+24; a.w=Math.max(200,a.w-w); } return a; };
+  const _el=enterLevels; enterLevels=function(){ const r=_el.apply(this,arguments); requestAnimationFrame(()=>{ try{ if(S.side.v==='level'&&S.level<4) fitWorld(false); }catch(e){} }); return r; };
   try{ render(); }catch(e){}
 })();
 </script>
