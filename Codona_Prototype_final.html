@@ -15511,6 +15511,8 @@ body.light .lf.err{box-shadow:inset 0 0 0 1px var(--danger-text)!important}
 <style>
 /* FB103 · levels open on the right, beside the use case; the use cases list stays on the left */
 #cxItem.lvside .rp-h{display:flex;align-items:center;gap:8px;width:100%}
+/* the level's view tabs (L2 Solution · Security · Network, L3, L4) sit in the canvas, left of the level panel, not over it */
+#vCodona.lvr .topright{right:calc(var(--rpw,380px) + 28px)!important}
 #cxItem.lvside .rp-h .back{display:inline-flex;align-items:center;gap:6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 </style>
 <script>
@@ -15521,7 +15523,7 @@ body.light .lf.err{box-shadow:inset 0 0 0 1px var(--danger-text)!important}
   const _rs=renderSide;
   renderSide=function(){
     const sd=S.side; const body=$('#cBody');
-    if(sd.v!=='level'||S.tab!=='codona'||(S.cx&&S.cx.min)){ rp.classList.remove('lvside'); return _rs.apply(this,arguments); }
+    if(sd.v!=='level'||S.tab!=='codona'||(S.cx&&S.cx.min)){ rp.classList.remove('lvside'); const vc=$('#vCodona'); if(vc) vc.classList.remove('lvr'); return _rs.apply(this,arguments); }
     const key='level:'+S.level+':'+(S.l2&&S.l2.tab||'');
     const dsc=rp.querySelector('.scroll'); const keepDet=rp.dataset.key===key&&dsc?dsc.scrollTop:0;
     const lsc=body.querySelector('.scroll'); const keepList=body.dataset.list==='2'&&lsc?lsc.scrollTop:null;
@@ -15533,6 +15535,7 @@ body.light .lf.err{box-shadow:inset 0 0 0 1px var(--danger-text)!important}
     body.querySelectorAll('.row').forEach(r=>{ const on=r.dataset.arg==='uc:'+UC_LEVELS||r.dataset.arg===UC_LEVELS; r.classList.toggle('on',on); if(on) r.setAttribute('aria-current','true'); });
     const sc=body.querySelector('.scroll'); if(sc){ if(keepList!=null) sc.scrollTop=keepList; else { const on=body.querySelector('.row.on'); if(on) on.scrollIntoView({block:'nearest'}); } }
     rp.innerHTML=html; rp.hidden=false; rp.dataset.key=key; rp.classList.add('lvside');
+    const vc=$('#vCodona'); if(vc){ vc.classList.add('lvr'); vc.style.setProperty('--rpw',rp.offsetWidth+'px'); }
     const head=`<div class="rp-h"><button class="back" data-act="lvexit" title="Back to ${esc(ucName())}">${I('arrow-left',16)}${esc(ucName())}</button><span class="sp"></span><button class="ib" data-act="lvclose" aria-label="Close the levels">${I('x',16)}</button></div>`;
     const bk=rp.querySelector('.back'); if(bk) bk.outerHTML=head; else rp.insertAdjacentHTML('afterbegin',head);
     const d2=rp.querySelector('.scroll'); if(d2) d2.scrollTop=keepDet;
