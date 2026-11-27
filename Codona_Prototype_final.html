@@ -15052,10 +15052,6 @@ function review(M){ const per=pname(M); const clash=/^system$/i.test(per); const
         ${x.kind==='decision'?`<div class="br">${(x.opts||[]).map((o,k)=>`<div><span class="if">${k?'Else if':'If'}</span><span class="ot">${esc(o.t||'…')}</span><span class="ar">→</span><span class="dst">${to(o,i)}</span></div>`).join('')}</div>`:''}</div></li>`).join('')||'<li class="none">No steps yet.</li>'}</ol></section>
     <section class="rc"><div class="rt"><b>Endings</b><span class="count">${ends.length+1}</span></div>
       <div class="ren"><div><i class="ok"></i><span><b>Main flow completes</b><small>The ${esc(per.toLowerCase())} gets it done</small></span></div>${ends.map(([a,b])=>`<div><i></i><span><b>${esc(a)}</b><small>${esc(b)}</small></span></div>`).join('')}</div></section>
-    <section class="rc"><div class="rt"><b>More about this use case</b><span class="opt">Optional</span></div><div class="xf">
-      <label>Key business rules<textarea data-xf="rules" placeholder="For example, only during school holidays; refunds over 1,000 need a second approver">${esc(xf.rules||'')}</textarea></label>
-      <label>How often it happens<input data-xf="freq" value="${esc(xf.freq||'')}" placeholder="For example, about 2,000 times a day"></label>
-      <label>Peak load and scale<input data-xf="peak" value="${esc(xf.peak||'')}" placeholder="For example, 50,000 an hour at month end, 5–6 pm peak"></label></div></section>
     <div class="note">${I('alert',14)}<span>APIs and code are picked later, in the solution design.</span></div></div>`; }
 function post(){ const n=document.querySelector('#npModal .ncm.npm'); if(!n||!S.np) return; const st=S.np.stage||1;
   let ph=n.querySelector(':scope > .npph'); if(st===1){ if(!ph) n.insertAdjacentHTML('beforeend',`<div class="npph"><div>${I('layers',28)}<span>New use case diagram will appear here</span></div></div>`); } else if(ph) ph.remove();
@@ -15137,11 +15133,7 @@ const _post=new MutationObserver(()=>requestAnimationFrame(()=>{ const M=S.np; i
       if(k==='Channel'){ sp[i].textContent='Channel apps'; sp[i+1].textContent=chs(M).map(id=>CHANNELS[id].name).join(', ')||'—'; }
       if(k==='Reviewer'){ sp[i].textContent='Business owner'; const w=M.who&&M.who!=='auto'?M.who.split('|')[1]:''; sp[i+1].textContent=w?(TEAMS.find(t=>t.id===w)||{name:w}).name:'Not set'; }
       if(k==='Context'){ sp[i].remove(); sp[i+1].remove(); } } }
-  const xf=M.xf||{}; const ends=[...l.querySelectorAll('.rs')].find(r=>/Endings/.test(r.textContent));
-  (ends||l.lastElementChild).insertAdjacentHTML('afterend',`<div class="rs"><h4>More about this use case<span class="soon">Optional</span></h4><div class="xf">
-    <label>Key business rules<textarea data-xf="rules" placeholder="For example, only during school holidays; refunds over 1,000 need a second approver">${esc(xf.rules||'')}</textarea></label>
-    <label>How often it happens<input data-xf="freq" value="${esc(xf.freq||'')}" placeholder="For example, about 2,000 times a day"></label>
-    <label>Peak load and scale<input data-xf="peak" value="${esc(xf.peak||'')}" placeholder="For example, 50,000 an hour at month end, 5–6 pm peak"></label></div></div>`); }));
+  }));
 { const el=document.getElementById('npModal'); if(el) _post.observe(el,{childList:true,subtree:true}); }
 /* save keeps the new fields */
 { const _s=ACT.npsave; ACT.npsave=function(){ const M=S.np; const keep={chs:M&&chs(M).slice(), who:M&&M.who, xf:M&&M.xf}; const n=SPECS.length; const r=_s.apply(this,arguments); if(SPECS.length>n){ const x=SPECS[0]; x.chs=keep.chs; x.ch=keep.chs[0]; x.xf=keep.xf; x.owner2=keep.who&&keep.who!=='auto'?keep.who.split('|')[1]:''; if(keep.xf&&keep.xf.rules) x.rules=keep.xf.rules.split(/\n+/).filter(Boolean).map(t=>[x.flow&&x.flow[0]?x.flow[0].id:'',t]); } return r; }; }
